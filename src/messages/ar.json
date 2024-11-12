@@ -1,0 +1,19 @@
+{
+  "NavbarLinks": {
+    "home": "الرئيسية",
+    "homeTitle": "صفحة الرئيسية",
+    "about": "من نحن",
+    "aboutTitle": "صفحة من نحن",
+    "profile": "الملف الشخصي",
+    "profileTitle": "صفحة الملف الشخصي"
+  },
+  "HomePage": {
+    "title": "الصفحة الرئيسية"
+  },
+  "AboutPage": {
+    "title": "من نحن"
+  },
+  "ProfilePage": {
+    "title": "الملف الشخصي"
+  }
+}
