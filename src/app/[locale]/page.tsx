@@ -18,12 +18,11 @@ export async function generateMetadata({
 
 export default function Home({ params }: { params: { locale: string } }) {
   const t = useTranslations('HomePage')
-  const { locale } = params
-  const isArabic = locale === 'ar'
+  const isArabic = params?.locale === 'ar'
 
   return (
     <div className="flex w-full" dir={isArabic ? 'rtl' : 'ltr'}>
-      <div className="text-3xl font-bold mt-20">{t('title')}</div>
+      <div className="mt-20 text-3xl font-bold">{t('title')}</div>
     </div>
   )
 }
