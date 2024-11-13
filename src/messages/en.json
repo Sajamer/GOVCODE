@@ -7,8 +7,13 @@
     "profile": "Profile",
     "profileTitle": "Profile page"
   },
+  "LocaleSwitcher": {
+    "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
+    "label": "Change language",
+    "locale": "{locale, select, ar {🇸🇦 Arabic} en {🇺🇸 English} other {Unknown}}"
+  },
   "HomePage": {
-    "title": "Landing page"
+    "title": "Govcode"
   },
   "AboutPage": {
     "title": "About"

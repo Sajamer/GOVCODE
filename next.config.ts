@@ -3,6 +3,19 @@ import createNextIntlPlugin from 'next-intl/plugin'
 
 const withNextIntl = createNextIntlPlugin()
 
-const nextConfig: NextConfig = {}
+/** @type {import('next').NextConfig} */
+const nextConfig: NextConfig = {
+  // typescript: {
+  //   ignoreBuildErrors: true,
+  // },
+  // eslint: {
+  //   ignoreDuringBuilds: true,
+  // },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100MB',
+    },
+  },
+}
 
 export default withNextIntl(nextConfig)

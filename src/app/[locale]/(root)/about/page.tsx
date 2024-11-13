@@ -1,12 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import Navbar from '@/components/navbar/Navbar'
-import { routing } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import { getMessages } from 'next-intl/server'
-
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }))
-}
 
 export async function generateMetadata({
   params,
@@ -14,23 +7,23 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const messages: any = await getMessages({ locale })
-  const title = messages?.NavbarLinks?.homeTitle
+  const title = messages?.NavbarLinks?.aboutTitle
 
   return {
     title,
   }
 }
 
-export default function Home() {
-  const t = useTranslations('HomePage')
+export default function About() {
+  const t = useTranslations('AboutPage')
   const locale = useLocale()
 
   const isArabic = locale === 'ar'
 
   return (
     <div className="flex w-full flex-col" dir={isArabic ? 'rtl' : 'ltr'}>
-      <Navbar />
       <div className="mt-20 text-5xl font-bold">{t('title')}</div>
     </div>
   )
