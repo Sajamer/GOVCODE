@@ -10,6 +10,7 @@ import { Locale, routing } from '@/i18n/routing'
 import { notFound } from 'next/navigation'
 
 import '../globals.css'
+import { ThemeProvider } from '@/providers/ThemeProvider'
 
 type LocalLayoutProps = {
   children: React.ReactNode
@@ -42,15 +43,15 @@ export default async function LocalLayout({
         {/* <SessionProvider session={session}> */}
         <NextIntlClientProvider messages={messages}>
           <TanStackProvider>
-            {/* <ThemeProvider
+            <ThemeProvider
               attribute="class"
-              defaultTheme="light"
-              themes={['light', 'dark']}
+              defaultTheme="system"
+              enableSystem
               disableTransitionOnChange
-            > */}
-            {children}
-            <Toaster />
-            {/* </ThemeProvider> */}
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
           </TanStackProvider>
         </NextIntlClientProvider>
         {/* </SessionProvider> */}

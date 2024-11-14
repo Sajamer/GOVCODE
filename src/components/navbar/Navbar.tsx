@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import React, { FC } from 'react'
 import LocaleSwitcher from '../shared/dropdowns/LocalSwitcher'
 import { Link } from '@/i18n/routing'
+import ThemeSwitcher from '../shared/ThemeSwitcher'
 
 const Navbar: FC = () => {
   const locale = useLocale()
@@ -20,7 +21,10 @@ const Navbar: FC = () => {
         <Link href={`/about`}>{t('about')}</Link>
         <Link href={`/contact-us`}>{t('profile')}</Link>
       </div>
-      <LocaleSwitcher />
+      <div className="flex-center gap-1">
+        <ThemeSwitcher />
+        <LocaleSwitcher />
+      </div>
     </div>
   )
 }

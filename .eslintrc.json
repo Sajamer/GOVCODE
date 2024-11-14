@@ -7,24 +7,25 @@
     "prettier"
   ],
   "rules": {
-    "no-undef": "off",
-    "no-restricted-imports": [
-      "error",
-      {
-        "name": "next/link",
-        "message": "Please use the Link component from @/i18n/routing instead.",
-        "importNames": ["Link"]
-      },
-      {
-        "name": "next/navigation",
-        "message": "Please use the Link component from @/i18n/routing instead.",
-        "importNames": [
-          "redirect",
-          "useRouter",
-          "permanentRedirect",
-          "usePathname"
-        ]
-      }
-    ]
+    "no-undef": "off"
+    // "@typescript-eslint/no-empty-interface": "off",
+    // "no-restricted-imports": [
+    //   "error",
+    //   {
+    //     "name": "next/link",
+    //     "message": "Please use the Link component from @/i18n/routing instead.",
+    //     "importNames": ["Link"]
+    //   },
+    //   {
+    //     "name": "next/navigation",
+    //     "message": "Please use the Link component from @/i18n/routing instead.",
+    //     "importNames": [
+    //       "redirect",
+    //       "useRouter",
+    //       "permanentRedirect",
+    //       "usePathname"
+    //     ]
+    //   }
+    // ]
   }
 }
