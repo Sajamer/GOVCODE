@@ -38,7 +38,7 @@ export default async function LocalLayout({
   // const session = await getServerSession(authOptions)
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${poppins.variable} font-poppins antialiased`}>
         {/* <SessionProvider session={session}> */}
         <NextIntlClientProvider messages={messages}>
