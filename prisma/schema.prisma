@@ -3,21 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  password String   @db.VarChar(255)
-  role     userRole @default(user)
+  id    Int      @id @default(autoincrement())
+  email String   @unique
+  role  userRole @default(user)
 
   fullName    String?   @db.VarChar(64)
   phone       String?   @db.VarChar(64)
   bio         String?   @db.VarChar(500)
   photo       String?
-  coverPhoto  String?
   dateOfBirth DateTime?
 
   createdAt DateTime @default(now())
@@ -25,6 +23,22 @@ model User {
 
   departmentId Int?
   department   Deparment? @relation(fields: [departmentId], references: [id])
+  account      Account[]
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  provider          Provider
+  providerAccountId String
+  refresh_token     String?
+  accessToken       String?
+  session_state     String?
+  expires_at        Int?
+
+  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
 model Organization {
@@ -150,6 +164,13 @@ model KPIProcess {
   @@id([kpiId, processId])
 }
 
+model Otp {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  otp       String
+  expiresAt DateTime
+}
+
 enum userRole {
   superAdmin
   moderator
@@ -183,4 +204,5 @@ enum Calibration {
 
 enum Provider {
   credential
+  google
 }
