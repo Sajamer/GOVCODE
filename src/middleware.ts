@@ -4,13 +4,7 @@ import { withAuth } from 'next-auth/middleware'
 import createMiddleware from 'next-intl/middleware'
 import { routing } from './i18n/routing'
 
-const publicPages = [
-  '/',
-  '/sign-in',
-  '/sign-up',
-  '/about',
-  // (/secret requires auth)
-]
+const publicPages = ['/', '/sign-in', '/sign-up']
 
 const intlMiddleware = createMiddleware(routing)
 

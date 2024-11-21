@@ -25,6 +25,7 @@ const AuthLayout = ({ children }: { children: ReactNode }) => {
             alt="Files"
             width={342}
             height={342}
+            priority
             className="transition-all hover:rotate-2 hover:scale-105"
           />
         </div>

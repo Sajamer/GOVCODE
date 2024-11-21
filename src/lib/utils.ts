@@ -4,6 +4,7 @@ import { type ClassValue, clsx } from 'clsx'
 import moment from 'moment'
 import { twMerge } from 'tailwind-merge'
 import { cloneElement } from 'react'
+import { Prisma } from '@prisma/client'
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
@@ -14,96 +15,96 @@ export const detectArabic = (text: string): boolean => {
   return arabicPattern.test(text)
 }
 
-// export async function sendError(e: unknown): Promise<void> {
-//   const embed: {
-//     type?: 'rich'
-//     title?: string
-//     description?: string | unknown
-//     color?: number
-//     fields?: {
-//       name?: string
-//       value?: string
-//       inline?: boolean
-//     }[]
-//     timestamp?: string
-//   } = {}
+export async function sendError(e: unknown): Promise<void> {
+  const embed: {
+    type?: 'rich'
+    title?: string
+    description?: string | unknown
+    color?: number
+    fields?: {
+      name?: string
+      value?: string
+      inline?: boolean
+    }[]
+    timestamp?: string
+  } = {}
 
-//   try {
-//     if (e instanceof Prisma.PrismaClientKnownRequestError) {
-//       embed.title = 'Prisma Known Error'
-//       embed.description = e.name
-//       embed.color = 0xff0000
-//       embed.timestamp = new Date().toISOString()
-//       embed.fields = [
-//         { name: 'Error Code', value: e.code, inline: false },
-//         {
-//           name: 'Stack',
-//           value: e.stack?.substring(0, 1000) || 'No stack trace available',
-//           inline: false,
-//         },
-//         { name: 'Error Message', value: e.message, inline: false },
-//       ]
-//     } else if (e instanceof Prisma.PrismaClientUnknownRequestError) {
-//       embed.title = 'Prisma Unknown Error'
-//       embed.description = e.name
-//       embed.color = 0xff0000
-//       embed.timestamp = new Date().toISOString()
-//       embed.fields = [
-//         {
-//           name: 'Stack',
-//           value: e.stack?.substring(0, 1000) || 'No stack trace available',
-//           inline: false,
-//         },
-//         { name: 'Error Message', value: e.message, inline: false },
-//       ]
-//     } else if (e instanceof Error) {
-//       embed.title = 'Error'
-//       embed.color = 0xff0000
-//       embed.timestamp = new Date().toISOString()
-//       embed.fields = [
-//         { name: 'Error Message', value: e.message, inline: false },
-//         {
-//           name: 'Stack',
-//           value: e.stack?.substring(0, 1000) || 'No stack trace available',
-//           inline: false,
-//         },
-//       ]
-//     } else {
-//       console.error(e)
-//       return
-//     }
+  try {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      embed.title = 'Prisma Known Error'
+      embed.description = e.name
+      embed.color = 0xff0000
+      embed.timestamp = new Date().toISOString()
+      embed.fields = [
+        { name: 'Error Code', value: e.code, inline: false },
+        {
+          name: 'Stack',
+          value: e.stack?.substring(0, 1000) || 'No stack trace available',
+          inline: false,
+        },
+        { name: 'Error Message', value: e.message, inline: false },
+      ]
+    } else if (e instanceof Prisma.PrismaClientUnknownRequestError) {
+      embed.title = 'Prisma Unknown Error'
+      embed.description = e.name
+      embed.color = 0xff0000
+      embed.timestamp = new Date().toISOString()
+      embed.fields = [
+        {
+          name: 'Stack',
+          value: e.stack?.substring(0, 1000) || 'No stack trace available',
+          inline: false,
+        },
+        { name: 'Error Message', value: e.message, inline: false },
+      ]
+    } else if (e instanceof Error) {
+      embed.title = 'Error'
+      embed.color = 0xff0000
+      embed.timestamp = new Date().toISOString()
+      embed.fields = [
+        { name: 'Error Message', value: e.message, inline: false },
+        {
+          name: 'Stack',
+          value: e.stack?.substring(0, 1000) || 'No stack trace available',
+          inline: false,
+        },
+      ]
+    } else {
+      console.error(e)
+      return
+    }
 
-//     const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URI
-//     if (!discordWebhookUrl) {
-//       console.error('Discord webhook URL is not defined.')
-//       return
-//     }
+    const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URI
+    if (!discordWebhookUrl) {
+      console.error('Discord webhook URL is not defined.')
+      return
+    }
 
-//     const discordMessage = {
-//       username: 'Masarux Logger',
-//       embeds: [embed],
-//     }
+    const discordMessage = {
+      username: 'Gov-code Logger',
+      embeds: [embed],
+    }
 
-//     const response = await fetch(discordWebhookUrl, {
-//       method: 'POST',
-//       headers: {
-//         // eslint-disable-next-line @typescript-eslint/naming-convention
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify(discordMessage),
-//     })
+    const response = await fetch(discordWebhookUrl, {
+      method: 'POST',
+      headers: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(discordMessage),
+    })
 
-//     if (!response.ok) {
-//       console.error(
-//         'Failed to send error message to Discord:',
-//         response.statusText,
-//       )
-//     }
-//   } catch (error) {
-//     sendError(error)
-//     console.error('Error while sending error to Discord:', error)
-//   }
-// }
+    if (!response.ok) {
+      console.error(
+        'Failed to send error message to Discord:',
+        response.statusText,
+      )
+    }
+  } catch (error) {
+    sendError(error)
+    console.error('Error while sending error to Discord:', error)
+  }
+}
 
 export function formatDateRange(
   startDate: Date,
@@ -173,26 +174,6 @@ export const dataUrlToFile = async (
   const res: Response = await fetch(dataUrl)
   const blob: Blob = await res.blob()
   return new File([blob], fileName, { type: 'image/png' })
-}
-
-export async function verifyOTP(
-  email: string,
-  inputOtp: string,
-): Promise<boolean> {
-  const storedOtp = await prisma.otp.findUnique({
-    where: { email },
-  })
-
-  if (!storedOtp || storedOtp.expiresAt < new Date()) {
-    return false
-  }
-
-  if (storedOtp.otp === inputOtp) {
-    await prisma.otp.delete({ where: { email } })
-    return true
-  }
-
-  return false
 }
 
 export const extractUsernameFromUrl = (url: string): string => {

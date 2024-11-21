@@ -20,5 +20,18 @@
   },
   "ProfilePage": {
     "title": "Profile"
+  },
+  "AuthenticationPage": {
+    "title": "Login Register",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "register": "Register",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "enter your OTP code": "Enter your OTP code",
+    "enter OTP": "Enter OTP",
+    "resend otp": "Resend OTP"
   }
 }

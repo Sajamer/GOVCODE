@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Navbar from '@/components/navbar/Navbar'
 import { routing } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import { getMessages } from 'next-intl/server'
@@ -30,8 +29,7 @@ export default function Home() {
 
   return (
     <div className="flex w-full flex-col" dir={isArabic ? 'rtl' : 'ltr'}>
-      <Navbar />
-      <div className="mt-20 text-5xl font-bold">{t('title')}</div>
+      <div className="text-5xl font-bold">{t('title')}</div>
     </div>
   )
 }

@@ -18,17 +18,16 @@ import {
 import React, { useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-// import { verifySecret, sendEmailOTP } from '@/lib/actions/user.actions'
-// import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import { verifyOTP } from '@/lib/actions/user.actions'
+// import { sendEmailOTP } from '@/app/api/otp/route'
 
-const OtpModal = ({
-  accountId,
-  email,
-}: {
-  accountId: string
+interface OtpModalProps {
   email: string
-}) => {
-  // const router = useRouter()
+}
+
+const OtpModal = ({ email }: OtpModalProps) => {
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(true)
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -37,11 +36,12 @@ const OtpModal = ({
     e.preventDefault()
     setIsLoading(true)
 
-    console.log({ accountId, password })
-
     try {
-      // const sessionId = await verifySecret({ accountId, password })
-      // if (sessionId) router.push('/')
+      const sessionId = await verifyOTP(email, password)
+
+      console.log('sessionId: ', sessionId)
+
+      if (sessionId) router.push('/')
     } catch (error) {
       console.log('Failed to verify OTP', error)
     }
@@ -50,7 +50,7 @@ const OtpModal = ({
   }
 
   const handleResendOtp = async () => {
-    // await sendEmailOTP({ email })
+    // await sendEmailOTP(email)
   }
 
   return (

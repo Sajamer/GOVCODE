@@ -42,7 +42,7 @@ const LocaleSwitcherSelect: FC<ILocaleSwitcherSelectProps> = ({
     >
       <p className="sr-only">{label}</p>
       <select
-        className="inline-flex cursor-pointer appearance-none bg-transparent py-3 pl-2 pr-6"
+        className="inline-flex cursor-pointer appearance-none bg-transparent py-3 pl-2 pr-6 focus-visible:border-none"
         defaultValue={defaultValue}
         disabled={isPending}
         onChange={onSelectChange}

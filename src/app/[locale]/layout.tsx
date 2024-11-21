@@ -1,16 +1,14 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { Poppins } from 'next/font/google'
-// import { SessionProvider } from 'next-auth/react'
 import TanStackProvider from '@/providers/TanstackProvider'
-// import { ThemeProvider } from '@/providers/ThemeProvider'
-// import { getServerSession } from 'next-auth'
 import { Toaster } from '@/components/ui/toaster'
 import { Locale, routing } from '@/i18n/routing'
 import { notFound } from 'next/navigation'
+import { ThemeProvider } from '@/providers/ThemeProvider'
 
 import '../globals.css'
-import { ThemeProvider } from '@/providers/ThemeProvider'
+import ClientSessionProvider from '@/providers/ClientSessionProvider'
 
 type LocalLayoutProps = {
   children: React.ReactNode
@@ -35,26 +33,25 @@ export default async function LocalLayout({
   }
 
   const messages = await getMessages()
-  // const session = await getServerSession(authOptions)
 
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${poppins.variable} font-poppins antialiased`}>
-        {/* <SessionProvider session={session}> */}
-        <NextIntlClientProvider messages={messages}>
-          <TanStackProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <Toaster />
-            </ThemeProvider>
-          </TanStackProvider>
-        </NextIntlClientProvider>
-        {/* </SessionProvider> */}
+        <ClientSessionProvider>
+          <NextIntlClientProvider messages={messages}>
+            <TanStackProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+                <Toaster />
+              </ThemeProvider>
+            </TanStackProvider>
+          </NextIntlClientProvider>
+        </ClientSessionProvider>
       </body>
     </html>
   )

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 interface ISidebar {
   id: number
   title: string
@@ -16,3 +17,15 @@ type AxiosErrorType = AxiosError<{
   message: string
   statusCode: number
 }>
+
+interface IValidatedRequest {
+  body?: any
+  query?: any
+  session?: any
+}
+
+interface IResponse<T = undefined> {
+  data?: T
+  message?: string
+  status?: number
+}
