@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import KpiComponent from '@/components/screens/home/KpiComponent'
 import { routing } from '@/i18n/routing'
-import { useLocale, useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 
 export function generateStaticParams() {
@@ -22,14 +23,15 @@ export async function generateMetadata({
 }
 
 export default function Home() {
-  const t = useTranslations('HomePage')
+  // const t = useTranslations('HomePage')
   const locale = useLocale()
 
   const isArabic = locale === 'ar'
 
   return (
     <div className="flex w-full flex-col" dir={isArabic ? 'rtl' : 'ltr'}>
-      <div className="text-5xl font-bold">{t('title')}</div>
+      {/* <div className="text-5xl font-bold">{t('title')}</div> */}
+      <KpiComponent />
     </div>
   )
 }

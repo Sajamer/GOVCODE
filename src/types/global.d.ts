@@ -29,3 +29,8 @@ interface IResponse<T = undefined> {
   message?: string
   status?: number
 }
+
+interface IOption {
+  label: string
+  value: number
+}

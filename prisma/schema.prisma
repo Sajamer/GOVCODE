@@ -22,7 +22,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   departmentId Int?
-  department   Deparment? @relation(fields: [departmentId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
   account      Account[]
 }
 
@@ -61,10 +61,10 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  departments Deparment[]
+  departments Department[]
 }
 
-model Deparment {
+model Department {
   id          Int     @id @default(autoincrement())
   name        String  @unique
   description String?
@@ -97,10 +97,10 @@ model KPI {
   updatedAt DateTime @updatedAt
 
   departmentId Int
-  department   Deparment @relation(fields: [departmentId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
 
   KPIObjective  KPIObjective[]
-  KPIComplience KPIComplience[]
+  KPICompliance KPICompliance[]
   KPIProcess    KPIProcess[]
 }
 
@@ -114,14 +114,14 @@ model Objective {
   KPIObjective KPIObjective[]
 }
 
-model Complience {
+model Compliance {
   id   Int    @id @default(autoincrement())
   name String @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  KPIComplience KPIComplience[]
+  KPICompliance KPICompliance[]
 }
 
 model Process {
@@ -144,14 +144,14 @@ model KPIObjective {
   @@id([kpiId, objectiveId])
 }
 
-model KPIComplience {
+model KPICompliance {
   kpiId Int
   kpi   KPI @relation(fields: [kpiId], references: [id])
 
-  complienceId Int
-  complience   Complience @relation(fields: [complienceId], references: [id])
+  complianceId Int
+  compliance   Compliance @relation(fields: [complianceId], references: [id])
 
-  @@id([kpiId, complienceId])
+  @@id([kpiId, complianceId])
 }
 
 model KPIProcess {
@@ -179,7 +179,7 @@ enum userRole {
 }
 
 enum KPIType {
-  CUMULITIVE
+  CUMULATIVE
   STAGING
 }
 

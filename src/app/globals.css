@@ -473,3 +473,46 @@
     @apply bg-background text-foreground;
   }
 }
+
+.table-1 td {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.875rem;
+  color: var(--zinc-800);
+  font-weight: 500;
+  height: 4.5rem;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+.table-1 .absolute-last-child {
+  position: sticky;
+  right: 0;
+  width: 2.91669rem;
+  background-color: var(--zinc-50);
+  box-shadow: -4px 0px 16px -12px rgba(0, 0, 0, 0.06);
+}
+
+.css-13cymwt-control {
+  @apply border border-input !important;
+  border-radius: 0.3125rem !important;
+  background-color: transparent !important;
+}
+.dark .css-1dimb5e-singleValue {
+  @apply text-zinc-500 !important;
+}
+
+.css-t3ipsp-control {
+  border-color: var(--input) !important;
+  border-width: 1px !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+.countries-dropdown .css-t3ipsp-control {
+  height: 2.5rem !important;
+}
+
+.dark .css-1nmdiq5-menu div {
+  @apply bg-zinc-900 !important;
+}
