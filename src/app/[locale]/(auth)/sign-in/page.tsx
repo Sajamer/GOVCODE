@@ -1,5 +1,5 @@
-import AuthForm from '@/components/forms/AuthForm'
+import LoginForm from '@/components/forms/LoginForm'
 
-const SignIn = () => <AuthForm type="sign-in" />
+const SignIn = () => <LoginForm />
 
 export default SignIn

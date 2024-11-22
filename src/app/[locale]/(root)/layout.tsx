@@ -1,5 +1,8 @@
 import ComponentWrapper from '@/components/shared/ComponentWrapper'
 import DashboardSidebar from '@/components/shared/sidebars/DashboardSidebar'
+import { auth } from '@/lib/auth'
+import { SessionProvider } from 'next-auth/react'
+import { redirect } from 'next/navigation'
 import { FC } from 'react'
 
 type Props = {
@@ -7,13 +10,20 @@ type Props = {
 }
 
 const AdminDashboardLayout: FC<Props> = async ({ children }) => {
+  const session = await auth()
+
+  if (!session) {
+    redirect('/sign-in')
+  }
   return (
-    <div className="flex h-screen w-full">
-      <DashboardSidebar />
-      <div className="h-screen w-full bg-gray-100 dark:bg-gray-300">
-        <ComponentWrapper>{children}</ComponentWrapper>
+    <SessionProvider session={session}>
+      <div className="flex h-screen w-full">
+        <DashboardSidebar />
+        <div className="h-screen w-full bg-gray-100 dark:bg-gray-300">
+          <ComponentWrapper>{children}</ComponentWrapper>
+        </div>
       </div>
-    </div>
+    </SessionProvider>
   )
 }
 

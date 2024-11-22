@@ -1,12 +1,12 @@
 import KPIForm from '@/components/forms/KPIForm'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
-import { axiosDelete, axiosGet } from '@/lib/axios'
+import { axiosDelete } from '@/lib/axios'
 import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { KPI } from '@prisma/client'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChartSpline, Loader2, Plus } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ChartSpline, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../headers/PageHeader'
 import ConfirmationDialog from '../modals/ConfirmationDialog'
@@ -20,6 +20,7 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
   description: string
   entityKey: keyof T
   sheetName: SheetNames
+  data: T[]
   columns: Array<{
     key: keyof T | 'actions'
     isSortable: boolean
@@ -33,6 +34,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   entityKey,
   sheetName,
   columns,
+  data,
 }: IGenericTableProps<T>): JSX.Element => {
   const queryClient = useQueryClient()
 
@@ -44,13 +46,13 @@ const GenericComponent = <T extends Record<string, unknown>>({
   const [openConfirmation, setOpenConfirmation] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const { data, isLoading } = useQuery({
-    queryKey: [sheetName],
-    queryFn: () => axiosGet<T[]>(`${sheetName as string}`),
-    staleTime: 1000 * 60 * 5,
-  })
+  // const { data, isLoading } = useQuery({
+  //   queryKey: [sheetName],
+  //   queryFn: () => axiosGet<T[]>(`${sheetName as string}`),
+  //   staleTime: 1000 * 60 * 5,
+  // })
 
-  const entityData = useMemo(() => data?.data ?? [], [data])
+  const entityData = useMemo(() => data ?? [], [data])
 
   const filteredData = useMemo(
     () =>
@@ -139,24 +141,27 @@ const GenericComponent = <T extends Record<string, unknown>>({
           </Button>
         </PageHeader>
         <div className="flex w-full flex-col gap-[1.88rem]">
-          {isLoading ? (
-            <div className="flex min-h-[200px] w-full items-center justify-center">
-              <Loader2 className="size-16 animate-spin" />
-            </div>
-          ) : entityData.length > 0 ? (
-            <TableComponent
-              data={values}
-              headers={headers}
-              hasFooter
-              addProps={{
-                label: `Add ${title}`,
-                sheetToOpen: sheetName as SheetNames,
-              }}
-              tableActions={tableActions}
-            />
-          ) : (
-            <NoResultFound label={`No ${title} yet.`} />
-          )}
+          {
+            //   isLoading ? (
+            //   <div className="flex min-h-[200px] w-full items-center justify-center">
+            //     <Loader2 className="size-16 animate-spin" />
+            //   </div>
+            // ) :
+            entityData.length > 0 ? (
+              <TableComponent
+                data={values}
+                headers={headers}
+                hasFooter
+                addProps={{
+                  label: `Add ${title}`,
+                  sheetToOpen: sheetName as SheetNames,
+                }}
+                tableActions={tableActions}
+              />
+            ) : (
+              <NoResultFound label={`No ${title} yet.`} />
+            )
+          }
         </div>
       </div>
       <ConfirmationDialog

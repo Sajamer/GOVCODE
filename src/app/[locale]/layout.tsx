@@ -1,14 +1,13 @@
+import { Toaster } from '@/components/ui/toaster'
+import { Locale, routing } from '@/i18n/routing'
+import TanStackProvider from '@/providers/TanstackProvider'
+import { ThemeProvider } from '@/providers/ThemeProvider'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { Poppins } from 'next/font/google'
-import TanStackProvider from '@/providers/TanstackProvider'
-import { Toaster } from '@/components/ui/toaster'
-import { Locale, routing } from '@/i18n/routing'
 import { notFound } from 'next/navigation'
-import { ThemeProvider } from '@/providers/ThemeProvider'
 
 import '../globals.css'
-import ClientSessionProvider from '@/providers/ClientSessionProvider'
 
 type LocalLayoutProps = {
   children: React.ReactNode
@@ -37,21 +36,19 @@ export default async function LocalLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${poppins.variable} font-poppins antialiased`}>
-        <ClientSessionProvider>
-          <NextIntlClientProvider messages={messages}>
-            <TanStackProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-                {children}
-                <Toaster />
-              </ThemeProvider>
-            </TanStackProvider>
-          </NextIntlClientProvider>
-        </ClientSessionProvider>
+        <NextIntlClientProvider messages={messages}>
+          <TanStackProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </TanStackProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

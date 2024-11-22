@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/authOptions'
-import { ZodSchema } from 'zod'
-import { sendError } from './utils'
 import { Method } from '@/types/method'
+import { NextRequest, NextResponse } from 'next/server'
+import { ZodSchema } from 'zod'
+import { auth } from './auth'
 import { testDatabaseConnection } from './db_utils'
+import { sendError } from './utils'
 
 export function validate(
   schema: {
@@ -27,10 +26,7 @@ export function validate(
         )
       }
 
-      const session = await getServerSession({
-        req: { headers: req.headers },
-        ...authOptions,
-      })
+      const session = await auth()
 
       if (isSecure && !session) {
         return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })

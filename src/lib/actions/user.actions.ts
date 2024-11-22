@@ -1,9 +1,37 @@
 'use server'
 
 import prisma from '@/lib/db_connection'
-import { randomUUID, createHash } from 'crypto'
-import { signIn, getSession } from 'next-auth/react'
-import { sendEmailOTP } from '@/app/api/otp/route'
+import { pbkdf2Sync, randomBytes } from 'crypto'
+import { getSession, signIn } from 'next-auth/react'
+
+export const hashPassword = async (
+  password: string,
+  salt: string,
+): Promise<string> => {
+  const hash = pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex')
+  return hash
+}
+
+export const generateSalt = async (): Promise<string> => {
+  return randomBytes(16).toString('hex')
+}
+
+export const createHashedPassword = async (
+  password: string,
+): Promise<{ salt: string; hash: string }> => {
+  const salt = await generateSalt()
+  const hash = await hashPassword(password, salt)
+  return { salt, hash }
+}
+
+export const comparePasswords = async (
+  password: string,
+  salt: string,
+  hash: string,
+): Promise<boolean> => {
+  const newHash = await hashPassword(password, salt)
+  return newHash === hash
+}
 
 // Unified error handler
 const handleError = (error: unknown, message: string) => {
@@ -11,64 +39,87 @@ const handleError = (error: unknown, message: string) => {
   throw new Error(message)
 }
 
-export const requestOTP = async (email: string) => {
-  try {
-    const otp = await sendEmailOTP(email)
-    return { otp, message: 'OTP sent successfully' }
-  } catch (error) {
-    handleError(error, 'Failed to send OTP')
-  }
-}
-
+type IActionResponse =
+  | { error: false; message: string; data: unknown }
+  | {
+      error: true
+      message: string
+      errorCode: unknown
+    }
 // Create account logic with OTP
 export const createAccount = async ({
   fullName,
   email,
+  password,
+  confirmPassword,
 }: {
   fullName: string
   email: string
-}) => {
+  password: string
+  confirmPassword: string
+}): Promise<IActionResponse> => {
   try {
-    // request OTP
-    await requestOTP(email)
-
     // Check if the user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } })
 
-    let user
+    if (existingUser)
+      return {
+        error: true,
+        errorCode: 'USER_ALREADY_EXISTS',
+        message: 'User already exists',
+      }
 
-    if (!existingUser) {
-      // Generate an access token
-      const accessToken = createHash('sha256')
-        .update(randomUUID())
-        .digest('hex')
+    // check passwords and compare and hash
+    if (password !== confirmPassword)
+      return {
+        error: true,
+        errorCode: 'PASSWORD_MISMATCH',
+        message: 'Passwords do not match',
+      }
 
-      // Create a new user and associate the account
-      user = await prisma.user.create({
-        data: {
-          email,
-          fullName,
-          account: {
-            create: {
-              provider: 'credential',
-              providerAccountId: randomUUID(),
-              accessToken,
-            },
+    // we need to hash and salt the password
+
+    const { salt, hash } = await createHashedPassword(password)
+
+    // create user
+
+    const user = await prisma.user.create({
+      data: {
+        fullName,
+        email,
+        account: {
+          create: {
+            provider: 'credentials',
+            providerAccountId: email,
+            type: 'email',
           },
         },
-      })
-    } else {
-      // If user exists, assign it to the `user` variable
-      user = existingUser
-    }
+      },
+    })
 
+    // save the password to the user
+    await prisma.password.create({
+      data: {
+        userId: user.id,
+        salt,
+        hash,
+      },
+    })
+
+    // send the verification email to user.
     return {
-      accountId: user.id,
-      message:
-        'OTP sent successfully. Please verify it to complete registration.',
+      error: false,
+      message: 'Account created successfully',
+      data: user,
     }
   } catch (error) {
-    handleError(error, 'Failed to create account')
+    // handleError(error, 'Failed to create account')
+    console.log(error)
+    return {
+      error: true,
+      errorCode: 'CREATE_ACCOUNT_FAILED',
+      message: 'Failed to create account',
+    }
   }
 }
 
