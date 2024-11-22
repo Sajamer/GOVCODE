@@ -1,26 +1,19 @@
 import { toast } from '@/hooks/use-toast'
 import { useSheetStore } from '@/stores/sheet-store'
-import { KPI } from '@prisma/client'
+import { Calibration, Frequency, KPI, KPIType, Units } from '@prisma/client'
 import { useMutation } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { FC } from 'react'
-import { z } from 'zod'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import LabeledInput from '../shared/inputs/LabeledInput'
 import LabeledTextArea from '../shared/textArea/LabeledTextArea'
 import { Button } from '../ui/button'
+import { IKpiManipulator } from '@/types/kpi'
+import { BodySchema } from '@/schema/kpi.schema'
 
 interface IKpiFormProps {
   data?: KPI
 }
-
-const BodySchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  difficulty: z.string(),
-  icon: z.string(),
-  duration: z.number(),
-})
 
 const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const isEdit = !!kpiData
@@ -30,13 +23,19 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const { closeSheet } = actions
 
   const { values, errors, getFieldProps, handleSubmit, dirty, touched } =
-    useFormik<ICourseManipulator>({
+    useFormik<IKpiManipulator>({
       initialValues: {
-        title: kpiData?.frequency ?? '',
+        name: kpiData?.name ?? '',
         description: kpiData?.description ?? '',
-        difficulty: kpiData?.departmentId ?? '',
-        icon: kpiData?.calibration ?? '',
-        duration: kpiData?.measurementDenominator ?? 0,
+        owner: kpiData?.owner ?? '',
+        measurementDenominator: kpiData?.measurementDenominator ?? undefined,
+        measurementNumerator: kpiData?.measurementNumerator ?? undefined,
+        measurementNumber: kpiData?.measurementNumber ?? undefined,
+        resources: kpiData?.resources ?? undefined,
+        unit: kpiData?.unit ?? Units.PERCENTAGE,
+        frequency: kpiData?.frequency ?? Frequency.MONTHLY,
+        type: kpiData?.type ?? KPIType.CUMULITIVE,
+        calibration: kpiData?.calibration ?? Calibration.INCREASING,
       },
       enableReinitialize: true,
       validationSchema: toFormikValidationSchema(BodySchema),
@@ -52,7 +51,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       toast({
         variant: 'success',
         title: 'Success',
-        description: `${values.title} successfully added`,
+        description: `${values.name} successfully added`,
       })
       closeSheet()
     },
@@ -72,7 +71,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       toast({
         variant: 'success',
         title: 'Success',
-        description: `${values.title} successfully updated`,
+        description: `${values.name} successfully updated`,
       })
       closeSheet()
     },
@@ -94,47 +93,27 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     >
       <div className="flex flex-col items-center justify-center gap-4 ">
         <LabeledInput
-          label="Title"
-          placeholder="Enter Course Title"
-          {...getFieldProps('title')}
-          error={touched.title && errors.title ? errors.title : ''}
+          label="KPI Owner"
+          placeholder="Enter KPI Owner"
+          type="number"
+          {...getFieldProps('owner')}
+          error={touched.owner && errors.owner ? errors.owner : ''}
+        />
+        <LabeledInput
+          label="KPI Name"
+          placeholder="Enter KPI name"
+          {...getFieldProps('name')}
+          error={touched.name && errors.name ? errors.name : ''}
         />
         <LabeledTextArea
           label="Description"
-          placeholder="Enter Course Description"
+          placeholder="Enter KPI Description"
           className="resize-none"
           {...getFieldProps('description')}
           error={
             touched.description && errors.description ? errors.description : ''
           }
         />
-        <LabeledInput
-          label="Duration"
-          placeholder="Enter Course Duration"
-          type="number"
-          {...getFieldProps('duration')}
-          error={touched.duration && errors.duration ? errors.duration : ''}
-        />
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700">
-            Difficulty
-          </label>
-          <select
-            {...getFieldProps('difficulty')}
-            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-            value={values.difficulty}
-          >
-            <option value="">Select Difficulty</option>
-            {difficultyOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          {touched.difficulty && errors.difficulty ? (
-            <p className="mt-1 text-sm text-red-600">{errors.difficulty}</p>
-          ) : null}
-        </div>
       </div>
       <div className="flex h-[3.625rem] w-full items-center justify-end gap-2 pt-3.5">
         <Button

@@ -3,8 +3,16 @@
 import GenericComponent from '@/components/shared/tables/GenericTable'
 import { KPI } from '@prisma/client'
 import { FC } from 'react'
-
 const KpiComponent: FC = () => {
+  // await prisma.kPI.create({
+  //   data: {
+  //     KPIObjective: {
+  //       createMany: {
+  //         data: [].map((id) => ({ objectiveId: id })),
+  //       },
+  //     },
+  //   },
+  // })
   return (
     <GenericComponent<KPI>
       title={'Kpis'}

@@ -34,3 +34,9 @@ interface IOption {
   label: string
   value: number
 }
+
+interface IDropdown {
+  id: string
+  label: string
+  value: string
+}
