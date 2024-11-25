@@ -45,92 +45,6 @@ model Department {
   kpis           KPI[]
 }
 
-model KPI {
-  id                     Int     @id @default(autoincrement())
-  name                   String
-  description            String
-  owner                  String
-  measurementNumerator   String?
-  measurementDenominator String?
-  measurementNumber      String?
-  resources              String?
-
-  unit        Units
-  frequency   Frequency
-  type        KPIType
-  calibration Calibration
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  departmentId Int
-  department   Department @relation(fields: [departmentId], references: [id])
-
-  KPIObjective  KPIObjective[]
-  KPICompliance KPICompliance[]
-  KPIProcess    KPIProcess[]
-}
-
-model Objective {
-  id   Int    @id @default(autoincrement())
-  name String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  KPIObjective KPIObjective[]
-}
-
-model Compliance {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  KPICompliance KPICompliance[]
-}
-
-model Process {
-  id   Int    @id @default(autoincrement())
-  name String @unique
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  KPIProcess KPIProcess[]
-}
-
-model KPIObjective {
-  kpiId Int
-  kpi   KPI @relation(fields: [kpiId], references: [id])
-
-  objectiveId Int
-  objective   Objective @relation(fields: [objectiveId], references: [id])
-
-  @@id([kpiId, objectiveId])
-}
-
-model KPICompliance {
-  kpiId Int
-  kpi   KPI @relation(fields: [kpiId], references: [id])
-
-  complianceId Int
-  compliance   Compliance @relation(fields: [complianceId], references: [id])
-
-  @@id([kpiId, complianceId])
-}
-
-model KPIProcess {
-  kpiId Int
-  kpi   KPI @relation(fields: [kpiId], references: [id])
-
-  processId Int
-  process   Process @relation(fields: [processId], references: [id])
-
-  @@id([kpiId, processId])
-}
-
 model Otp {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -167,6 +81,7 @@ enum Frequency {
 enum Calibration {
   INCREASING
   DECREASING
+  NEUTRAL
 }
 
 enum Provider {

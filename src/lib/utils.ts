@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 // import { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { type ClassValue, clsx } from 'clsx'
 import moment from 'moment'
-import { twMerge } from 'tailwind-merge'
 import { cloneElement } from 'react'
-import { Prisma } from '@prisma/client'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
@@ -261,4 +261,63 @@ export const convertToBase64 = (file: File): Promise<string> => {
       reject(error)
     }
   })
+}
+
+export const handleNumberInput = (
+  event: React.KeyboardEvent<HTMLInputElement>,
+  isDecimal: boolean = false,
+  isPhone: boolean = false,
+): void => {
+  const key = event.key
+  const ctrlOrCmd = event.ctrlKey || event.metaKey
+
+  const allowedKeys = [
+    'Backspace',
+    'Delete',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowUp',
+    'ArrowDown',
+    'Home',
+    'End',
+    'Tab',
+    'Enter',
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+  ]
+
+  if (isDecimal) {
+    if (event.currentTarget.value.includes('.') && key === '.')
+      event.preventDefault()
+    allowedKeys.push('.')
+  }
+
+  if (isPhone) {
+    allowedKeys.push('+')
+    allowedKeys.push('-')
+
+    if (key === '+' && event.currentTarget.value.length > 0) {
+      event.preventDefault()
+    }
+
+    if (key === '-' && event.currentTarget.value.length < 1) {
+      event.preventDefault()
+    }
+  }
+
+  if (ctrlOrCmd && ['a', 'c', 'v', 'x', 'z', 'y'].includes(key.toLowerCase())) {
+    return
+  }
+
+  if (!allowedKeys.includes(key)) {
+    event.preventDefault()
+  }
 }

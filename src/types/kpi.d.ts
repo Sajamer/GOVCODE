@@ -4,6 +4,7 @@ export interface IKpiManipulator {
   name: string
   description: string
   owner: string
+  measurement_equation: boolean
   measurementNumerator?: string
   measurementDenominator?: string
   measurementNumber?: string
@@ -14,5 +15,7 @@ export interface IKpiManipulator {
   type: KPIType
   calibration: Calibration
 
-  KPIObjectIds: string[]
+  KPIObjective: number[]
+  KPICompliance: number[]
+  KPIProcess: number[]
 }

@@ -3,6 +3,7 @@
 import prisma from '@/lib/db_connection'
 import { pbkdf2Sync, randomBytes } from 'crypto'
 import { getSession, signIn } from 'next-auth/react'
+import { sendError } from '../utils'
 
 export const hashPassword = async (
   password: string,
@@ -113,8 +114,8 @@ export const createAccount = async ({
       data: user,
     }
   } catch (error) {
-    // handleError(error, 'Failed to create account')
-    console.log(error)
+    sendError(error)
+    handleError(error, 'Failed to create account')
     return {
       error: true,
       errorCode: 'CREATE_ACCOUNT_FAILED',
@@ -150,6 +151,7 @@ export const signInUser = async ({
 
     return { accountId: user.id, message: 'User signed in successfully' }
   } catch (error) {
+    sendError(error)
     handleError(error, 'Failed to sign in user')
   }
 }
@@ -166,6 +168,7 @@ export const getCurrentUser = async () => {
     return user || null
   } catch (error) {
     console.error(error)
+    sendError(error)
     return null
   }
 }
@@ -177,8 +180,6 @@ export async function verifyOTP(
   const storedOtp = await prisma.otp.findUnique({
     where: { email },
   })
-
-  console.log('storedOtp: ', storedOtp, storedOtp?.otp === inputOtp)
 
   if (!storedOtp || storedOtp.expiresAt < new Date()) {
     return false

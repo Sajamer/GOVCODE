@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { createAccount } from '@/lib/actions/user.actions'
+import { createAccount } from '@/lib/actions/userActions'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'

@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { useViewportSize } from '@mantine/hooks'
-import { ArrowDown2, SearchNormal1 } from 'iconsax-react'
+import { ChevronDown, Search } from 'lucide-react'
 import React, { MutableRefObject, useRef } from 'react'
 
 interface IBasicDropdownProps {
@@ -118,7 +118,7 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
               >
                 {defaultValue?.label || placeholder}
               </p>
-              <ArrowDown2
+              <ChevronDown
                 className={cn(
                   'text-neutral-600 transition-all duration-200 size-4',
                   open && '-rotate-180',
@@ -192,7 +192,7 @@ const MenuList = React.memo(function MenuList({
         <div className="border-b border-neutral-200 px-3.5 py-3">
           {searchable ? (
             <div className="flex items-center gap-x-2 rounded-lg">
-              <SearchNormal1
+              <Search
                 size="16"
                 className="flex items-center justify-center text-neutral-800"
               />

@@ -40,3 +40,24 @@ interface IDropdown {
   label: string
   value: string
 }
+
+interface ICountryList {
+  id: string
+  name: string
+  flag: string
+  isoAlpha2: string
+  phoneCode: string
+}
+
+interface IBasicDropdown extends IDropdown {
+  leftIcon?: React | string
+  rightIcon?: React | string
+  shortcut?: React
+  description?: string
+}
+
+interface IMultiSelectOptions {
+  id: number
+  label: string
+  value: string
+}

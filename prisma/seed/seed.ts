@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { compliances, objectives, Processes } from './utils/GlobalSeed'
 import { organization } from './utils/OrganizationSeed' // Array of organizations to seed
 
 const prisma = new PrismaClient()
@@ -8,12 +9,46 @@ async function main() {
 
   // Clear existing data
   console.log('Clearing existing data...')
+  await prisma.kPIProcess.deleteMany() // Clear KPIProcess
+  await prisma.kPICompliance.deleteMany() // Clear KPICompliance
+  await prisma.kPIObjective.deleteMany() // Clear KPIObjective
+  await prisma.kPI.deleteMany() // Clear KPIs
+
   await prisma.department.deleteMany() // Clear departments first
   await prisma.organization.deleteMany() // Then clear organizations
+  await prisma.objective.deleteMany() // Clear objectives
+  await prisma.process.deleteMany() // Clear processes
+  await prisma.compliance.deleteMany() // Clear compliances
 
+  // Seed organizations
+  console.log('Seeding organizations...')
   for (const org of organization) {
     await prisma.organization.create({
       data: org,
+    })
+  }
+
+  // Seed objectives
+  console.log('Seeding objectives...')
+  for (const objective of objectives) {
+    await prisma.objective.create({
+      data: objective,
+    })
+  }
+
+  // Seed processes
+  console.log('Seeding processes...')
+  for (const process of Processes) {
+    await prisma.process.create({
+      data: process,
+    })
+  }
+
+  // Seed compliances
+  console.log('Seeding compliances...')
+  for (const compliance of compliances) {
+    await prisma.compliance.create({
+      data: compliance,
     })
   }
 

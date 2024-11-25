@@ -12,4 +12,7 @@ export const BodySchema = z.object({
   frequency: z.string(),
   type: z.string(),
   calibration: z.string(),
+  KPIObjective: z.array(z.number()).optional(),
+  KPICompliance: z.array(z.number()).optional(),
+  KPIProcess: z.array(z.number()).optional(),
 })
