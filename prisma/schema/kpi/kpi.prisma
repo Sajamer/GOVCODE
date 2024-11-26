@@ -1,6 +1,7 @@
 model KPI {
   id                     Int     @id @default(autoincrement())
   name                   String
+  code                   String
   description            String
   owner                  String
   measurementNumerator   String?

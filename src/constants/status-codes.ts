@@ -1,0 +1,5 @@
+export const STATUS_CODES = {
+  SUCCESS: 200,
+  CREATED: 201,
+  SERVER_ERROR: 500,
+}

@@ -1,29 +1,13 @@
 'use server'
 
 import prisma from '@/lib/db_connection'
-import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
+import { IKpiManipulator } from '@/types/kpi'
 import { sendError } from '../utils'
-
-interface KPIData {
-  name: string
-  description: string
-  owner: string
-  measurementNumerator?: string
-  measurementDenominator?: string
-  measurementNumber?: string
-  resources?: string
-  unit: Units
-  frequency: Frequency
-  type: KPIType
-  calibration: Calibration
-  departmentId: number
-}
 
 export const getAllKPI = async (searchParams: Record<string, string>) => {
   try {
     const params = searchParams
 
-    const department = 18 // this needs to be a property in user.
     const limit = +(params.limit ?? '10')
     const page = +(params.page ?? '1')
 
@@ -32,9 +16,6 @@ export const getAllKPI = async (searchParams: Record<string, string>) => {
     const skip = (page - 1) * limit
 
     const kpis = await prisma.kPI.findMany({
-      where: {
-        departmentId: department,
-      },
       skip,
       take: limit,
     })
@@ -46,11 +27,12 @@ export const getAllKPI = async (searchParams: Record<string, string>) => {
   }
 }
 
-export const createKPI = async (data: KPIData) => {
+export const createKPI = async (data: IKpiManipulator) => {
   try {
     const newKPI = await prisma.kPI.create({
       data: {
         name: data.name,
+        code: data.code,
         description: data.description,
         owner: data.owner,
         measurementNumerator: data.measurementNumerator,
@@ -62,17 +44,38 @@ export const createKPI = async (data: KPIData) => {
         type: data.type,
         calibration: data.calibration,
         departmentId: data.departmentId,
+        KPICompliance: {
+          create: data.compliances.map((id) => ({
+            compliance: {
+              connect: { id },
+            },
+          })),
+        },
+        KPIObjective: {
+          create: data.objectives.map((id) => ({
+            objective: {
+              connect: { id },
+            },
+          })),
+        },
+        KPIProcess: {
+          create: data.processes.map((id) => ({
+            process: {
+              connect: { id },
+            },
+          })),
+        },
       },
     })
     return newKPI
   } catch (error) {
-    console.error('Error creating KPI:', error)
     sendError(error)
+    console.error('Error creating KPI:', error)
     throw new Error('Error creating KPI')
   }
 }
 
-export const updateKPI = async (id: number, data: KPIData) => {
+export const updateKPI = async (id: number, data: IKpiManipulator) => {
   try {
     const updatedKPI = await prisma.kPI.update({
       where: { id },

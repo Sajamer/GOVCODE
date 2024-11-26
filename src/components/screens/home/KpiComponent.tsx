@@ -17,7 +17,7 @@ const KpiComponent: FC<IKpiComponentProps> = ({ data }) => {
       sheetName={'kpis'}
       data={data}
       columns={[
-        { key: 'id', isSortable: true, type: 'number' },
+        { key: 'code', isSortable: true, type: 'string' },
         { key: 'name', isSortable: false, type: 'string' },
         { key: 'calibration', isSortable: false, type: 'string' },
         { key: 'description', isSortable: false, type: 'string' },

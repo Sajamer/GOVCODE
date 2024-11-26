@@ -1,18 +1,22 @@
 import { z } from 'zod'
 
-export const BodySchema = z.object({
-  name: z.string().min(5),
-  description: z.string().min(5),
-  owner: z.string().min(5),
-  measurementNumerator: z.string().optional(),
-  measurementDenominator: z.string().optional(),
-  measurementNumber: z.string().optional(),
-  resources: z.string().optional(),
-  unit: z.string(),
-  frequency: z.string(),
-  type: z.string(),
-  calibration: z.string(),
-  KPIObjective: z.array(z.number()).optional(),
-  KPICompliance: z.array(z.number()).optional(),
-  KPIProcess: z.array(z.number()).optional(),
+const { object, string, number, array } = z
+
+export const BodySchema = object({
+  code: string().min(3),
+  name: string().min(5),
+  description: string().min(5),
+  owner: string().min(5),
+  measurementNumerator: string().optional(),
+  measurementDenominator: string().optional(),
+  measurementNumber: string().optional(),
+  resources: string().optional(),
+  unit: string(),
+  frequency: string(),
+  type: string(),
+  calibration: string(),
+  departmentId: number(),
+  objectives: array(number()).optional(),
+  compliances: array(number()).optional(),
+  processes: array(number()).optional(),
 })

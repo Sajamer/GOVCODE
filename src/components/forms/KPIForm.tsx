@@ -1,13 +1,19 @@
+'use client'
+
 import {
   calibrationOptions,
   frequencyOptions,
   kpiTypeOptions,
   unitOptions,
 } from '@/constants/global-constants'
+import { toast } from '@/hooks/use-toast'
+import { createKPI } from '@/lib/actions/kpiActions'
+import { axiosGet } from '@/lib/axios'
 import { BodySchema } from '@/schema/kpi.schema'
 import { useSheetStore } from '@/stores/sheet-store'
-import { IKpiManipulator } from '@/types/kpi'
+import { IKpiFormDropdownData, IKpiManipulator } from '@/types/kpi'
 import { Calibration, Frequency, KPI, KPIType, Units } from '@prisma/client'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
@@ -28,6 +34,46 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
 
+  const { data: departmentData } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => axiosGet<IDepartment[]>('department'),
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const { data: multipleOptionsDatabaseValues } = useQuery({
+    queryKey: ['multipleOptionsDatabaseValues'],
+    queryFn: () => axiosGet<IKpiFormDropdownData>('kpi'),
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const departmentOptions = departmentData?.data?.map((option) => ({
+    id: String(option.id),
+    label: option.name,
+    value: option.name,
+  }))
+
+  const objectivesOptions =
+    multipleOptionsDatabaseValues?.data?.objectives?.map((option) => ({
+      id: option.id,
+      label: option.name,
+      value: option.name,
+    }))
+
+  const complianceOptions =
+    multipleOptionsDatabaseValues?.data?.compliances?.map((option) => ({
+      id: option.id,
+      label: option.name,
+      value: option.name,
+    }))
+
+  const processOptions = multipleOptionsDatabaseValues?.data?.processes?.map(
+    (option) => ({
+      id: option.id,
+      label: option.name,
+      value: option.name,
+    }),
+  )
+
   const {
     values,
     errors,
@@ -40,6 +86,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     touched,
   } = useFormik<IKpiManipulator>({
     initialValues: {
+      code: kpiData?.code ?? '',
+      departmentId: kpiData?.departmentId ?? 0,
       owner: kpiData?.owner ?? '',
       name: kpiData?.name ?? '',
       description: kpiData?.description ?? '',
@@ -54,36 +102,39 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       frequency: kpiData?.frequency ?? Frequency.MONTHLY,
       type: kpiData?.type ?? KPIType.CUMULATIVE,
       calibration: kpiData?.calibration ?? Calibration.INCREASING,
-      KPIObjective: [], // kpiData?. ?? [],
-      KPICompliance: [], // kpiData?.KPICompliance ?? [],
-      KPIProcess: [], // kpiData?.KPIProcess ?? [],
+      objectives: [], // kpiData?.KPIObjective?.map((obj) => obj.objectiveId) ?? [],
+      compliances: [], // kpiData?.KPICompliance ?? [],
+      processes: [], // kpiData?.KPIProcess ?? [],
     },
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(BodySchema),
     onSubmit: () => {
       // isEdit ? editMutation(kpiData.id) : addMutation()
+      addMutation()
     },
   })
 
-  // const { mutate: addMutation, isPending: addLoading } = useMutation({
-  //   mutationFn: () => {},
-  //   // axiosPost<ICourseManipulator, ICourseManipulator>('courses', values),
-  //   onSuccess: () => {
-  //     toast({
-  //       variant: 'success',
-  //       title: 'Success',
-  //       description: `${values.name} successfully added`,
-  //     })
-  //     closeSheet()
-  //   },
-  //   onError: (error: AxiosErrorType) => {
-  //     toast({
-  //       variant: 'destructive',
-  //       title: 'Resend Failed',
-  //       description: error?.message,
-  //     })
-  //   },
-  // })
+  console.log('values: ', values)
+
+  const { mutate: addMutation, isPending: addLoading } = useMutation({
+    mutationFn: async () => await createKPI(values),
+    // axiosPost<ICourseManipulator, ICourseManipulator>('courses', values),
+    onSuccess: () => {
+      toast({
+        variant: 'success',
+        title: 'Success',
+        description: `${values.name} successfully added`,
+      })
+      closeSheet()
+    },
+    onError: (error: AxiosErrorType) => {
+      toast({
+        variant: 'destructive',
+        title: 'Resend Failed',
+        description: error?.message,
+      })
+    },
+  })
 
   // const { mutate: editMutation, isPending: editLoading } = useMutation({
   //   mutationFn: (id: number) => {},
@@ -105,25 +156,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   //   },
   // })
 
-  const isLoading = false // addLoading || editLoading
-
-  const test = [
-    {
-      id: 1,
-      value: 'next.js',
-      label: 'Next.js',
-    },
-    {
-      id: 2,
-      value: 'sveltekit',
-      label: 'SvelteKit',
-    },
-    {
-      id: 3,
-      value: 'nuxt.js',
-      label: 'Nuxt.js',
-    },
-  ]
+  const isLoading = addLoading // || editLoading
 
   return (
     <form
@@ -131,6 +164,28 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       className="styleScrollbar flex size-full max-h-full flex-col justify-between overflow-y-auto"
     >
       <div className="flex flex-col items-center justify-center gap-4 ">
+        <LabeledInput
+          label="KPI Code"
+          placeholder="Enter KPI Code"
+          {...getFieldProps('code')}
+          error={touched.code && errors.code ? errors.code : ''}
+        />
+        <BasicDropdown
+          data={departmentOptions ?? []}
+          label="Department"
+          triggerStyle="h-11"
+          placeholder="Select department"
+          defaultValue={departmentOptions?.find(
+            (option) => +option.id === values.departmentId,
+          )}
+          error={
+            errors.departmentId && touched.departmentId
+              ? errors.departmentId
+              : ''
+          }
+          {...getFieldProps('departmentId')}
+          callback={(option) => setFieldValue('departmentId', +option.id)}
+        />
         <LabeledInput
           label="KPI Owner"
           placeholder="Enter KPI Owner"
@@ -169,14 +224,14 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
                   setValues((prev) => ({
                     ...prev,
                     measurement_equation: true,
-                    measurementNumber: undefined,
+                    measurementNumber: '',
                   }))
                 } else {
                   setValues((prev) => ({
                     ...prev,
                     measurement_equation: false,
-                    measurementDenominator: undefined,
-                    measurementNumerator: undefined,
+                    measurementDenominator: '',
+                    measurementNumerator: '',
                   }))
                 }
               }}
@@ -272,11 +327,88 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           callback={(option) => setFieldValue('calibration', option.value)}
         />
         <MultiSelect
+          instanceId={'objectives'}
           label={'Objectives'}
-          placeholder="select all objectives needed"
-          data={test}
+          placeholder="select objectives"
+          data={objectivesOptions ?? []}
           hasArrow
           isMulti
+          name="objectives"
+          defaultValue={objectivesOptions?.filter((option) =>
+            values.objectives.includes(option.id),
+          )}
+          error={
+            touched.objectives && errors.objectives
+              ? typeof errors.objectives === 'string'
+                ? errors.objectives
+                : String(errors.objectives)
+              : undefined
+          }
+          onBlur={handleBlur}
+          onChange={(newValue) => {
+            const selectedOptions = newValue as IMultiSelectOptions[]
+
+            setFieldValue(
+              'objectives',
+              selectedOptions.map((option) => option.id),
+            )
+          }}
+        />
+        <MultiSelect
+          instanceId={'compliances'}
+          label={'compliances'}
+          placeholder="select compliances"
+          data={complianceOptions ?? []}
+          hasArrow
+          isMulti
+          name="compliances"
+          defaultValue={complianceOptions?.filter((option) =>
+            values.compliances.includes(option.id),
+          )}
+          error={
+            touched.compliances && errors.compliances
+              ? typeof errors.compliances === 'string'
+                ? errors.compliances
+                : String(errors.compliances)
+              : undefined
+          }
+          onBlur={handleBlur}
+          onChange={(newValue) => {
+            const selectedOptions = newValue as IMultiSelectOptions[]
+
+            setFieldValue(
+              'compliances',
+              selectedOptions.map((option) => option.id),
+            )
+          }}
+        />
+        <MultiSelect
+          instanceId={'processes'}
+          label={'processes'}
+          placeholder="select processes"
+          data={processOptions ?? []}
+          hasArrow
+          isMulti
+          name="processes"
+          defaultValue={processOptions?.filter((option) =>
+            values.processes.includes(option.id),
+          )}
+          error={
+            touched.processes && errors.processes
+              ? typeof errors.processes === 'string'
+                ? errors.processes
+                : String(errors.processes)
+              : undefined
+          }
+          onBlur={handleBlur}
+          onChange={(newValue) => {
+            const selectedOptions = newValue as IMultiSelectOptions[]
+
+            setFieldValue(
+              'processes',
+              selectedOptions.map((option) => option.id),
+            )
+          }}
         />
         <LabeledInput
           label="Information source"

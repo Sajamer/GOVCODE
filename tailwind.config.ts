@@ -11,6 +11,28 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        neutral: {
+          0: 'var(--neutral-0)',
+          50: 'var(--neutral-50)',
+          100: 'var(--neutral-100)',
+          200: 'var(--neutral-200)',
+          300: 'var(--neutral-300)',
+          400: 'var(--neutral-400)',
+          500: 'var(--neutral-500)',
+          600: 'var(--neutral-600)',
+          700: 'var(--neutral-700)',
+          800: 'var(--neutral-800)',
+          900: 'var(--neutral-900)',
+          1000: 'var(--neutral-1000)',
+          alpha_100: 'var(--neutral-alpha-100)',
+          alpha_200: 'var(--neutral-alpha-200)',
+        },
+        destructive: {
+          DEFAULT: 'var(--destructive)',
+          disabled: 'var(--destructive-disabled)',
+          light: 'var(--destructive-light)',
+          foreground: 'var(--destructive-foreground)',
+        },
         brand: {
           '100': '#EA6365',
           DEFAULT: '#FA7275',
@@ -56,10 +78,6 @@ const config: Config = {
         accent: {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

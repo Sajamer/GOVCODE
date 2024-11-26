@@ -1,6 +1,7 @@
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import { ArrowDown2, CloseCircle } from 'iconsax-react'
+import { ArrowDown2 } from 'iconsax-react'
+import { X } from 'lucide-react'
 import Image from 'next/image'
 import React from 'react'
 import Select, {
@@ -195,7 +196,7 @@ const MultiValueRemove = (
 ): React.JSX.Element => {
   return (
     <components.MultiValueRemove {...props}>
-      <CloseCircle variant="Bulk" className="size-5 text-neutral-800" />
+      <X className="size-4 text-neutral-800" />
     </components.MultiValueRemove>
   )
 }
