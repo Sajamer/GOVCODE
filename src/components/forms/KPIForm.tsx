@@ -47,7 +47,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
 
   const { data: multipleOptionsDatabaseValues } = useQuery({
     queryKey: ['multipleOptionsDatabaseValues'],
-    queryFn: () => axiosGet<IKpiFormDropdownData>('kpi'),
+    queryFn: () => axiosGet<IKpiFormDropdownData>('kpis'),
     staleTime: 1000 * 60 * 5,
   })
 
