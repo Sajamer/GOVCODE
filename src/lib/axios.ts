@@ -74,6 +74,7 @@ export const axiosDelete = async <T>(path: string): Promise<IResponse<T>> => {
     const response = await api.delete(path)
 
     const data = response?.data as IResponse<T>
+
     if (data && data?.status === 500) {
       throw new Error(data?.message)
     }

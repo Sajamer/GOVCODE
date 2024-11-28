@@ -52,6 +52,10 @@ export const getAllKPI = async (searchParams?: Record<string, string>) => {
       },
     })
 
+    if (!rawKpis) {
+      return []
+    }
+
     // Transform the data
     const kpis = rawKpis.map(
       ({ KPICompliance, KPIObjective, KPIProcess, ...rest }) => ({

@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FC } from 'react'
 
 const KpiComponent: FC = () => {
-  const { data = [] } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['kpis'],
     queryFn: async () => {
       await getAllKPI()
@@ -15,13 +15,16 @@ const KpiComponent: FC = () => {
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
 
+  const kpiData = data || []
+
   return (
     <GenericComponent<IKpiResponse>
       title={'Kpis'}
       description={'Manage all the kpi available on the platform.'}
       entityKey="id"
       sheetName={'kpis'}
-      data={data ?? []}
+      data={kpiData}
+      isLoading={isLoading}
       columns={[
         { key: 'code', isSortable: true, type: 'string' },
         { key: 'name', isSortable: false, type: 'string' },

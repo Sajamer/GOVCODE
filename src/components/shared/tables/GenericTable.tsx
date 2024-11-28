@@ -6,7 +6,7 @@ import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { IKpiResponse } from '@/types/kpi'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChartSpline, Plus } from 'lucide-react'
+import { ChartSpline, Loader2, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../headers/PageHeader'
 import ConfirmationDialog from '../modals/ConfirmationDialog'
@@ -21,6 +21,7 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
   entityKey: keyof T
   sheetName: SheetNames
   data: T[]
+  isLoading?: boolean
   columns: Array<{
     key: keyof T | 'actions'
     isSortable: boolean
@@ -34,6 +35,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   entityKey,
   sheetName,
   columns,
+  isLoading,
   data,
 }: IGenericTableProps<T>): JSX.Element => {
   const queryClient = useQueryClient()
@@ -45,12 +47,6 @@ const GenericComponent = <T extends Record<string, unknown>>({
 
   const [openConfirmation, setOpenConfirmation] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-
-  // const { data, isLoading } = useQuery({
-  //   queryKey: [sheetName],
-  //   queryFn: () => axiosGet<T[]>(`${sheetName as string}`),
-  //   staleTime: 1000 * 60 * 5,
-  // })
 
   const entityData = useMemo(() => data ?? [], [data])
 
@@ -64,7 +60,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   )
 
   const { mutate, isPending } = useMutation({
-    mutationFn: () => axiosDelete(`${sheetName}/` + selectedId),
+    mutationFn: () => axiosDelete(`${sheetName}/${selectedId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [sheetName as string] })
       setOpenConfirmation(false)
@@ -141,27 +137,24 @@ const GenericComponent = <T extends Record<string, unknown>>({
           </Button>
         </PageHeader>
         <div className="flex w-full flex-col gap-[1.88rem]">
-          {
-            //   isLoading ? (
-            //   <div className="flex min-h-[200px] w-full items-center justify-center">
-            //     <Loader2 className="size-16 animate-spin" />
-            //   </div>
-            // ) :
-            entityData.length > 0 ? (
-              <TableComponent
-                data={values}
-                headers={headers}
-                hasFooter
-                addProps={{
-                  label: `Add ${title}`,
-                  sheetToOpen: sheetName as SheetNames,
-                }}
-                tableActions={tableActions}
-              />
-            ) : (
-              <NoResultFound label={`No ${title} yet.`} />
-            )
-          }
+          {isLoading ? (
+            <div className="flex min-h-[200px] w-full items-center justify-center">
+              <Loader2 className="size-16 animate-spin" />
+            </div>
+          ) : entityData.length > 0 ? (
+            <TableComponent
+              data={values}
+              headers={headers}
+              hasFooter
+              addProps={{
+                label: `Add ${title}`,
+                sheetToOpen: sheetName as SheetNames,
+              }}
+              tableActions={tableActions}
+            />
+          ) : (
+            <NoResultFound label={`No ${title} yet.`} />
+          )}
         </div>
       </div>
       <ConfirmationDialog
