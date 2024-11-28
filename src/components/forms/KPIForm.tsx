@@ -7,13 +7,17 @@ import {
   unitOptions,
 } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
-import { createKPI } from '@/lib/actions/kpiActions'
+import { createKPI, updateKPI } from '@/lib/actions/kpiActions'
 import { axiosGet } from '@/lib/axios'
 import { BodySchema } from '@/schema/kpi.schema'
 import { useSheetStore } from '@/stores/sheet-store'
-import { IKpiFormDropdownData, IKpiManipulator } from '@/types/kpi'
-import { Calibration, Frequency, KPI, KPIType, Units } from '@prisma/client'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import {
+  IKpiFormDropdownData,
+  IKpiManipulator,
+  IKpiResponse,
+} from '@/types/kpi'
+import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
@@ -25,11 +29,12 @@ import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 
 interface IKpiFormProps {
-  data?: KPI
+  data?: IKpiResponse
 }
 
 const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const isEdit = !!kpiData
+  const queryClient = useQueryClient()
 
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
@@ -102,24 +107,30 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       frequency: kpiData?.frequency ?? Frequency.MONTHLY,
       type: kpiData?.type ?? KPIType.CUMULATIVE,
       calibration: kpiData?.calibration ?? Calibration.INCREASING,
-      objectives: [], // kpiData?.KPIObjective?.map((obj) => obj.objectiveId) ?? [],
-      compliances: [], // kpiData?.KPICompliance ?? [],
-      processes: [], // kpiData?.KPIProcess ?? [],
+      objectives: kpiData?.objectives?.map((obj) => obj.id) ?? [],
+      compliances: kpiData?.compliances?.map((obj) => obj.id) ?? [],
+      processes: kpiData?.processes?.map((obj) => obj.id) ?? [],
     },
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(BodySchema),
     onSubmit: () => {
-      // isEdit ? editMutation(kpiData.id) : addMutation()
-      addMutation()
+      if (isEdit) {
+        editMutation(kpiData.id)
+      } else {
+        addMutation()
+      }
     },
   })
 
-  console.log('values: ', values)
-
   const { mutate: addMutation, isPending: addLoading } = useMutation({
     mutationFn: async () => await createKPI(values),
-    // axiosPost<ICourseManipulator, ICourseManipulator>('courses', values),
-    onSuccess: () => {
+    onSuccess: (newKPI) => {
+      queryClient.setQueryData(
+        ['kpis'],
+        (oldData: IKpiManipulator[] | undefined) => {
+          return oldData ? [...oldData, newKPI] : [newKPI]
+        },
+      )
       toast({
         variant: 'success',
         title: 'Success',
@@ -136,27 +147,43 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     },
   })
 
-  // const { mutate: editMutation, isPending: editLoading } = useMutation({
-  //   mutationFn: (id: number) => {},
-  //   // axiosPut<ICourseManipulator, ICourseManipulator>('courses/' + id, values),
-  //   onSuccess: () => {
-  //     toast({
-  //       variant: 'success',
-  //       title: 'Success',
-  //       description: `${values.name} successfully updated`,
-  //     })
-  //     closeSheet()
-  //   },
-  //   onError: (error: AxiosErrorType) => {
-  //     toast({
-  //       variant: 'destructive',
-  //       title: 'Resend Failed',
-  //       description: error?.message,
-  //     })
-  //   },
-  // })
+  const { mutate: editMutation, isPending: editLoading } = useMutation({
+    mutationFn: async (id: number) => await updateKPI(id, values),
+    onSuccess: (updatedKPI, id) => {
+      queryClient.setQueryData(
+        ['kpis'],
+        (oldData: IKpiResponse[] | undefined) => {
+          if (!oldData) return []
 
-  const isLoading = addLoading // || editLoading
+          return oldData.map((kpi) => {
+            if (kpi.id === id) {
+              return {
+                ...kpi,
+                ...updatedKPI,
+              }
+            }
+            return kpi
+          })
+        },
+      )
+
+      toast({
+        variant: 'success',
+        title: 'Success',
+        description: `${values.code} successfully updated`,
+      })
+      closeSheet()
+    },
+    onError: (error: AxiosErrorType) => {
+      toast({
+        variant: 'destructive',
+        title: 'Resend Failed',
+        description: error?.message,
+      })
+    },
+  })
+
+  const isLoading = addLoading || editLoading
 
   return (
     <form

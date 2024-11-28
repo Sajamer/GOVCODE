@@ -2,6 +2,11 @@
 import KpiComponent from '@/components/screens/home/KpiComponent'
 import { routing } from '@/i18n/routing'
 import { getAllKPI } from '@/lib/actions/kpiActions'
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from '@tanstack/react-query'
 import { getMessages } from 'next-intl/server'
 
 export function generateStaticParams() {
@@ -22,13 +27,22 @@ export async function generateMetadata({
   }
 }
 
+const queryClient = new QueryClient()
+
 export default async function Home(data: {
   searchParams: Promise<Record<string, string>>
 }) {
   // const user = await auth()
   const params = await data.searchParams
 
-  const kpis = await getAllKPI(params)
+  await queryClient.prefetchQuery({
+    queryKey: ['kpis'],
+    queryFn: async () => await getAllKPI(params),
+  })
 
-  return <KpiComponent data={kpis} />
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <KpiComponent />
+    </HydrationBoundary>
+  )
 }

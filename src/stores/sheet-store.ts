@@ -4,8 +4,7 @@ import { combine } from 'zustand/middleware'
 export type SheetNames = 'kpis'
 
 type SheetProps = {
-  parentId?: string
-  childId?: string
+  rowId?: string
   sheetToOpen: SheetNames | undefined
   isEdit?: boolean
   isConfirmationModalOpen?: boolean

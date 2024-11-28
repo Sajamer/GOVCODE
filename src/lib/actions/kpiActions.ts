@@ -4,22 +4,65 @@ import prisma from '@/lib/db_connection'
 import { IKpiManipulator } from '@/types/kpi'
 import { sendError } from '../utils'
 
-export const getAllKPI = async (searchParams: Record<string, string>) => {
+export const getAllKPI = async (searchParams?: Record<string, string>) => {
   try {
-    const params = searchParams
+    const params = searchParams || {}
 
-    const limit = +(params.limit ?? '10')
-    const page = +(params.page ?? '1')
+    const limit = +(params?.limit ?? '10')
+    const page = +(params?.page ?? '1')
 
     // we need to use skip and take in prisma to get the data
 
     const skip = (page - 1) * limit
 
-    const kpis = await prisma.kPI.findMany({
+    const rawKpis = await prisma.kPI.findMany({
       skip,
       take: limit,
+      include: {
+        KPICompliance: {
+          select: {
+            compliance: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        KPIObjective: {
+          select: {
+            objective: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        KPIProcess: {
+          select: {
+            process: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
     })
-    return kpis
+
+    // Transform the data
+    const kpis = rawKpis.map(
+      ({ KPICompliance, KPIObjective, KPIProcess, ...rest }) => ({
+        ...rest,
+        compliances: KPICompliance.map(({ compliance }) => compliance),
+        objectives: KPIObjective.map(({ objective }) => objective),
+        processes: KPIProcess.map(({ process }) => process),
+      }),
+    )
+
+    return kpis ?? []
   } catch (error) {
     console.error('Error fetching KPIs:', error)
     sendError(error)
@@ -81,6 +124,7 @@ export const updateKPI = async (id: number, data: IKpiManipulator) => {
       where: { id },
       data: {
         name: data.name,
+        code: data.code,
         description: data.description,
         owner: data.owner,
         measurementNumerator: data.measurementNumerator,
@@ -92,6 +136,30 @@ export const updateKPI = async (id: number, data: IKpiManipulator) => {
         type: data.type,
         calibration: data.calibration,
         departmentId: data.departmentId,
+        KPICompliance: {
+          deleteMany: {},
+          create: data.compliances.map((id) => ({
+            compliance: {
+              connect: { id },
+            },
+          })),
+        },
+        KPIObjective: {
+          deleteMany: {},
+          create: data.objectives.map((id) => ({
+            objective: {
+              connect: { id },
+            },
+          })),
+        },
+        KPIProcess: {
+          deleteMany: {},
+          create: data.processes.map((id) => ({
+            process: {
+              connect: { id },
+            },
+          })),
+        },
       },
     })
     return updatedKPI

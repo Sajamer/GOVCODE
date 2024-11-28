@@ -25,7 +25,7 @@ interface ITableComponentProps<T extends object> {
   addProps?: {
     sheetToOpen: SheetNames
     label: string
-    parentId?: string
+    rowId?: string
   }
   data: Array<ITableRow<T>> // Array of ITableRow objects constrained by T
   headers: Array<ITableHeader<T>>
@@ -233,7 +233,7 @@ const TableComponent = <T extends object>({
                       onClick={() => {
                         openSheet({
                           sheetToOpen: addProps.sheetToOpen,
-                          parentId: addProps.parentId,
+                          rowId: addProps.rowId,
                           isEdit: false,
                         })
                       }}

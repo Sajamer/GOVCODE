@@ -2,6 +2,16 @@ import { z } from 'zod'
 
 const { object, string, number, array } = z
 
+export const ParamsSchema = z.object({
+  id: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      const parsed = parseInt(val, 10)
+      return isNaN(parsed) ? undefined : parsed
+    }
+    return val
+  }, z.number().int().positive().optional()),
+})
+
 export const BodySchema = object({
   code: string().min(3),
   name: string().min(5),

@@ -30,8 +30,7 @@ const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
                 onClick={() =>
                   openSheet({
                     sheetToOpen: sheetName,
-                    parentId: rowId,
-                    childId: rowId,
+                    rowId,
                     isEdit: true,
                   })
                 }

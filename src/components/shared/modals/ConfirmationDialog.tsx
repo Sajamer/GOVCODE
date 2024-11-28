@@ -1,8 +1,13 @@
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { InfoCircle, Notification, TickCircle } from 'iconsax-react'
-import { FC, useEffect, useRef } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { useSheetStore } from '@/stores/sheet-store'
+import { Bell, CircleCheck, Info } from 'lucide-react'
+import { FC, useEffect, useRef } from 'react'
 
 export type ConfirmationType = 'default' | 'warning' | 'success' | 'destructive'
 
@@ -34,25 +39,25 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
       case 'warning':
         return (
           <div className="flex size-12 items-center justify-center rounded-full bg-amber-400">
-            <InfoCircle variant="Bulk" className="text-amber-600" />
+            <Info className="text-amber-600" />
           </div>
         )
       case 'success':
         return (
           <div className="flex size-12 items-center justify-center rounded-full bg-success/20">
-            <TickCircle variant="Bulk" className="text-success" />
+            <CircleCheck className="text-success" />
           </div>
         )
       case 'destructive':
         return (
-          <div className="flex size-12 items-center justify-center rounded-full bg-destructive/20">
-            <InfoCircle variant="Bulk" className="text-destructive" />
+          <div className="bg-destructive/20 flex size-12 items-center justify-center rounded-full">
+            <Info className="text-destructive" />
           </div>
         )
       default:
         return (
           <div className="flex size-12 items-center justify-center rounded-full bg-zinc-200">
-            <Notification variant="Bulk" className="text-zinc-800" />
+            <Bell className="text-zinc-800" />
           </div>
         )
     }
@@ -77,11 +82,13 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
         <div className="flex w-full flex-col items-center gap-5">
           {iconToShow(type)}
           <div className="flex w-full flex-col items-start justify-center gap-2 text-center">
-            <h3 className="w-full text-2xl font-medium leading-[1.8rem] text-zinc-900">
+            <DialogTitle className="w-full text-2xl font-medium leading-[1.8rem] text-zinc-900">
               {title}
-            </h3>
+            </DialogTitle>
             {subTitle && (
-              <p className="w-full text-sm text-zinc-500">{subTitle}</p>
+              <DialogDescription className="w-full text-sm text-zinc-500">
+                {subTitle}
+              </DialogDescription>
             )}
           </div>
         </div>

@@ -1,6 +1,6 @@
-import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
+import { Calibration, Frequency, KPI, KPIType, Units } from '@prisma/client'
 
-export interface IMultiSelectValues {
+export interface IDatabaseStaticData {
   id: number
   name: string
 }
@@ -9,9 +9,9 @@ interface Ids {
   id: number
 }
 export interface IKpiFormDropdownData {
-  objectives: IMultiSelectValues[]
-  compliances: IMultiSelectValues[]
-  processes: IMultiSelectValues[]
+  objectives: IDatabaseStaticData[]
+  compliances: IDatabaseStaticData[]
+  processes: IDatabaseStaticData[]
 }
 
 export interface IKpiManipulator {
@@ -34,4 +34,11 @@ export interface IKpiManipulator {
   objectives: number[]
   compliances: number[]
   processes: number[]
+}
+
+export interface IKpiResponse extends KPI {
+  objectives: IDatabaseStaticData[]
+  compliances: IDatabaseStaticData[]
+  processes: IDatabaseStaticData[]
+  [key: string]: unknown
 }

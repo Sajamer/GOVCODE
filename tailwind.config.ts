@@ -31,6 +31,7 @@ const config: Config = {
           DEFAULT: 'var(--destructive)',
           disabled: 'var(--destructive-disabled)',
           light: 'var(--destructive-light)',
+          hover: 'var(--destructive-hover)',
           foreground: 'var(--destructive-foreground)',
         },
         brand: {

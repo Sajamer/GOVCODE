@@ -4,7 +4,7 @@ import { toast } from '@/hooks/use-toast'
 import { axiosDelete } from '@/lib/axios'
 import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
-import { KPI } from '@prisma/client'
+import { IKpiResponse } from '@/types/kpi'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChartSpline, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -38,7 +38,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
 }: IGenericTableProps<T>): JSX.Element => {
   const queryClient = useQueryClient()
 
-  const { actions, searchTerm, sheetToOpen, isEdit, childId } = useSheetStore(
+  const { actions, searchTerm, sheetToOpen, isEdit, rowId } = useSheetStore(
     (store) => store,
   )
   const { openSheet, setSearchTerm } = actions
@@ -66,7 +66,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   const { mutate, isPending } = useMutation({
     mutationFn: () => axiosDelete(`${sheetName}/` + selectedId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [entityKey] })
+      queryClient.invalidateQueries({ queryKey: [sheetName as string] })
       setOpenConfirmation(false)
       toast({
         variant: 'success',
@@ -103,7 +103,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   )
 
   const singleEntityData = isEdit
-    ? (entityData.find((r) => r[entityKey] === childId) as T | undefined)
+    ? (entityData.find((r) => r[entityKey] === rowId) as T | undefined)
     : undefined
 
   return (
@@ -124,7 +124,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
             }
           >
             {sheetToOpen === 'kpis' ? (
-              <KPIForm data={singleEntityData as unknown as KPI} />
+              <KPIForm data={singleEntityData as unknown as IKpiResponse} />
             ) : null}
           </SheetComponent>
           <Button
