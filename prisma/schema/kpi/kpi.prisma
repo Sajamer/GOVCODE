@@ -23,6 +23,21 @@ model KPI {
   KPIObjective  KPIObjective[]
   KPICompliance KPICompliance[]
   KPIProcess    KPIProcess[]
+  KPITarget     KPITarget[]
+}
+
+model KPITarget {
+  id          Int      @id @default(autoincrement())
+  year        Int
+  period      String
+  targetValue Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  kpiId Int
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  @@unique([kpiId, year, period])
 }
 
 model Objective {
