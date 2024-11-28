@@ -117,7 +117,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
         >
           <SheetComponent
             sheetName={sheetName as SheetNames}
-            breadcrumb={['Admin Dashboard', title]}
+            breadcrumb={[title, 'kpi form']}
             title={isEdit ? `Edit ${title}` : `Add New ${title}`}
             subtitle={
               isEdit ? `Edit a ${title} here` : `Define new ${title} here`

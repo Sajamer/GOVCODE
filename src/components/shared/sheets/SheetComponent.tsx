@@ -5,6 +5,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetTitle,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -45,6 +46,9 @@ const SheetComponent: FC<ISheetComponentProps> = ({
         )}
       >
         <SheetTitle className="sr-only">Sheet</SheetTitle>
+        <SheetDescription className="sr-only">
+          Sheet Description
+        </SheetDescription>
         <div className="relative size-full pt-[3.125rem]">
           <div
             className={cn(

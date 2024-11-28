@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FC } from 'react'
 
 const KpiComponent: FC = () => {
-  const { data } = useQuery({
+  const { data = [] } = useQuery({
     queryKey: ['kpis'],
     queryFn: async () => {
       await getAllKPI()
@@ -30,9 +30,9 @@ const KpiComponent: FC = () => {
         { key: 'frequency', isSortable: false, type: 'string' },
         { key: 'unit', isSortable: false, type: 'string' },
         { key: 'type', isSortable: false, type: 'string' },
-        { key: 'measurementDenominator', isSortable: false, type: 'string' },
-        { key: 'measurementNumerator', isSortable: false, type: 'string' },
-        { key: 'measurementNumber', isSortable: false, type: 'string' },
+        // { key: 'measurementDenominator', isSortable: false, type: 'string' },
+        // { key: 'measurementNumerator', isSortable: false, type: 'string' },
+        // { key: 'measurementNumber', isSortable: false, type: 'string' },
       ]}
     />
   )
