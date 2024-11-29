@@ -1,7 +1,7 @@
 'use server'
 
 import prisma from '@/lib/db_connection'
-import { IKpiManipulator } from '@/types/kpi'
+import { IKpiManipulator, IKpiTargetManipulator } from '@/types/kpi'
 import { sendError } from '../utils'
 
 export const getAllKPI = async (searchParams?: Record<string, string>) => {
@@ -187,17 +187,20 @@ export const deleteKPI = async (id: number) => {
   }
 }
 
-export const getKPIById = async (id: number) => {
+export const getKPIByIdIncludingKPITarget = async (id: number) => {
   try {
     const kpi = await prisma.kPI.findUnique({
       where: { id },
-      include: {
-        department: true,
-        KPIObjective: true,
-        KPICompliance: true,
-        KPIProcess: true,
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        unit: true,
+        frequency: true,
+        KPITarget: true,
       },
     })
+
     if (!kpi) {
       throw new Error('KPI not found')
     }
@@ -206,5 +209,42 @@ export const getKPIById = async (id: number) => {
     console.error('Error fetching KPI by ID:', error)
     sendError(error)
     throw new Error('Error fetching KPI by ID')
+  }
+}
+
+export const saveKPITargets = async (targets: IKpiTargetManipulator[]) => {
+  console.log('Saving KPI targets:', targets)
+
+  try {
+    // await prisma.kPITarget.createMany({
+    //   data: targets,
+    //   skipDuplicates: true, // Prevent duplicate year-period combinations
+    // })
+    for (const target of targets) {
+      await prisma.kPITarget.upsert({
+        where: {
+          // Ensure the combination of `kpiId`, `year`, and `period` is unique
+          kpiId_year_period: {
+            kpiId: target.kpiId,
+            year: target.year,
+            period: target.period,
+          },
+        },
+        update: {
+          // Update the target value if the record exists
+          targetValue: target.targetValue,
+        },
+        create: {
+          // Create a new record if it doesn't exist
+          kpiId: target.kpiId,
+          year: target.year,
+          period: target.period,
+          targetValue: target.targetValue,
+        },
+      })
+    }
+  } catch (error) {
+    console.error('Error saving KPI targets:', error)
+    throw new Error('Failed to save KPI targets')
   }
 }

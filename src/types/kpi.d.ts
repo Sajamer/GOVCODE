@@ -1,4 +1,12 @@
-import { Calibration, Frequency, KPI, KPIType, Units } from '@prisma/client'
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+import {
+  Calibration,
+  Frequency,
+  KPI,
+  KPITarget,
+  KPIType,
+  Units,
+} from '@prisma/client'
 
 export interface IDatabaseStaticData {
   id: number
@@ -41,4 +49,18 @@ export interface IKpiResponse extends KPI {
   compliances: IDatabaseStaticData[]
   processes: IDatabaseStaticData[]
   [key: string]: unknown
+}
+
+interface IKpiTarget extends KPITarget {}
+
+export interface IKpiTargetResponse
+  extends Pick<KPI, 'id' | 'name' | 'code' | 'unit' | 'frequency'> {
+  KPITarget: IKpiTarget[]
+}
+
+export interface IKpiTargetManipulator {
+  kpiId: number
+  year: number
+  period: string
+  targetValue: number
 }

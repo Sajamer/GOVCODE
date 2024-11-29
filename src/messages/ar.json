@@ -5,7 +5,8 @@
     "about": "من نحن",
     "aboutTitle": "من نحن",
     "profile": "الملف الشخصي",
-    "profileTitle": "الملف الشخصي"
+    "profileTitle": "الملف الشخصي",
+    "kpiTarget": "أهداف المؤشر"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -30,7 +31,7 @@
     "forgotPassword": "نسيت كلمة المرور؟",
     "noAccount": "ليس لديك حساب؟",
     "haveAccount": "لديك حساب؟",
-    "enter your OTP code": "أدخل " ,
+    "enter your OTP code": "أدخل ",
     "enter OTP": "أدخل رمز التحقق",
     "resend otp": "إعادة إرسال الرابط"
   }

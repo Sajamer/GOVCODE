@@ -5,7 +5,8 @@
     "about": "About",
     "aboutTitle": "About page",
     "profile": "Profile",
-    "profileTitle": "Profile page"
+    "profileTitle": "Profile page",
+    "kpiTarget": "KPI Target"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",

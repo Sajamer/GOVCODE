@@ -15,7 +15,7 @@ import { FC } from 'react'
 const DashboardSidebar: FC = () => {
   const { isSidebarOpened, setIsSidebarOpened } = useAdminDashboard()
   const pathname = usePathname()
-  const isArabic = pathname.includes('ar')
+  const isArabic = pathname.includes('/ar')
   const normalizedPathname = isArabic
     ? pathname.replace(/^\/?ar\/?/, '') || '/'
     : pathname

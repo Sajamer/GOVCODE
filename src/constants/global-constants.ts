@@ -1,4 +1,5 @@
 import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
+import { periodsByFrequency } from './kpi-constants'
 
 export const kpiTypeOptions = [
   {
@@ -70,9 +71,19 @@ export const calibrationOptions = [
     label: 'Decreasing',
     value: Calibration.DECREASING,
   },
-  {
-    id: Calibration.NEUTRAL,
-    label: 'Neutral',
-    value: Calibration.NEUTRAL,
-  },
+  // {
+  //   id: Calibration.NEUTRAL,
+  //   label: 'Neutral',
+  //   value: Calibration.NEUTRAL,
+  // },
 ]
+
+export const frequencyMapping: Record<
+  Frequency,
+  keyof typeof periodsByFrequency
+> = {
+  [Frequency.MONTHLY]: 'monthly',
+  [Frequency.QUARTERLY]: 'quarterly',
+  [Frequency.SEMI_ANNUALLY]: 'semiannual',
+  [Frequency.ANNUALLY]: 'yearly',
+}
