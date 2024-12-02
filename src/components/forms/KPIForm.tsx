@@ -36,6 +36,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const isEdit = !!kpiData
   const queryClient = useQueryClient()
 
+  console.log('kpiData', kpiData)
+
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
 
@@ -318,6 +320,10 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           data={frequencyOptions ?? []}
           label="Frequency"
           triggerStyle="h-11"
+          disabled={
+            isEdit &&
+            (kpiData?.targets?.length > 0 || kpiData?.actualTargets?.length > 0)
+          }
           placeholder="Select default frequency"
           defaultValue={frequencyOptions?.find(
             (option) => option.value === values.frequency,

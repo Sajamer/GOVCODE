@@ -67,7 +67,7 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
   label,
   labelStyle,
   iconStyle,
-  disabled,
+  disabled = false,
   splitLabel,
   error,
   callback,
@@ -77,6 +77,8 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
   const triggerRef: MutableRefObject<HTMLButtonElement | null> = useRef(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { width } = useViewportSize()
+
+  console.log('disabled: ', disabled)
 
   return (
     <div
@@ -93,7 +95,14 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
           {label}
         </Label>
       )}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(newState) => {
+          if (!disabled) {
+            setOpen(newState)
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <div className="flex w-full items-center gap-2">
             <Button

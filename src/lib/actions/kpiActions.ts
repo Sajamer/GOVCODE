@@ -19,6 +19,8 @@ export const getAllKPI = async (searchParams?: Record<string, string>) => {
       skip,
       take: limit,
       include: {
+        KPITarget: true,
+        KPIActual: true,
         KPICompliance: {
           select: {
             compliance: {
@@ -58,11 +60,20 @@ export const getAllKPI = async (searchParams?: Record<string, string>) => {
 
     // Transform the data
     const kpis = rawKpis.map(
-      ({ KPICompliance, KPIObjective, KPIProcess, ...rest }) => ({
+      ({
+        KPICompliance,
+        KPIObjective,
+        KPIProcess,
+        KPIActual,
+        KPITarget,
+        ...rest
+      }) => ({
         ...rest,
         compliances: KPICompliance.map(({ compliance }) => compliance),
         objectives: KPIObjective.map(({ objective }) => objective),
         processes: KPIProcess.map(({ process }) => process),
+        targets: KPITarget,
+        actualTargets: KPIActual,
       }),
     )
 

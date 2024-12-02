@@ -9,6 +9,9 @@ import {
   Units,
 } from '@prisma/client'
 
+interface IKpiTarget extends KPITarget {}
+interface IKpiActualTarget extends KPIActual {}
+
 export interface IDatabaseStaticData {
   id: number
   name: string
@@ -49,14 +52,20 @@ export interface IKpiResponse extends KPI {
   objectives: IDatabaseStaticData[]
   compliances: IDatabaseStaticData[]
   processes: IDatabaseStaticData[]
+  targets: IKpiTarget[]
+  actualTargets: IKpiActualTarget[]
+
   [key: string]: unknown
 }
 
-interface IKpiTarget extends KPITarget {}
-interface IKpiActualTarget extends KPIActual {}
 export interface IKpiTargetResponse
   extends Pick<KPI, 'id' | 'name' | 'code' | 'unit' | 'frequency'> {
   KPITarget: IKpiTarget[]
+}
+
+export interface IKpiActualTargetResponse
+  extends Pick<KPI, 'id' | 'name' | 'code' | 'unit' | 'frequency'> {
+  KPIActual: IKpiActualTarget[]
 }
 
 export interface IKpiTargetManipulator {
@@ -64,9 +73,4 @@ export interface IKpiTargetManipulator {
   year: number
   period: string
   targetValue: number
-}
-
-export interface IKpiActualTargetResponse
-  extends Pick<KPI, 'id' | 'name' | 'code' | 'unit' | 'frequency'> {
-  KPIActual: IKpiActualTarget[]
 }
