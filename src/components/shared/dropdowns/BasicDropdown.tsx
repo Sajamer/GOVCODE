@@ -78,8 +78,6 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
   const containerRef = useRef<HTMLDivElement>(null)
   const { width } = useViewportSize()
 
-  console.log('disabled: ', disabled)
-
   return (
     <div
       className={cn(

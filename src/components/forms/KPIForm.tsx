@@ -36,8 +36,6 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const isEdit = !!kpiData
   const queryClient = useQueryClient()
 
-  console.log('kpiData', kpiData)
-
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
 
