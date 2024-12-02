@@ -54,7 +54,7 @@ const SignupForm = () => {
     setErrorMessage('')
 
     try {
-      await createAccount(form.getValues())
+      await createAccount(values)
     } catch {
       setErrorMessage('Failed to create account. Please try again.')
     } finally {
