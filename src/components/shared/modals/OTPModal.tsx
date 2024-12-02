@@ -39,8 +39,6 @@ const OtpModal = ({ email }: OtpModalProps) => {
     try {
       const sessionId = await verifyOTP(email, password)
 
-      console.log('sessionId: ', sessionId)
-
       if (sessionId) router.push('/')
     } catch (error) {
       console.log('Failed to verify OTP', error)

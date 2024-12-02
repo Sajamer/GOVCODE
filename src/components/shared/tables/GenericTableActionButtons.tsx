@@ -1,6 +1,6 @@
 import { Link } from '@/i18n/routing'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
-import { Edit2, Target, Trash } from 'lucide-react'
+import { Crosshair, Edit2, Target, Trash } from 'lucide-react'
 import { FC } from 'react'
 import Tooltips from '../tooltips/Tooltips'
 
@@ -41,6 +41,11 @@ const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
       <Tooltips content="Target" variant="bold" position="top" asChild>
         <Link href={`/kpi-target/${rowId}`}>
           <Target size={16} className="text-secondary" />
+        </Link>
+      </Tooltips>
+      <Tooltips content="Actual Target" variant="bold" position="top" asChild>
+        <Link href={`/kpi-actual-target/${rowId}`}>
+          <Crosshair size={16} className="text-secondary" />
         </Link>
       </Tooltips>
     </div>

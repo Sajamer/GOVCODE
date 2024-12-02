@@ -57,7 +57,6 @@ const LoginForm = () => {
       if (user?.error) return setErrorMessage('Invalid credentials')
 
       if (user?.ok) push('/')
-      console.log('user', user)
     } catch (e) {
       console.log(e)
       setErrorMessage('Invalid credentials')

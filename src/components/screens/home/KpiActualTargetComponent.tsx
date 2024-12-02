@@ -6,20 +6,22 @@ import { Label } from '@/components/ui/label'
 import { frequencyMapping } from '@/constants/global-constants'
 import { periodsByFrequency } from '@/constants/kpi-constants'
 import { toast } from '@/hooks/use-toast'
-import { saveKPITargets } from '@/lib/actions/kpiActions'
+import { saveKPIActualTarget } from '@/lib/actions/kpiActions'
 import { kpiTargetSchema } from '@/schema/kpi-target.schema'
-import { IKpiTargetManipulator, IKpiTargetResponse } from '@/types/kpi'
+import { IKpiActualTargetResponse, IKpiTargetManipulator } from '@/types/kpi'
 import { useMutation } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 
-interface IKpiTargetComponentProps {
-  data: IKpiTargetResponse
+interface IKpiActualTargetComponentProps {
+  data: IKpiActualTargetResponse
 }
 
-const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
-  const { id, code, name, frequency, unit, KPITarget } = data
+const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
+  data,
+}) => {
+  const { id, code, name, frequency, unit, KPIActual } = data
 
   const frequencyKey = frequencyMapping[frequency]
   const periods = periodsByFrequency[frequencyKey]
@@ -27,7 +29,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
   const { values, dirty, setFieldValue, handleSubmit, setValues, handleBlur } =
     useFormik<IKpiTargetManipulator[]>({
       initialValues:
-        KPITarget?.map((target) => ({
+        KPIActual?.map((target) => ({
           kpiId: id,
           year: target.year || new Date().getFullYear(),
           period: target.period,
@@ -42,7 +44,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: IKpiTargetManipulator[]) =>
-      await saveKPITargets(values),
+      await saveKPIActualTarget(values),
     onSuccess: () => {
       toast({
         variant: 'success',
@@ -194,4 +196,4 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
   )
 }
 
-export default KpiTargetComponent
+export default KpiActualTargetComponent

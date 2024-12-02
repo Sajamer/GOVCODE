@@ -246,7 +246,6 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
               id="pricing-mode"
               checked={values.measurement_equation}
               onCheckedChange={(checked) => {
-                console.log('checked: ', checked)
                 if (checked) {
                   setValues((prev) => ({
                     ...prev,

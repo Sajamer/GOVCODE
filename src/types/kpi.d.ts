@@ -3,6 +3,7 @@ import {
   Calibration,
   Frequency,
   KPI,
+  KPIActual,
   KPITarget,
   KPIType,
   Units,
@@ -52,7 +53,7 @@ export interface IKpiResponse extends KPI {
 }
 
 interface IKpiTarget extends KPITarget {}
-
+interface IKpiActualTarget extends KPIActual {}
 export interface IKpiTargetResponse
   extends Pick<KPI, 'id' | 'name' | 'code' | 'unit' | 'frequency'> {
   KPITarget: IKpiTarget[]
@@ -63,4 +64,9 @@ export interface IKpiTargetManipulator {
   year: number
   period: string
   targetValue: number
+}
+
+export interface IKpiActualTargetResponse
+  extends Pick<KPI, 'id' | 'name' | 'code' | 'unit' | 'frequency'> {
+  KPIActual: IKpiActualTarget[]
 }

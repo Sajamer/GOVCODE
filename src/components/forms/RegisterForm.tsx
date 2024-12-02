@@ -50,15 +50,11 @@ const SignupForm = () => {
   })
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log('values: ', values)
-
     setIsLoading(true)
     setErrorMessage('')
 
     try {
-      const user = await createAccount(form.getValues())
-
-      console.log(user)
+      await createAccount(form.getValues())
     } catch {
       setErrorMessage('Failed to create account. Please try again.')
     } finally {
