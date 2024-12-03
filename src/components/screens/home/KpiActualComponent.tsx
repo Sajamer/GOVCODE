@@ -7,6 +7,7 @@ import { frequencyMapping } from '@/constants/global-constants'
 import { periodsByFrequency } from '@/constants/kpi-constants'
 import { toast } from '@/hooks/use-toast'
 import { saveKPIActualTarget } from '@/lib/actions/kpiActions'
+import { cn } from '@/lib/utils'
 import { kpiTargetSchema } from '@/schema/kpi-target.schema'
 import { IKpiActualTargetResponse, IKpiTargetManipulator } from '@/types/kpi'
 import { useMutation } from '@tanstack/react-query'
@@ -14,14 +15,13 @@ import { useFormik } from 'formik'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 
-interface IKpiActualTargetComponentProps {
+interface IKpiActualComponentProps {
   data: IKpiActualTargetResponse
 }
 
-const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
-  data,
-}) => {
+const KpiActualComponent: FC<IKpiActualComponentProps> = ({ data }) => {
   const { id, code, name, frequency, unit, KPIActual } = data
+  const currentYear = new Date().getFullYear()
 
   const frequencyKey = frequencyMapping[frequency]
   const periods = periodsByFrequency[frequencyKey]
@@ -62,7 +62,6 @@ const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
   })
 
   const handleAddYear = () => {
-    const currentYear = new Date().getFullYear()
     const existingYears = values.map((target) => target.year)
     const nextYear = existingYears.length
       ? Math.max(...existingYears) + 1
@@ -123,7 +122,7 @@ const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
           className="w-40"
           onClick={handleAddYear}
         >
-          Add Target
+          Add Actual
         </Button>
       </div>
       <form
@@ -136,8 +135,14 @@ const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
               key={year}
               className="flex w-full flex-col items-start justify-center gap-5"
             >
-              <h3 className="text-2xl font-semibold text-secondary">
+              <h3
+                className={cn(
+                  'text-2xl font-semibold text-secondary',
+                  currentYear === year && 'text-primary',
+                )}
+              >
                 <span className="font-bold">Year:</span> {year}
+                {currentYear === year && ' (Current Year)'}
               </h3>
               <div className="flex flex-wrap gap-2.5 ">
                 {periodsByFrequency[frequencyKey].map((period) => (
@@ -175,8 +180,8 @@ const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
           ))
         ) : (
           <p className="mt-5 text-center text-xl font-semibold text-secondary">
-            Start adding Targets for your kpi <br />
-            by clicking the add target button.
+            Start adding Actuals for your kpi <br />
+            by clicking the add actual button.
           </p>
         )}
 
@@ -187,7 +192,7 @@ const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
               className="w-40"
               disabled={isPending || !dirty}
             >
-              Save Targets
+              Save Actuals
             </Button>
           )}
         </div>
@@ -196,4 +201,4 @@ const KpiActualTargetComponent: FC<IKpiActualTargetComponentProps> = ({
   )
 }
 
-export default KpiActualTargetComponent
+export default KpiActualComponent

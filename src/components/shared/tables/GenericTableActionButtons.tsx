@@ -43,7 +43,7 @@ const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
           <Target size={16} className="text-secondary" />
         </Link>
       </Tooltips>
-      <Tooltips content="Actual Target" variant="bold" position="top" asChild>
+      <Tooltips content="Actuals" variant="bold" position="top" asChild>
         <Link href={`/kpi-actual-target/${rowId}`}>
           <Crosshair size={16} className="text-secondary" />
         </Link>

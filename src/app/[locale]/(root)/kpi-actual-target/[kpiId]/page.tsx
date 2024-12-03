@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import KpiActualTargetComponent from '@/components/screens/home/KpiActualTargetComponent'
+import KpiActualComponent from '@/components/screens/home/KpiActualComponent'
 import { getKPIByIdIncludingKPIActualTargets } from '@/lib/actions/kpiActions'
 import { getMessages } from 'next-intl/server'
 
@@ -26,5 +26,5 @@ export default async function KpiActualTarget({
 
   const data = await getKPIByIdIncludingKPIActualTargets(+kpiId)
 
-  return <KpiActualTargetComponent data={data} />
+  return <KpiActualComponent data={data} />
 }

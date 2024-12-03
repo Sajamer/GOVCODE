@@ -6,7 +6,8 @@
     "aboutTitle": "من نحن",
     "profile": "الملف الشخصي",
     "profileTitle": "الملف الشخصي",
-    "kpiTarget": "أهداف المؤشر"
+    "kpiTarget": "أهداف المؤشر",
+    "actualTarget": "المؤشرات الفعلية"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -27,6 +28,7 @@
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
     "register": "تسجيل",
     "forgotPassword": "نسيت كلمة المرور؟",
     "noAccount": "ليس لديك حساب؟",
@@ -34,5 +36,12 @@
     "enter your OTP code": "أدخل ",
     "enter OTP": "أدخل رمز التحقق",
     "resend otp": "إعادة إرسال الرابط"
+  },
+  "general": {
+    "kpi": "مؤشرات الأداء",
+    "kpis": "مؤشرات الأداء",
+    "kpiDescription": "إدارة جميع المؤشرات المتاحة على المنصة.",
+    "search": "بحث",
+    "add_new": "إضافة جديد {{title}}"
   }
 }

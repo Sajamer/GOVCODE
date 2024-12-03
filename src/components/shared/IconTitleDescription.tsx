@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 import { FC, ReactNode } from 'react'
 
 interface IIconTitleDescriptionProps {
@@ -18,6 +19,8 @@ const IconTitleDescription: FC<IIconTitleDescriptionProps> = ({
   title,
   descriptionStyles,
 }) => {
+  const t = useTranslations('general')
+
   return (
     <div className="flex h-fit w-full items-start gap-3 md:items-start">
       <div
@@ -30,14 +33,12 @@ const IconTitleDescription: FC<IIconTitleDescriptionProps> = ({
       </div>
       <div className="flex flex-col items-start">
         <h4 className="text-base font-semibold text-zinc-800 md:text-xl">
-          {title}
+          {t(`${title?.toLowerCase()}`)}
         </h4>
         <div className={cn('w-full', descriptionStyles)}>
-          <p
-            className="text-sm leading-normal text-zinc-600"
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            dangerouslySetInnerHTML={{ __html: description }}
-          />
+          <p className="text-sm leading-normal text-zinc-600">
+            {t(`${description}`)}
+          </p>
         </div>
       </div>
     </div>

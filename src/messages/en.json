@@ -6,7 +6,8 @@
     "aboutTitle": "About page",
     "profile": "Profile",
     "profileTitle": "Profile page",
-    "kpiTarget": "KPI Target"
+    "kpiTarget": "KPI Target",
+    "actualTarget": "Actual Target"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -27,6 +28,7 @@
     "email": "Email",
     "password": "Password",
     "login": "Login",
+    "logout": "Logout",
     "register": "Register",
     "forgotPassword": "Forgot password?",
     "noAccount": "Don't have an account?",
@@ -34,5 +36,12 @@
     "enter your OTP code": "Enter your OTP code",
     "enter OTP": "Enter OTP",
     "resend otp": "Resend OTP"
+  },
+  "general": {
+    "kpi": "KPI",
+    "kpis": "KPIs",
+    "kpiDescription": "Manage all the kpi available on the platform.",
+    "search": "Search",
+    "add_new": "Add New {{title}}"
   }
 }

@@ -3,17 +3,21 @@
 import { Icons } from '@/components/icons/Icons'
 import Tooltips from '@/components/shared/tooltips/Tooltips'
 import { Button } from '@/components/ui/button'
-import { sidebarItems } from '@/constants/sidebar-constants'
+import { SidebarItems } from '@/constants/sidebar-constants'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 import { cn } from '@/lib/utils'
 import { ArrowRight } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 
 const DashboardSidebar: FC = () => {
   const { isSidebarOpened, setIsSidebarOpened } = useAdminDashboard()
+  const sidebarItems = SidebarItems()
+  const t = useTranslations('AuthenticationPage')
+
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
   const normalizedPathname = isArabic
@@ -110,7 +114,7 @@ const DashboardSidebar: FC = () => {
         <div className="w-full px-4">
           <Button className="w-full justify-start" onClick={() => signOut()}>
             <Icons.PowerSymbol />
-            {isSidebarOpened && 'Logout'}
+            {isSidebarOpened && t('logout')}
           </Button>
         </div>
       </div>

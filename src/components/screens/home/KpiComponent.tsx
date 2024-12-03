@@ -19,8 +19,8 @@ const KpiComponent: FC = () => {
 
   return (
     <GenericComponent<IKpiResponse>
-      title={'Kpis'}
-      description={'Manage all the kpi available on the platform.'}
+      title="Kpis"
+      description="kpiDescription"
       entityKey="id"
       sheetName={'kpis'}
       data={kpiData}

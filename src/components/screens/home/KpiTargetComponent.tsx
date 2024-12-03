@@ -7,6 +7,7 @@ import { frequencyMapping } from '@/constants/global-constants'
 import { periodsByFrequency } from '@/constants/kpi-constants'
 import { toast } from '@/hooks/use-toast'
 import { saveKPITargets } from '@/lib/actions/kpiActions'
+import { cn } from '@/lib/utils'
 import { kpiTargetSchema } from '@/schema/kpi-target.schema'
 import { IKpiTargetManipulator, IKpiTargetResponse } from '@/types/kpi'
 import { useMutation } from '@tanstack/react-query'
@@ -20,6 +21,7 @@ interface IKpiTargetComponentProps {
 
 const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
   const { id, code, name, frequency, unit, KPITarget } = data
+  const currentYear = new Date().getFullYear()
 
   const frequencyKey = frequencyMapping[frequency]
   const periods = periodsByFrequency[frequencyKey]
@@ -60,7 +62,6 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
   })
 
   const handleAddYear = () => {
-    const currentYear = new Date().getFullYear()
     const existingYears = values.map((target) => target.year)
     const nextYear = existingYears.length
       ? Math.max(...existingYears) + 1
@@ -134,8 +135,14 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
               key={year}
               className="flex w-full flex-col items-start justify-center gap-5"
             >
-              <h3 className="text-2xl font-semibold text-secondary">
+              <h3
+                className={cn(
+                  'text-2xl font-semibold text-secondary',
+                  currentYear === year && 'text-primary',
+                )}
+              >
                 <span className="font-bold">Year:</span> {year}
+                {currentYear === year && ' (Current Year)'}
               </h3>
               <div className="flex flex-wrap gap-2.5 ">
                 {periodsByFrequency[frequencyKey].map((period) => (
