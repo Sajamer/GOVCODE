@@ -7,7 +7,8 @@
     "profile": "Profile",
     "profileTitle": "Profile page",
     "kpiTarget": "KPI Target",
-    "actualTarget": "Actual Target"
+    "actualTarget": "Actual Target",
+    "kpiAnalysis": "KPI Analysis"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -40,6 +41,7 @@
   "general": {
     "kpi": "KPI",
     "kpis": "KPIs",
+    "kpi-analysis": "KPI Analysis",
     "kpiDescription": "Manage all the kpi available on the platform.",
     "search": "Search",
     "add_new": "Add New {{title}}"

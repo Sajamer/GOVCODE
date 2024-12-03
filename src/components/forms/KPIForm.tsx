@@ -320,7 +320,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           triggerStyle="h-11"
           disabled={
             isEdit &&
-            (kpiData?.targets?.length > 0 || kpiData?.actualTargets?.length > 0)
+            (kpiData?.targets?.length > 0 || kpiData?.actuals?.length > 0)
           }
           placeholder="Select default frequency"
           defaultValue={frequencyOptions?.find(

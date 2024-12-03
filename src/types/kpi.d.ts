@@ -53,9 +53,9 @@ export interface IKpiResponse extends KPI {
   compliances: IDatabaseStaticData[]
   processes: IDatabaseStaticData[]
   targets: IKpiTarget[]
-  actualTargets: IKpiActualTarget[]
+  actuals: IKpiActualTarget[]
 
-  [key: string]: unknown
+  // [key: string]: unknown
 }
 
 export interface IKpiTargetResponse

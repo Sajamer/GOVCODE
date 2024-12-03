@@ -73,7 +73,7 @@ export const getAllKPI = async (searchParams?: Record<string, string>) => {
         objectives: KPIObjective.map(({ objective }) => objective),
         processes: KPIProcess.map(({ process }) => process),
         targets: KPITarget,
-        actualTargets: KPIActual,
+        actuals: KPIActual,
       }),
     )
 
