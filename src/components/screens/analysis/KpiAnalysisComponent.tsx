@@ -1,7 +1,12 @@
 import { quarters } from '@/constants/global-constants'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
 import { trendIndicatorSwitch } from '@/lib/functions'
-import { calculateTrend, cn, switchUnit } from '@/lib/utils'
+import {
+  calculateTrend,
+  capitalizeFirstLetter,
+  cn,
+  switchUnit,
+} from '@/lib/utils'
 import { IKpiResponse, MonthlyData } from '@/types/kpi'
 import { Calibration, KPIActual } from '@prisma/client'
 import { FC, Fragment } from 'react'
@@ -33,11 +38,11 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
     actuals.forEach((actual) => {
       const value = actual.targetValue
       const period = actual.period.toLowerCase()
+
       const dataYear = actual.year
       const target =
         dataYear === year ? monthlyData.current : monthlyData.previous
 
-      // Handle different period formats
       if (period.startsWith('q')) {
         const quarterMonth =
           period === 'q1'
@@ -48,16 +53,17 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
                 ? 'September'
                 : 'December'
         target[quarterMonth] = value
-      } else if (period.startsWith('s')) {
+      } else if (period === 's1' || period === 's2') {
         const halfMonth = period === 's1' ? 'June' : 'December'
         target[halfMonth] = value
       } else if (period === 'yearly') {
         target.December = value
-      } else if (months.includes(period as Month)) {
-        target[
-          (period.charAt(0).toUpperCase() +
-            period.slice(1)) as keyof MonthlyData
-        ] = value
+      } else {
+        const capitalizedPeriod = capitalizeFirstLetter(period) as Month
+
+        if (months.includes(capitalizedPeriod)) {
+          target[capitalizedPeriod] = value
+        }
       }
     })
 
@@ -69,7 +75,6 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
       <table className="min-w-full border-collapse">
         <thead>
           <tr className="bg-gray-100">
-            <th />
             <th />
             <th />
             <th />
