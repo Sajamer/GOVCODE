@@ -348,3 +348,22 @@ export const calculateTrend = (
   else if (diff < 0 && defaultTrend === Calibration.DECREASING) return true
   else return false
 }
+
+// Helper function to capitalize first letter
+export const capitalizeFirstLetter = (str: string): string => {
+  return (str.charAt(0).toUpperCase() + str.slice(1)) as string
+}
+
+export const calculateStatus = (
+  defaultTrend: Calibration,
+  ct?: number,
+  ca?: number,
+): boolean | undefined => {
+  if (ca === undefined || ct === undefined) return undefined
+
+  const diff = ca - ct
+  diff.toFixed(2)
+  if (diff >= 0 && defaultTrend === Calibration.INCREASING) return true
+  else if (diff <= 0 && defaultTrend === Calibration.DECREASING) return true
+  else return false
+}

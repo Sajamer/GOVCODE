@@ -8,7 +8,8 @@
     "profileTitle": "الملف الشخصي",
     "kpiTarget": "أهداف المؤشر",
     "actualTarget": "المؤشرات الفعلية",
-    "kpiAnalysis": "تحليل المؤشرات"
+    "kpiAnalysis": "تحليل المؤشرات",
+    "kpiStatus": "حالة المؤشرات"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -42,6 +43,7 @@
     "kpi": "مؤشرات الأداء",
     "kpis": "مؤشرات الأداء",
     "kpi-analysis": "تحليل المؤشرات",
+    "kpi-status": "حالة المؤشر",
     "kpiDescription": "إدارة جميع المؤشرات المتاحة على المنصة.",
     "search": "بحث",
     "add_new": "إضافة جديد {{title}}"

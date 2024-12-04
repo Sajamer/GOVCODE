@@ -12,3 +12,14 @@ export const trendIndicatorSwitch = (trend: Calibration) => {
       return <></>
   }
 }
+
+export const statusIndicatorSwitch = (status?: boolean) => {
+  switch (status) {
+    case true:
+      return <div className="size-5 rounded-full bg-primary" />
+    case false:
+      return <div className="size-5 rounded-full bg-destructive" />
+    default:
+      return <></>
+  }
+}
