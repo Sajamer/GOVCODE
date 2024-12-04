@@ -79,6 +79,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
             <th />
             <th />
             <th />
+            <th />
             <th colSpan={36} className="border border-gray-300 p-2.5">
               Year {currentYear}
             </th>
