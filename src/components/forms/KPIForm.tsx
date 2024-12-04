@@ -19,6 +19,8 @@ import {
 import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import BasicDropdown from '../shared/dropdowns/BasicDropdown'
@@ -35,6 +37,8 @@ interface IKpiFormProps {
 const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const isEdit = !!kpiData
   const queryClient = useQueryClient()
+  const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
 
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
@@ -192,16 +196,16 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     >
       <div className="flex flex-col items-center justify-center gap-4 ">
         <LabeledInput
-          label="KPI Code"
-          placeholder="Enter KPI Code"
+          label={t('kpi-code')}
+          placeholder={t('kpi-code-placeholder')}
           {...getFieldProps('code')}
           error={touched.code && errors.code ? errors.code : ''}
         />
         <BasicDropdown
           data={departmentOptions ?? []}
-          label="Department"
+          label={t('department')}
           triggerStyle="h-11"
-          placeholder="Select department"
+          placeholder={t('department-placeholder')}
           defaultValue={departmentOptions?.find(
             (option) => +option.id === values.departmentId,
           )}
@@ -214,20 +218,20 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           callback={(option) => setFieldValue('departmentId', +option.id)}
         />
         <LabeledInput
-          label="KPI Owner"
-          placeholder="Enter KPI Owner"
+          label={t('kpi-owner')}
+          placeholder={t('kpi-owner-placeholder')}
           {...getFieldProps('owner')}
           error={touched.owner && errors.owner ? errors.owner : ''}
         />
         <LabeledInput
-          label="KPI Name"
-          placeholder="Enter KPI name"
+          label={t('kpi-name')}
+          placeholder={t('kpi-name-placeholder')}
           {...getFieldProps('name')}
           error={touched.name && errors.name ? errors.name : ''}
         />
         <LabeledTextArea
-          label="Description"
-          placeholder="Enter KPI Description"
+          label={t('Description')}
+          placeholder={t('kpi-description-placeholder')}
           className="resize-none"
           {...getFieldProps('description')}
           error={
@@ -236,14 +240,15 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
         />
         <div className="flex w-full flex-col items-start justify-start gap-3">
           <h3 className="text-sm font-medium text-zinc-800">
-            Measurement Equation:
+            {t('measurement-equation')}:
           </h3>
           <div className="flex items-center justify-center gap-3">
             <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
-              as Number
+              {t('as-number')}:
             </span>
             <Switch
               id="pricing-mode"
+              dir={isArabic ? 'rtl' : 'ltr'}
               checked={values.measurement_equation}
               onCheckedChange={(checked) => {
                 if (checked) {
@@ -263,15 +268,15 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
               }}
             />
             <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
-              as Numerator/Denominator
+              {t('as-numerator-or-denominator')}:
             </span>
           </div>
         </div>
         {values.measurement_equation ? (
           <>
             <LabeledInput
-              label="Denominator"
-              placeholder="Enter Denominator text"
+              label={t('denominator')}
+              placeholder={t('denominator-placeholder')}
               {...getFieldProps('measurementDenominator')}
               error={
                 touched.measurementDenominator && errors.measurementDenominator
@@ -280,8 +285,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
               }
             />
             <LabeledInput
-              label="Numerator"
-              placeholder="Enter Numerator text"
+              label={t('numerator')}
+              placeholder={t('numerator-placeholder')}
               {...getFieldProps('measurementNumerator')}
               error={
                 touched.measurementNumerator && errors.measurementNumerator
@@ -292,8 +297,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           </>
         ) : (
           <LabeledInput
-            label="Measurement Number"
-            placeholder="Enter Number text"
+            label={t('measurement-number')}
+            placeholder={t('measurement-number-placeholder')}
             {...getFieldProps('measurementNumber')}
             error={
               touched.measurementNumber && errors.measurementNumber
@@ -304,9 +309,9 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
         )}
         <BasicDropdown
           data={unitOptions ?? []}
-          label="Unit of measurement"
+          label={t('unit-of-measurement')}
           triggerStyle="h-11"
-          placeholder="Select default unit"
+          placeholder={t('unit-of-measurement-placeholder')}
           defaultValue={unitOptions?.find(
             (option) => option.value === values.unit,
           )}
@@ -315,14 +320,14 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           callback={(option) => setFieldValue('unit', option.value)}
         />
         <BasicDropdown
+          label={t('frequency')}
+          placeholder={t('frequency-placeholder')}
           data={frequencyOptions ?? []}
-          label="Frequency"
           triggerStyle="h-11"
           disabled={
             isEdit &&
             (kpiData?.targets?.length > 0 || kpiData?.actuals?.length > 0)
           }
-          placeholder="Select default frequency"
           defaultValue={frequencyOptions?.find(
             (option) => option.value === values.frequency,
           )}
@@ -331,10 +336,10 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           callback={(option) => setFieldValue('frequency', option.value)}
         />
         <BasicDropdown
+          label={t('measurement-type')}
+          placeholder={t('measurement-type-placeholder')}
           data={kpiTypeOptions ?? []}
-          label="Measurement type"
           triggerStyle="h-11"
-          placeholder="Select default measurement type"
           defaultValue={kpiTypeOptions?.find(
             (option) => option.value === values.type,
           )}
@@ -343,10 +348,10 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           callback={(option) => setFieldValue('type', option.value)}
         />
         <BasicDropdown
+          label={t('desired-direction')}
+          placeholder={t('desired-direction-placeholder')}
           data={calibrationOptions ?? []}
-          label="Desired direction"
           triggerStyle="h-11"
-          placeholder="Select default direction"
           defaultValue={calibrationOptions?.find(
             (option) => option.value === values.calibration,
           )}
@@ -358,8 +363,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
         />
         <MultiSelect
           instanceId={'objectives'}
-          label={'Objectives'}
-          placeholder="select objectives"
+          label={t('objectives')}
+          placeholder={t('objectives-placeholder')}
           data={objectivesOptions ?? []}
           hasArrow
           isMulti
@@ -386,8 +391,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
         />
         <MultiSelect
           instanceId={'compliances'}
-          label={'compliances'}
-          placeholder="select compliances"
+          label={t('compliances')}
+          placeholder={t('compliances-placeholder')}
           data={complianceOptions ?? []}
           hasArrow
           isMulti
@@ -414,8 +419,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
         />
         <MultiSelect
           instanceId={'processes'}
-          label={'processes'}
-          placeholder="select processes"
+          label={t('processes')}
+          placeholder={t('processes-placeholder')}
           data={processOptions ?? []}
           hasArrow
           isMulti
@@ -441,8 +446,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           }}
         />
         <LabeledInput
-          label="Information source"
-          placeholder="Enter Information source"
+          label={t('information-source')}
+          placeholder={t('information-source-placeholder')}
           {...getFieldProps('resources')}
           error={touched.resources && errors.resources ? errors.resources : ''}
         />
@@ -454,7 +459,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           variant={'outline'}
           className="h-11 w-[6.25rem] rounded-[2.5rem] border border-zinc-200 text-sm font-medium text-zinc-800"
         >
-          Close
+          {t('close')}
         </Button>
         <Button
           type="submit"
@@ -462,7 +467,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           isLoading={isLoading}
           disabled={isLoading || !dirty}
         >
-          {isEdit ? 'Update Kpi' : 'Add New Kpi'}
+          {isEdit ? t('update-kpi') : t('create-kpi')}
         </Button>
       </div>
     </form>

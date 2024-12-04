@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils'
 import { useSheetStore, type SheetNames } from '@/stores/sheet-store'
 import { ArrowUp } from 'iconsax-react'
 import _ from 'lodash'
-import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { usePathname, useRouter } from 'next/navigation'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import Date from './tableColumnComponents/Date'
 
@@ -58,6 +59,9 @@ const TableComponent = <T extends object>({
   const { openSheet } = useSheetStore((store) => store.actions)
 
   const router = useRouter()
+
+  const isArabic = usePathname().includes('/ar')
+  const t = useTranslations('general')
 
   const checkHorizontalScroll = useCallback(() => {
     const cardContent = cardContentRef.current
@@ -119,15 +123,20 @@ const TableComponent = <T extends object>({
           className="flex cursor-pointer items-center gap-1 text-sm font-medium capitalize text-zinc-800"
           onClick={() => sortColumn(headers.indexOf(header))}
         >
-          <span>{formatKey(String(key))}</span>
+          <span>{t(formatKey(String(key)))}</span>
           <div>
             <Icons.SortingArrows className="size-3 min-h-3 min-w-3" />
           </div>
         </div>
       </th>
     ) : (
-      <th className="px-6 py-3 text-left text-sm font-medium capitalize text-zinc-800">
-        {formatKey(String(key))}
+      <th
+        className={cn(
+          'px-6 py-3 text-left text-sm font-medium capitalize text-zinc-800',
+          isArabic && 'text-right',
+        )}
+      >
+        {t(formatKey(String(key)))}
       </th>
     )
   }
@@ -169,7 +178,7 @@ const TableComponent = <T extends object>({
       )}
     >
       {row.map((value, index) => (
-        <td key={index} className="px-6 py-4">
+        <td key={index} className="px-6 py-4 text-left">
           {TableCell(value.type, value.value)}
         </td>
       ))}
@@ -279,6 +288,7 @@ const TableComponent = <T extends object>({
             >
               <table
                 ref={tableRef}
+                dir={isArabic ? 'rtl' : 'ltr'}
                 className="table-1 relative w-full border-collapse"
               >
                 <thead>
@@ -349,12 +359,19 @@ const TableComponent = <T extends object>({
 export default TableComponent
 
 const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
+  const isArabic = usePathname().includes('/ar')
+
   switch (type.toLowerCase()) {
     case 'date':
       return <Date date={value as string} />
     default:
       return (
-        <div className="max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800">
+        <div
+          className={cn(
+            'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800',
+            isArabic && 'text-right',
+          )}
+        >
           {value ? String(value) : '-'}
         </div>
       )

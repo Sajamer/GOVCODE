@@ -7,6 +7,8 @@ import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { IKpiResponse } from '@/types/kpi'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChartSpline, Loader2, Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../headers/PageHeader'
 import ConfirmationDialog from '../modals/ConfirmationDialog'
@@ -39,6 +41,9 @@ const GenericComponent = <T extends Record<string, unknown>>({
   data,
 }: IGenericTableProps<T>): JSX.Element => {
   const queryClient = useQueryClient()
+  const t = useTranslations('general')
+  const pathname = usePathname()
+  const isArabic = pathname.includes('/ar')
 
   const { actions, searchTerm, sheetToOpen, isEdit, rowId } = useSheetStore(
     (store) => store,
@@ -104,7 +109,10 @@ const GenericComponent = <T extends Record<string, unknown>>({
 
   return (
     <>
-      <div className="flex w-full flex-col items-start gap-[1.875rem]">
+      <div
+        dir={isArabic ? 'rtl' : 'ltr'}
+        className="flex w-full flex-col items-start gap-[1.875rem]"
+      >
         <PageHeader
           title={title}
           description={description}
@@ -132,7 +140,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
           >
             <Plus size="24" className="text-primary-foreground" />
             <span className="hidden text-sm font-medium lg:flex">
-              Add New {title}
+              {t('add-new') + ' ' + t(title)}
             </span>
           </Button>
         </PageHeader>
@@ -147,7 +155,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
               headers={headers}
               hasFooter
               addProps={{
-                label: `Add ${title}`,
+                label: `${t('add') + ' ' + t(title)}`,
                 sheetToOpen: sheetName as SheetNames,
               }}
               tableActions={tableActions}

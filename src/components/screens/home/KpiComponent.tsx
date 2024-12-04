@@ -19,7 +19,7 @@ const KpiComponent: FC = () => {
 
   return (
     <GenericComponent<IKpiResponse>
-      title="Kpis"
+      title="kpis"
       description="kpiDescription"
       entityKey="id"
       sheetName={'kpis'}

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useSheetStore, type SheetNames } from '@/stores/sheet-store'
+import { usePathname } from 'next/navigation'
 import { FC, HTMLAttributes } from 'react'
 
 export interface ISheetComponentProps extends HTMLAttributes<HTMLDivElement> {
@@ -36,9 +37,14 @@ const SheetComponent: FC<ISheetComponentProps> = ({
   const hasBreadcrumb = breadcrumb.length > 0
 
   const { actions, sheetToOpen } = useSheetStore((store) => store)
+  const pathname = usePathname()
+  const isArabic = pathname.includes('/ar')
+
   return (
     <Sheet open={sheetName === sheetToOpen} onOpenChange={actions.closeSheet}>
       <SheetContent
+        side={isArabic ? 'left' : 'right'}
+        dir={isArabic ? 'rtl' : 'ltr'}
         hideClose
         className={cn(
           'sm:my-auto sm:mr-[1.88rem] sm:max-h-[calc(100%-3.76rem)] sm:rounded-[1.875rem] bg-zinc-50 w-full max-w-[31.25rem] sm:min-w-[31.25rem]',

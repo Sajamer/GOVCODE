@@ -56,7 +56,7 @@ export interface IKpiResponse extends KPI {
   targets: IKpiTarget[]
   actuals: IKpiActualTarget[]
 
-  // [key: string]: unknown
+  [key: string]: unknown
 }
 
 export interface IKpiTargetResponse
