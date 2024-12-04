@@ -1,13 +1,10 @@
 import { quarters } from '@/constants/global-constants'
-import { periodsByFrequency } from '@/constants/kpi-constants'
-import { cn } from '@/lib/utils'
-import { IKpiResponse } from '@/types/kpi'
-import { Calibration, KPIActual, Units } from '@prisma/client'
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
+import { Month, periodsByFrequency } from '@/constants/kpi-constants'
+import { trendIndicatorSwitch } from '@/lib/functions'
+import { calculateTrend, cn, switchUnit } from '@/lib/utils'
+import { IKpiResponse, MonthlyData } from '@/types/kpi'
+import { Calibration, KPIActual } from '@prisma/client'
 import { FC, Fragment } from 'react'
-
-// Types for monthly data
-type MonthlyData = Record<string, number | undefined> // Key is month name, value is number or undefined
 
 interface IKpiAnalysisProps {
   data?: IKpiResponse[] // Array of KPI data
@@ -56,23 +53,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
         target[halfMonth] = value
       } else if (period === 'yearly') {
         target.December = value
-      } else if (
-        months.includes(
-          period as
-            | 'January'
-            | 'February'
-            | 'March'
-            | 'April'
-            | 'May'
-            | 'June'
-            | 'July'
-            | 'August'
-            | 'September'
-            | 'October'
-            | 'November'
-            | 'December',
-        )
-      ) {
+      } else if (months.includes(period as Month)) {
         target[
           (period.charAt(0).toUpperCase() +
             period.slice(1)) as keyof MonthlyData
@@ -81,46 +62,6 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
     })
 
     return monthlyData
-  }
-
-  const calculateTrend = (
-    defaultTrend: Calibration,
-    cy?: number,
-    py?: number,
-  ): boolean | undefined => {
-    if (cy === undefined || py === undefined) return undefined
-
-    const diff = cy - py
-    diff.toFixed(2)
-    if (diff > 0 && defaultTrend === Calibration.INCREASING) return true
-    else if (diff < 0 && defaultTrend === Calibration.DECREASING) return true
-    else return false
-  }
-
-  // Function to get the unit name based on the unit type
-  const switchUnit = (unit: Units): string => {
-    switch (unit) {
-      case Units.DAYS:
-        return 'Days'
-      case Units.PERCENTAGE:
-        return '%'
-      case Units.NUMBER:
-        return 'NBR'
-      default:
-        return '-'
-    }
-  }
-
-  // Function to switch the calibration trend
-  const trendIndicatorSwitch = (trend: Calibration) => {
-    switch (trend) {
-      case Calibration.INCREASING:
-        return <ArrowUpRight className="text-primary" />
-      case Calibration.DECREASING:
-        return <ArrowDownLeft className="text-destructive" />
-      default:
-        return <></>
-    }
   }
 
   return (

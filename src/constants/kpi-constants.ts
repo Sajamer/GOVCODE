@@ -18,3 +18,6 @@ export const periodsByFrequency = {
   yearly: ['Yearly'] as const,
   weekly: Array.from({ length: 52 }, (_, i) => `Week ${i + 1}`),
 } as const
+
+// type for months
+export type Month = (typeof periodsByFrequency)['monthly'][number]

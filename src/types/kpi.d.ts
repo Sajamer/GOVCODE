@@ -12,6 +12,7 @@ import {
 interface IKpiTarget extends KPITarget {}
 interface IKpiActualTarget extends KPIActual {}
 
+export type MonthlyData = Record<string, number | undefined>
 export interface IDatabaseStaticData {
   id: number
   name: string

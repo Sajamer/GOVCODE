@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 // import { Prisma } from '@prisma/client'
-import { Prisma } from '@prisma/client'
+import { Calibration, Prisma, Units } from '@prisma/client'
 import { type ClassValue, clsx } from 'clsx'
 import moment from 'moment'
 import { cloneElement } from 'react'
@@ -320,4 +320,31 @@ export const handleNumberInput = (
   if (!allowedKeys.includes(key)) {
     event.preventDefault()
   }
+}
+
+export const switchUnit = (unit: Units): string => {
+  switch (unit) {
+    case Units.DAYS:
+      return 'Days'
+    case Units.PERCENTAGE:
+      return '%'
+    case Units.NUMBER:
+      return 'NBR'
+    default:
+      return '-'
+  }
+}
+
+export const calculateTrend = (
+  defaultTrend: Calibration,
+  cy?: number,
+  py?: number,
+): boolean | undefined => {
+  if (cy === undefined || py === undefined) return undefined
+
+  const diff = cy - py
+  diff.toFixed(2)
+  if (diff > 0 && defaultTrend === Calibration.INCREASING) return true
+  else if (diff < 0 && defaultTrend === Calibration.DECREASING) return true
+  else return false
 }
