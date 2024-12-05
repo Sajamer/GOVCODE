@@ -1,79 +1,85 @@
 import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
 import { periodsByFrequency } from './kpi-constants'
 
-export const kpiTypeOptions = [
+type TranslationFunction = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string
+
+export const getKpiTypeOptions = (t: TranslationFunction) => [
   {
     id: KPIType.CUMULATIVE,
-    label: 'Cumulative',
+    label: t('options.Cumulative'),
     value: KPIType.CUMULATIVE,
   },
   {
     id: KPIType.STAGING,
-    label: 'Staging',
+    label: t('options.Staging'),
     value: KPIType.STAGING,
   },
 ]
 
-export const unitOptions = [
+export const getUnitOptions = (t: TranslationFunction) => [
   {
     id: Units.PERCENTAGE,
-    label: 'Percentage',
+    label: t('options.Percentage'),
     value: Units.PERCENTAGE,
   },
   {
     id: Units.NUMBER,
-    label: 'Number',
+    label: t('options.Number'),
     value: Units.NUMBER,
   },
   {
     id: Units.TIME,
-    label: 'Time',
+    label: t('options.Time'),
     value: Units.TIME,
   },
   {
     id: Units.DAYS,
-    label: 'Days',
+    label: t('options.Days'),
     value: Units.DAYS,
   },
 ]
 
-export const frequencyOptions = [
+export const getFrequencyOptions = (t: TranslationFunction) => [
   {
     id: Frequency.MONTHLY,
-    label: 'Monthly',
+    label: t('options.Monthly'),
     value: Frequency.MONTHLY,
   },
   {
     id: Frequency.QUARTERLY,
-    label: 'Quarterly',
+    label: t('options.Quarterly'),
     value: Frequency.QUARTERLY,
   },
   {
     id: Frequency.SEMI_ANNUALLY,
-    label: 'Semi Annually',
+    label: t('options.Semi Annually'),
     value: Frequency.SEMI_ANNUALLY,
   },
   {
     id: Frequency.ANNUALLY,
-    label: 'Annually',
+    label: t('options.Annually'),
     value: Frequency.ANNUALLY,
   },
 ]
 
-export const calibrationOptions = [
+export const getCalibrationOptions = (t: TranslationFunction) => [
   {
     id: Calibration.INCREASING,
-    label: 'Increasing',
+    label: t('options.Increasing'),
     value: Calibration.INCREASING,
   },
   {
     id: Calibration.DECREASING,
-    label: 'Decreasing',
+    label: t('options.Decreasing'),
     value: Calibration.DECREASING,
   },
+  // Uncomment if needed
   // {
   //   id: Calibration.NEUTRAL,
-  //   label: 'Neutral',
+  //   label: t('options.Neutral'),
   //   value: Calibration.NEUTRAL,
   // },
 ]

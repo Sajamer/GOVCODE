@@ -93,13 +93,69 @@
     "desired-direction-placeholder": "اختر الاتجاه المطلوب",
     "objectives": "الأهداف",
     "objectives-placeholder": "اختر الأهداف",
-    "compliances": "الامتثال",
-    "compliances-placeholder": "اختر الامتثال",
+    "compliances": "التشريع",
+    "compliances-placeholder": "اختر التشاريع",
     "processes": "العمليات",
     "processes-placeholder": "اختر العمليات",
     "information-source": "مصدر المعلومات",
     "information-source-placeholder": "أدخل مصدر المعلومات",
     "update-kpi": "تحديث المؤشر",
-    "create-kpi": "إنشاء مؤشر"
+    "create-kpi": "إنشاء مؤشر",
+    "here": "هنا",
+    "define-new": "تعريف جديد",
+    "deleteConfirmation": "هل أنت متأكد أنك تريد حذف هذا {title} لا يمكن التراجع عن هذا الإجراء",
+    "deleteSuccess": "تم حذف {title} بنجاح.",
+    "deleteError": "حدث خطأ أثناء حذف {title}.",
+    "confirm-deletion": "تأكيد الحذف",
+    "department-options": {
+      "Application": "التطبيقات",
+      "CIO": "رئيس قسم المعلومات",
+      "Digital Transformation Awareness": "الوعي بالتحول الرقمي",
+      "Governance": "الحوكمة",
+      "Help Desk": "مكتب المساعدة",
+      "Infrastructure": "البنية التحتية",
+      "Integration and Data": "التكامل والبيانات"
+    },
+    "objective-options": {
+      "Objective 1": "الهدف 1",
+      "Objective 2": "الهدف 2",
+      "Objective 3": "الهدف 3"
+    },
+    "compliance-options": {
+      "Compliance 1": "التشريع 1",
+      "Compliance 2": "التشريع 2",
+      "Compliance 3": "التشريع 3"
+    },
+    "process-options": {
+      "Process 1": "العملية 1",
+      "Process 2": "العملية 2",
+      "Process 3": "العملية 3"
+    },
+    "options": {
+      "Cumulative": "تراكمي",
+      "CUMULATIVE": "تراكمي",
+      "Staging": "مرحلي",
+      "STAGING": "مرحلي",
+      "Percentage": "نسبة المئوية",
+      "PERCENTAGE": "نسبة المئوية",
+      "Number": "عدد",
+      "NUMBER": "عدد",
+      "TIME": "وقت",
+      "Time": "وقت",
+      "Days": "ايام",
+      "DAYS": "ايام",
+      "Monthly": "شهري",
+      "MONTHLY": "شهري",
+      "Quarterly": "ربع سنوي",
+      "QUARTERLY": "ربع سنوي",
+      "Semi Annually": "نصف سنوي",
+      "SEMI_ANNUALLY": "نصف سنوي",
+      "Annually": "سنوي",
+      "ANNUALLY": "سنوي",
+      "Increasing": "تصاعدي",
+      "INCREASING": "تصاعدي",
+      "Decreasing": "تنازلي",
+      "DECREASING": "تنازلي"
+    }
   }
 }

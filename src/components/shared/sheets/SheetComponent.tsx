@@ -16,7 +16,6 @@ import { FC, HTMLAttributes } from 'react'
 export interface ISheetComponentProps extends HTMLAttributes<HTMLDivElement> {
   isTableHeader?: boolean
   isTableFooter?: boolean
-  breadcrumb?: string[]
   title: string
   subtitle: string
   saveButtonName?: string
@@ -27,18 +26,14 @@ export interface ISheetComponentProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const SheetComponent: FC<ISheetComponentProps> = ({
-  breadcrumb = [],
   title,
   sheetName,
   subtitle,
   className,
   children,
 }) => {
-  const hasBreadcrumb = breadcrumb.length > 0
-
   const { actions, sheetToOpen } = useSheetStore((store) => store)
-  const pathname = usePathname()
-  const isArabic = pathname.includes('/ar')
+  const isArabic = usePathname().includes('/ar')
 
   return (
     <Sheet open={sheetName === sheetToOpen} onOpenChange={actions.closeSheet}>
@@ -55,25 +50,12 @@ const SheetComponent: FC<ISheetComponentProps> = ({
         <SheetDescription className="sr-only">
           Sheet Description
         </SheetDescription>
-        <div className="relative size-full pt-[3.125rem]">
+        <div className="relative size-full">
           <div
             className={cn(
-              'absolute top-0 flex w-full items-center',
-              hasBreadcrumb ? 'justify-between' : 'justify-end',
+              'absolute top-0 flex w-full items-center justify-end',
             )}
           >
-            {hasBreadcrumb && (
-              <div className="line-clamp-1 text-xs font-normal text-zinc-500">
-                {breadcrumb.map((item, index) => (
-                  <span key={index}>
-                    {item}
-                    {index < breadcrumb.length - 1 && (
-                      <span className="mx-[0.38rem]">&gt;</span>
-                    )}
-                  </span>
-                ))}
-              </div>
-            )}
             <SheetClose>
               <Icons.SheetCircleClose className="size-6 min-h-6 min-w-6 text-zinc-800" />
             </SheetClose>

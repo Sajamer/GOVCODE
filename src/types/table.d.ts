@@ -9,6 +9,7 @@ type CellType =
   | 'timezone'
   | 'created_date'
   | 'custom'
+  | 'translated'
 
 interface ITableHeader<T> {
   isSortable: boolean
@@ -36,7 +37,7 @@ type GenerateTable = <T>(
     key: keyof T
     isSortable?: boolean
     type: CellType
-  }>
+  }>,
 ) => {
   headers: Array<ITableHeader<T>>
   values: Array<ITableCell<T>[]>

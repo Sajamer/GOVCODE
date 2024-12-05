@@ -360,10 +360,27 @@ export default TableComponent
 
 const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
   const isArabic = usePathname().includes('/ar')
+  const t = useTranslations('general')
+
+  const translatedValue = value as string
+  translatedValue.toLowerCase()
+
+  console.log('translatedValue', translatedValue)
 
   switch (type.toLowerCase()) {
     case 'date':
       return <Date date={value as string} />
+    case 'translated':
+      return (
+        <div
+          className={cn(
+            'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800',
+            isArabic && 'text-right',
+          )}
+        >
+          {t(`options.${translatedValue}`) ?? '-'}
+        </div>
+      )
     default:
       return (
         <div

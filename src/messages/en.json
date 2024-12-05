@@ -100,6 +100,62 @@
     "information-source": "Information Source",
     "information-source-placeholder": "Enter Information Source",
     "update-kpi": "Update Kpi",
-    "create-kpi": "Create Kpi"
+    "create-kpi": "Create Kpi",
+    "here": "here",
+    "define-new": "Define New",
+    "deleteConfirmation": "Are you sure you want to delete this {title}? This action cannot be undone.",
+    "deleteSuccess": "{title} has been deleted successfully.",
+    "deleteError": "An error occurred while deleting {title}. Please try again.",
+    "confirm-deletion": "Confirm Deletion",
+    "department-options": {
+      "Application": "Application",
+      "CIO": "CIO",
+      "Digital Transformation Awareness": "Digital Transformation Awareness",
+      "Governance": "Governance",
+      "Help Desk": "Help Desk",
+      "Infrastructure": "Infrastructure",
+      "Integration and Data": "Integration and Data"
+    },
+    "objective-options": {
+      "Objective 1": "Objective 1",
+      "Objective 2": "Objective 2",
+      "Objective 3": "Objective 3"
+    },
+    "compliance-options": {
+      "Compliance 1": "Compliance 1",
+      "Compliance 2": "Compliance 2",
+      "Compliance 3": "Compliance 3"
+    },
+    "process-options": {
+      "Process 1": "Process 1",
+      "Process 2": "Process 2",
+      "Process 3": "Process 3"
+    },
+    "options": {
+      "Cumulative": "Cumulative",
+      "CUMULATIVE": "Cumulative",
+      "Staging": "Staging",
+      "STAGING": "Staging",
+      "PERCENTAGE": "Percentage",
+      "Percentage": "Percentage",
+      "Number": "Number",
+      "NUMBER": "Number",
+      "Time": "Time",
+      "TIME": "Time",
+      "Days": "Days",
+      "DAYS": "Days",
+      "Monthly": "Monthly",
+      "MONTHLY": "Monthly",
+      "Quarterly": "Quarterly",
+      "QUARTERLY": "Quarterly",
+      "Semi Annually": "Semi Annually",
+      "SEMI_ANNUALLY": "Semi Annually",
+      "Annually": "Annually",
+      "ANNUALLY": "Annually",
+      "Increasing": "Increasing",
+      "INCREASING": "Increasing",
+      "Decreasing": "Decreasing",
+      "DECREASING": "Decreasing"
+    }
   }
 }

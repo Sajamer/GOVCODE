@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { useSheetStore } from '@/stores/sheet-store'
 import { Bell, CircleCheck, Info } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { FC, useEffect, useRef } from 'react'
 
 export type ConfirmationType = 'default' | 'warning' | 'success' | 'destructive'
@@ -33,6 +34,7 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
   const ref = useRef<HTMLDivElement>(null)
   const { isConfirmationModalOpen, actions } = useSheetStore((store) => store)
   const { openConfirmationModal } = actions
+  const t = useTranslations('general')
 
   const iconToShow = (type: ConfirmationType): JSX.Element => {
     switch (type) {
@@ -98,7 +100,7 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
             className="w-full max-w-36 sm:max-w-[10.25rem]"
             onClick={() => onClose()}
           >
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             variant={type === 'destructive' ? 'destructive' : 'default'}
@@ -107,7 +109,7 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
             className="w-full max-w-36 sm:max-w-[10.25rem]"
             onClick={() => callback()}
           >
-            Confirm
+            {t('confirm')}
           </Button>
         </div>
       </DialogContent>

@@ -107,6 +107,8 @@ const GenericComponent = <T extends Record<string, unknown>>({
     ? (entityData.find((r) => r[entityKey] === rowId) as T | undefined)
     : undefined
 
+  const localizedTitle = t(title)
+
   return (
     <>
       <div
@@ -121,10 +123,15 @@ const GenericComponent = <T extends Record<string, unknown>>({
         >
           <SheetComponent
             sheetName={sheetName as SheetNames}
-            breadcrumb={[title, 'kpi form']}
-            title={isEdit ? `Edit ${title}` : `Add New ${title}`}
+            title={
+              isEdit
+                ? `${t('edit')} ${localizedTitle}`
+                : `${t('add-new')} ${localizedTitle}`
+            }
             subtitle={
-              isEdit ? `Edit a ${title} here` : `Define new ${title} here`
+              isEdit
+                ? `${t('edit')} ${localizedTitle} ${t('here')}`
+                : `${t('define-new')} ${localizedTitle}`
             }
           >
             {sheetToOpen === 'kpis' ? (
@@ -140,7 +147,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
           >
             <Plus size="24" className="text-primary-foreground" />
             <span className="hidden text-sm font-medium lg:flex">
-              {t('add-new') + ' ' + t(title)}
+              {t('add-new') + ' ' + localizedTitle}
             </span>
           </Button>
         </PageHeader>
@@ -155,7 +162,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
               headers={headers}
               hasFooter
               addProps={{
-                label: `${t('add') + ' ' + t(title)}`,
+                label: `${t('add') + ' ' + localizedTitle}`,
                 sheetToOpen: sheetName as SheetNames,
               }}
               tableActions={tableActions}
@@ -166,8 +173,8 @@ const GenericComponent = <T extends Record<string, unknown>>({
         </div>
       </div>
       <ConfirmationDialog
-        title="Confirm Deletion"
-        subTitle={`Are you sure you want to delete this ${title}? This action cannot be undone.`}
+        title={t('confirm-deletion')}
+        subTitle={t('deleteConfirmation', { title })}
         type="destructive"
         open={openConfirmation}
         onClose={() => setOpenConfirmation(false)}

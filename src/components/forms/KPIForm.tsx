@@ -1,10 +1,10 @@
 'use client'
 
 import {
-  calibrationOptions,
-  frequencyOptions,
-  kpiTypeOptions,
-  unitOptions,
+  getCalibrationOptions,
+  getFrequencyOptions,
+  getKpiTypeOptions,
+  getUnitOptions,
 } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
 import { createKPI, updateKPI } from '@/lib/actions/kpiActions'
@@ -49,6 +49,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     staleTime: 1000 * 60 * 5,
   })
 
+  const unitOptions = getUnitOptions(t)
+  const frequencyOptions = getFrequencyOptions(t)
+  const kpiTypeOptions = getKpiTypeOptions(t)
+  const calibrationOptions = getCalibrationOptions(t)
+
   const { data: multipleOptionsDatabaseValues } = useQuery({
     queryKey: ['multipleOptionsDatabaseValues'],
     queryFn: () => axiosGet<IKpiFormDropdownData>('kpis'),
@@ -61,12 +66,22 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     value: option.name,
   }))
 
+  const localizedDepartmentOptions = departmentOptions?.map((option) => ({
+    ...option,
+    label: t(`department-options.${option.label}`),
+  }))
+
   const objectivesOptions =
     multipleOptionsDatabaseValues?.data?.objectives?.map((option) => ({
       id: option.id,
       label: option.name,
       value: option.name,
     }))
+
+  const localizedObjectivesOptions = objectivesOptions?.map((option) => ({
+    ...option,
+    label: t(`objective-options.${option.label}`),
+  }))
 
   const complianceOptions =
     multipleOptionsDatabaseValues?.data?.compliances?.map((option) => ({
@@ -75,6 +90,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       value: option.name,
     }))
 
+  const localizedComplianceOptions = complianceOptions?.map((option) => ({
+    ...option,
+    label: t(`compliance-options.${option.label}`),
+  }))
+
   const processOptions = multipleOptionsDatabaseValues?.data?.processes?.map(
     (option) => ({
       id: option.id,
@@ -82,6 +102,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       value: option.name,
     }),
   )
+
+  const localizedProcessOptions = processOptions?.map((option) => ({
+    ...option,
+    label: t(`process-options.${option.label}`),
+  }))
 
   const {
     values,
@@ -202,11 +227,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           error={touched.code && errors.code ? errors.code : ''}
         />
         <BasicDropdown
-          data={departmentOptions ?? []}
+          data={localizedDepartmentOptions ?? []}
           label={t('department')}
           triggerStyle="h-11"
           placeholder={t('department-placeholder')}
-          defaultValue={departmentOptions?.find(
+          defaultValue={localizedDepartmentOptions?.find(
             (option) => +option.id === values.departmentId,
           )}
           error={
@@ -365,11 +390,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           instanceId={'objectives'}
           label={t('objectives')}
           placeholder={t('objectives-placeholder')}
-          data={objectivesOptions ?? []}
+          data={localizedObjectivesOptions ?? []}
           hasArrow
           isMulti
           name="objectives"
-          defaultValue={objectivesOptions?.filter((option) =>
+          defaultValue={localizedObjectivesOptions?.filter((option) =>
             values.objectives.includes(option.id),
           )}
           error={
@@ -393,11 +418,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           instanceId={'compliances'}
           label={t('compliances')}
           placeholder={t('compliances-placeholder')}
-          data={complianceOptions ?? []}
+          data={localizedComplianceOptions ?? []}
           hasArrow
           isMulti
           name="compliances"
-          defaultValue={complianceOptions?.filter((option) =>
+          defaultValue={localizedComplianceOptions?.filter((option) =>
             values.compliances.includes(option.id),
           )}
           error={
@@ -421,11 +446,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           instanceId={'processes'}
           label={t('processes')}
           placeholder={t('processes-placeholder')}
-          data={processOptions ?? []}
+          data={localizedProcessOptions ?? []}
           hasArrow
           isMulti
           name="processes"
-          defaultValue={processOptions?.filter((option) =>
+          defaultValue={localizedProcessOptions?.filter((option) =>
             values.processes.includes(option.id),
           )}
           error={
