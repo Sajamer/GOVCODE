@@ -179,7 +179,7 @@ const SignupForm = () => {
           {errorMessage && <p className="error-message">*{errorMessage}</p>}
           <div className="body-2 flex justify-center">
             <p className="text-light-100">{'Already have an account?'}</p>
-            <Link href={'/sign-in'} className="ml-1 font-medium text-brand">
+            <Link href={'/sign-in'} className="ml-1 font-medium text-primary">
               {'Sign In'}
             </Link>
           </div>

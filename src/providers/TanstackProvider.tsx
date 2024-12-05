@@ -2,8 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useState } from 'react'
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar'
+import { useState } from 'react'
 
 const TanStackProvider = ({
   children,
@@ -17,7 +17,7 @@ const TanStackProvider = ({
       {children}
       <ProgressBar
         height="4px"
-        color="#50B"
+        color="#266a55"
         options={{ showSpinner: false }}
         shallowRouting
       />

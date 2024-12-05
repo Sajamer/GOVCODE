@@ -187,7 +187,7 @@
     @apply mx-auto max-w-7xl px-5;
   }
   .primary-btn {
-    @apply bg-brand hover:bg-brand-100 transition-all rounded-full button !important;
+    @apply bg-primary transition-all rounded-full button !important;
   }
   .flex-center {
     @apply flex items-center justify-center;
