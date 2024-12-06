@@ -1,3 +1,4 @@
+import Tooltips from '@/components/shared/tooltips/Tooltips'
 import { quarters } from '@/constants/global-constants'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
 import { statusIndicatorSwitch, trendIndicatorSwitch } from '@/lib/functions'
@@ -125,9 +126,30 @@ const KpiStatusComponent: FC<IKpiStatusProps> = ({ data }) => {
               <Fragment key={quarter}>
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
-                    <th className="border border-gray-300 p-2.5">CT</th>
-                    <th className="border border-gray-300 p-2.5">CA</th>
-                    <th className="border border-gray-300 p-2.5">ST</th>
+                    <Tooltips
+                      content={'Current Target'}
+                      variant="bold"
+                      position="top"
+                      asChild
+                    >
+                      <th className="border border-gray-300 p-2.5">CT</th>
+                    </Tooltips>
+                    <Tooltips
+                      content={'Current Actual'}
+                      variant="bold"
+                      position="top"
+                      asChild
+                    >
+                      <th className="border border-gray-300 p-2.5">CA</th>
+                    </Tooltips>
+                    <Tooltips
+                      content={'Status'}
+                      variant="bold"
+                      position="top"
+                      asChild
+                    >
+                      <th className="border border-gray-300 p-2.5">ST</th>
+                    </Tooltips>
                   </Fragment>
                 ))}
               </Fragment>

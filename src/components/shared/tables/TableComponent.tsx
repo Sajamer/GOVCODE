@@ -365,8 +365,6 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
   const translatedValue = value as string
   translatedValue.toLowerCase()
 
-  console.log('translatedValue', translatedValue)
-
   switch (type.toLowerCase()) {
     case 'date':
       return <Date date={value as string} />
