@@ -69,6 +69,11 @@ export interface IKpiActualTargetResponse
   KPIActual: IKpiActualTarget[]
 }
 
+export interface IKpiWithTargetsAndActuals extends KPI {
+  KPITarget: IKpiTarget[]
+  KPIActual: IKpiActualTarget[]
+}
+
 export interface IKpiTargetManipulator {
   kpiId: number
   year: number

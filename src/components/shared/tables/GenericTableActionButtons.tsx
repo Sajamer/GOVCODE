@@ -1,6 +1,12 @@
 import { Link } from '@/i18n/routing'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
-import { Crosshair, Edit2, Target, Trash } from 'lucide-react'
+import {
+  ChartNoAxesColumnIncreasing,
+  Crosshair,
+  Edit2,
+  Target,
+  Trash,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
 import Tooltips from '../tooltips/Tooltips'
@@ -48,6 +54,11 @@ const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
       <Tooltips content={t('actual')} variant="bold" position="top" asChild>
         <Link href={`/kpi-actual-target/${rowId}`}>
           <Crosshair size={16} className="text-secondary" />
+        </Link>
+      </Tooltips>
+      <Tooltips content={t('kpi-charts')} variant="bold" position="top" asChild>
+        <Link href={`/kpi-charts/${rowId}`}>
+          <ChartNoAxesColumnIncreasing size={16} className="text-secondary" />
         </Link>
       </Tooltips>
     </div>

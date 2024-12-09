@@ -15,7 +15,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { useViewportSize } from '@mantine/hooks'
 import { ChevronDown, Search } from 'lucide-react'
 import React, { MutableRefObject, useRef } from 'react'
 
@@ -76,7 +75,6 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
 
   const triggerRef: MutableRefObject<HTMLButtonElement | null> = useRef(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { width } = useViewportSize()
 
   return (
     <div
@@ -143,7 +141,7 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
           )}
           align={align}
           style={{
-            minWidth: width < 767 ? '10rem' : containerRef.current?.offsetWidth,
+            minWidth: containerRef.current?.offsetWidth,
           }}
           container={containerRef.current}
         >

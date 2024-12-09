@@ -254,7 +254,7 @@ export const saveKPITargets = async (targets: IKpiTargetManipulator[]) => {
   }
 }
 
-export const getKPIByIdIncludingKPIActualTargets = async (id: number) => {
+export const getKPIByIdIncludingKPIActual = async (id: number) => {
   try {
     const kpi = await prisma.kPI.findUnique({
       where: { id },
@@ -309,5 +309,26 @@ export const saveKPIActualTarget = async (
   } catch (error) {
     console.error('Error saving KPI actual targets:', error)
     throw new Error('Failed to save KPI actual targets')
+  }
+}
+
+export const getKPIById = async (id: number) => {
+  try {
+    const kpi = await prisma.kPI.findUnique({
+      where: { id },
+      include: {
+        KPITarget: true,
+        KPIActual: true,
+      },
+    })
+
+    if (!kpi) {
+      throw new Error('KPI not found')
+    }
+    return kpi
+  } catch (error) {
+    console.error('Error fetching KPI by ID:', error)
+    sendError(error)
+    throw new Error('Error fetching KPI by ID')
   }
 }
