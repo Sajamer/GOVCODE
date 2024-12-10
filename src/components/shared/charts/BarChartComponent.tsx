@@ -10,6 +10,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart'
+import { IChartData } from '@/types/kpi'
+import NoResultFound from '../NoResultFound'
 
 interface IBarChartComponentProps<T> {
   title: string
@@ -17,6 +19,7 @@ interface IBarChartComponentProps<T> {
   year: string
   chartConfig: ChartConfig
   chartData: Array<T>
+  isMultipleData?: boolean
   callback: (option: IDropdown) => void
 }
 
@@ -29,33 +32,48 @@ const BarChartComponent = <T,>({
   callback,
 }: IBarChartComponentProps<T>) => {
   return (
-    <Card>
+    <Card className="w-full max-w-2xl">
       <CustomCardHeader
         title={title}
         description={description}
         year={year}
         callback={callback}
       />
-      <CardContent>
-        <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dashed" />}
-            />
-            <Bar dataKey="target" fill="var(--color-target)" radius={4} />
-            {/* <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} /> */}
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
+      {chartData && chartData.length > 0 ? (
+        <CardContent>
+          <ChartContainer config={chartConfig}>
+            <BarChart accessibilityLayer data={chartData}>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey={(item: IChartData) => {
+                  if ('month' in item) return item.month
+                  if ('quarter' in item) return item.quarter
+                  if ('semiAnnual' in item) return item.semiAnnual
+                  if ('year' in item) return item.year
+                  return ''
+                }}
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value) => value.slice(0, 3)}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dashed" />}
+              />
+              {Object.entries(chartConfig || {}).map(([key, config]) => {
+                console.log('key', key)
+
+                return (
+                  <Bar key={key} dataKey={key} fill={config.color} radius={4} />
+                )
+              })}
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      ) : (
+        <NoResultFound label={`No results found for the year ${year}`} />
+      )}
     </Card>
   )
 }

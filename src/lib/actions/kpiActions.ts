@@ -332,3 +332,34 @@ export const getKPIById = async (id: number) => {
     throw new Error('Error fetching KPI by ID')
   }
 }
+
+export const getKPIByIdAndYearFilter = async (id: number, year?: string) => {
+  try {
+    const targetYear = year ? parseInt(year) : new Date().getFullYear()
+
+    const kpi = await prisma.kPI.findUnique({
+      where: { id },
+      include: {
+        KPITarget: {
+          where: {
+            year: targetYear,
+          },
+        },
+        KPIActual: {
+          where: {
+            year: targetYear,
+          },
+        },
+      },
+    })
+
+    if (!kpi) {
+      throw new Error('KPI not found')
+    }
+    return kpi
+  } catch (error) {
+    console.error('Error fetching KPI by ID:', error)
+    sendError(error)
+    throw new Error('Error fetching KPI by ID')
+  }
+}

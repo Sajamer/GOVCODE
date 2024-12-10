@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import KpiChartsComponent from '@/components/screens/charts/KpiChartsComponent'
-import { getKPIById } from '@/lib/actions/kpiActions'
+import { getKPIByIdAndYearFilter } from '@/lib/actions/kpiActions'
 import { getMessages } from 'next-intl/server'
 
 export async function generateMetadata({
@@ -24,7 +24,7 @@ export default async function KpiCharts({
 }) {
   const { kpiId } = await params
 
-  const data = await getKPIById(+kpiId)
+  const data = await getKPIByIdAndYearFilter(+kpiId)
 
   return <KpiChartsComponent data={data} />
 }

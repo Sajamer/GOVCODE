@@ -13,6 +13,18 @@ interface IKpiTarget extends KPITarget {}
 interface IKpiActualTarget extends KPIActual {}
 
 export type MonthlyData = Record<string, number | undefined>
+export type IChartData =
+  | { month: string; target: number }
+  | { quarter: string; target: number }
+  | { semiAnnual: string; target: number }
+  | { year: string; target: number }
+
+export type IMultipleChartData =
+  | { month: string; actual: number; target: number }
+  | { quarter: string; actual: number; target: number }
+  | { semiAnnual: string; actual: number; target: number }
+  | { year: string; actual: number; target: number }
+
 export interface IDatabaseStaticData {
   id: number
   name: string
