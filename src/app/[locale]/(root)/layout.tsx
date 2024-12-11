@@ -17,9 +17,9 @@ const AdminDashboardLayout: FC<Props> = async ({ children }) => {
   }
   return (
     <SessionProvider session={session}>
-      <div className="flex h-screen w-full">
+      <div className="flex min-h-screen w-full">
         <DashboardSidebar />
-        <div className="h-screen w-full bg-gray-100 dark:bg-gray-300">
+        <div className="min-h-screen w-full bg-gray-100 dark:bg-gray-300">
           <ComponentWrapper>{children}</ComponentWrapper>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import BarChartComponent from '@/components/shared/charts/BarChartComponent'
+import BasicDropdown from '@/components/shared/dropdowns/BasicDropdown'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
 import { getKPIByIdAndYearFilter } from '@/lib/actions/kpiActions'
 import {
@@ -8,6 +9,7 @@ import {
   IKpiWithTargetsAndActuals,
   IMultipleChartData,
 } from '@/types/kpi'
+import { useTranslations } from 'next-intl'
 import { FC, useEffect, useState } from 'react'
 
 interface IKpiChartsComponentProps {
@@ -15,14 +17,26 @@ interface IKpiChartsComponentProps {
 }
 
 const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
+  const t = useTranslations('general')
+  const currentYear = new Date().getFullYear()
+
   const [chartData, setChartData] = useState<IChartData[]>([])
   const [multipleChartData, setMultipleChartData] = useState<
     IMultipleChartData[]
   >([])
-  const [currentYear, setCurrentYear] = useState(
-    data.KPIActual?.[0]?.year?.toString() ||
-      new Date().getFullYear().toString(),
+  const [selectedYear, setSelectedYear] = useState(
+    new Date().getFullYear().toString(),
   )
+
+  const yearOptions = Array.from({ length: 7 }, (_, i) => {
+    const year = currentYear - 2 + i
+    return { id: String(year), label: String(year), value: String(year) }
+  })
+
+  const localizedYearOptions = yearOptions.map((option) => ({
+    ...option,
+    label: t(`year-options.${option.label}`),
+  }))
 
   const transformSingleChartData = (
     data: IKpiWithTargetsAndActuals,
@@ -133,7 +147,7 @@ const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
   }
 
   const handleYearChange = (option: IDropdown) => {
-    setCurrentYear(option.id)
+    setSelectedYear(option.id)
     fetchChartData(option.id)
   }
 
@@ -162,25 +176,35 @@ const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
 
   return (
     <div className="flex w-full flex-col gap-10">
+      <div className="flex w-full items-center justify-end">
+        <BasicDropdown
+          data={localizedYearOptions ?? []}
+          triggerStyle="h-11 justify-end"
+          wrapperStyle="w-40"
+          containerStyle="max-w-40 w-full"
+          defaultValue={localizedYearOptions?.find(
+            (option) => option.id === selectedYear,
+          )}
+          callback={handleYearChange}
+        />
+      </div>
       <div className="flex w-full items-start justify-start gap-5">
         <BarChartComponent
           title="Current Actuals"
-          description={`Showing Actuals for year ${currentYear}`}
-          year={currentYear}
+          description={`Showing Actuals for year ${selectedYear}`}
+          year={selectedYear}
           chartData={chartData}
           chartConfig={chartConfig}
-          callback={handleYearChange}
         />
         <div>data to be added</div>
       </div>
       <div className="flex w-full items-start justify-start gap-5">
         <BarChartComponent
           title="Actuals vs Targets"
-          description={`Showing differences between actuals and targets for year ${currentYear}`}
-          year={currentYear}
+          description={`Showing differences between actuals and targets for year ${selectedYear}`}
+          year={selectedYear}
           chartData={multipleChartData}
           chartConfig={multipleChartConfig}
-          callback={handleYearChange}
           isMultipleData
         />
         <div>data to be added</div>

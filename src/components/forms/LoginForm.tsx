@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { loginSchema } from '@/schema/auth.schema'
 import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -21,19 +22,12 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import OtpModal from '../shared/modals/OTPModal'
 
-const authFormSchema = () => {
-  return z.object({
-    email: z.string().email(),
-    password: z.string().min(8).max(100),
-  })
-}
-
 const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [accountId] = useState<number | null>(null)
 
-  const formSchema = authFormSchema()
+  const formSchema = loginSchema()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

@@ -14,32 +14,20 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { useRouter } from '@/i18n/routing'
 import { createAccount } from '@/lib/actions/userActions'
+import { registrationSchema } from '@/schema/auth.schema'
 import Image from 'next/image'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { useState } from 'react'
-import OtpModal from '../shared/modals/OTPModal'
-
-const authFormSchema = () => {
-  return z
-    .object({
-      email: z.string().email(),
-      fullName: z.string().min(2).max(50),
-      password: z.string().min(8).max(100),
-      confirmPassword: z.string().min(8).max(100),
-    })
-    .refine((data) => data.confirmPassword === data.password, {
-      message: 'Passwords do not match',
-    })
-}
 
 const SignupForm = () => {
+  const router = useRouter()
+
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [accountId] = useState<number | null>(null)
 
-  const formSchema = authFormSchema()
+  const formSchema = registrationSchema()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -55,9 +43,17 @@ const SignupForm = () => {
     setErrorMessage('')
 
     try {
-      await createAccount(values)
-      redirect('/sign-in')
-    } catch {
+      const response = await createAccount(values)
+
+      console.log('Create account response:', response) // Debugging log
+
+      if (response.error) {
+        setErrorMessage(response.message || 'Failed to create account.')
+      } else {
+        router.push('/sign-in')
+      }
+    } catch (error) {
+      console.error('Account creation error:', error) // Debugging log
       setErrorMessage('Failed to create account. Please try again.')
     } finally {
       setIsLoading(false)
@@ -187,8 +183,6 @@ const SignupForm = () => {
           </div>
         </form>
       </Form>
-
-      {accountId && <OtpModal email={form.getValues('email')} />}
     </>
   )
 }

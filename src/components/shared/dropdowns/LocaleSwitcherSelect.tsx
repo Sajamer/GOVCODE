@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from '@/i18n/routing'
 import { cn } from '@/lib/utils'
 import { useParams } from 'next/navigation'
-import { ChangeEvent, ReactNode, useTransition, FC } from 'react'
+import { ChangeEvent, FC, ReactNode, useTransition } from 'react'
 
 interface ILocaleSwitcherSelectProps {
   children: ReactNode

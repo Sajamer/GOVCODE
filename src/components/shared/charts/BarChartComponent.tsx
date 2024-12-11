@@ -20,7 +20,6 @@ interface IBarChartComponentProps<T> {
   chartConfig: ChartConfig
   chartData: Array<T>
   isMultipleData?: boolean
-  callback: (option: IDropdown) => void
 }
 
 const BarChartComponent = <T,>({
@@ -29,16 +28,10 @@ const BarChartComponent = <T,>({
   year,
   chartData,
   chartConfig,
-  callback,
 }: IBarChartComponentProps<T>) => {
   return (
     <Card className="w-full max-w-2xl">
-      <CustomCardHeader
-        title={title}
-        description={description}
-        year={year}
-        callback={callback}
-      />
+      <CustomCardHeader title={title} description={description} />
       {chartData && chartData.length > 0 ? (
         <CardContent>
           <ChartContainer config={chartConfig}>
@@ -72,7 +65,10 @@ const BarChartComponent = <T,>({
           </ChartContainer>
         </CardContent>
       ) : (
-        <NoResultFound label={`No results found for the year ${year}`} />
+        <NoResultFound
+          label={`No results found for the year ${year}`}
+          wrapperStyle="min-h-[300px]"
+        />
       )}
     </Card>
   )

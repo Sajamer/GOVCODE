@@ -2,9 +2,9 @@
 
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 import { cn } from '@/lib/utils'
+import { useLocale } from 'next-intl'
 import { FC } from 'react'
 import Navbar from '../navbar/Navbar'
-import { useLocale } from 'next-intl'
 
 interface IComponentWrapperProps {
   children: React.ReactNode
@@ -18,7 +18,7 @@ const ComponentWrapper: FC<IComponentWrapperProps> = ({ children }) => {
   return (
     <div
       className={cn(
-        'w-full h-screen transition-all duration-500 flex flex-col justify-start items-start',
+        'w-full transition-all duration-500 flex flex-col justify-start items-start',
         isSidebarOpened
           ? isArabic
             ? 'pr-[17rem]'
