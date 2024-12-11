@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { createAccount } from '@/lib/actions/userActions'
 import Image from 'next/image'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { useState } from 'react'
 import OtpModal from '../shared/modals/OTPModal'
 
@@ -55,6 +56,7 @@ const SignupForm = () => {
 
     try {
       await createAccount(values)
+      redirect('/sign-in')
     } catch {
       setErrorMessage('Failed to create account. Please try again.')
     } finally {

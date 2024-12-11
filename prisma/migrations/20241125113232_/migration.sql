@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `kpi` MODIFY `calibration` ENUM('INCREASING', 'DECREASING', 'NEUTRAL') NOT NULL;
