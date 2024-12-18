@@ -5,9 +5,10 @@ import Tooltips from '@/components/shared/tooltips/Tooltips'
 import { Button } from '@/components/ui/button'
 import { SidebarItems } from '@/constants/sidebar-constants'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
+import { CustomUser } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import { ArrowRight } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -23,6 +24,15 @@ const DashboardSidebar: FC = () => {
   const normalizedPathname = isArabic
     ? pathname.replace(/^\/?ar\/?/, '') || '/'
     : pathname
+
+  const { data } = useSession()
+  const userData = data?.user as CustomUser | undefined
+  const role = userData?.role ?? 'user'
+
+  const filteredSidebarItems = sidebarItems.filter((item) => {
+    if (!item.permissions) return true
+    return item.permissions.includes(role)
+  })
 
   return (
     <aside
@@ -79,7 +89,7 @@ const DashboardSidebar: FC = () => {
         </div>
 
         <nav className="styleScrollbar mt-6 flex h-[calc(100%-140px)] w-full flex-col overflow-y-auto overflow-x-hidden">
-          {sidebarItems.map((item, index) => (
+          {filteredSidebarItems.map((item, index) => (
             <Link
               key={index}
               href={item.href}

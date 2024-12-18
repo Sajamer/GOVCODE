@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { combine } from 'zustand/middleware'
 
-export type SheetNames = 'kpis'
+export type SheetNames = 'kpis' | 'organization'
 
 type SheetProps = {
   rowId?: string

@@ -20,12 +20,6 @@ if (process.env.NODE_ENV === 'production') {
   prisma = global.prisma
 }
 
-if (!prisma) {
-  prisma = new PrismaClient({
-    log: ['query', 'info', 'warn', 'error'],
-  })
-}
-
 async function cleanup() {
   if (prisma) {
     await prisma.$disconnect()

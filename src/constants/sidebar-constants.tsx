@@ -1,4 +1,9 @@
-import { ChartColumnIncreasing, ChartSpline, Clock5 } from 'lucide-react'
+import {
+  Building2,
+  ChartColumnIncreasing,
+  ChartSpline,
+  Clock5,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export const SidebarItems = () => {
@@ -19,6 +24,12 @@ export const SidebarItems = () => {
       title: t('kpi-status'),
       icon: <Clock5 className="size-5 min-w-5" />,
       href: '/kpi-status',
+    },
+    {
+      title: t('organizations'),
+      icon: <Building2 className="size-5 min-w-5" />,
+      href: '/organization',
+      permissions: ['superAdmin', 'moderator'],
     },
   ]
 }

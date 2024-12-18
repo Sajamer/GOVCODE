@@ -56,7 +56,8 @@ enum userRole {
   superAdmin
   moderator
   contributor
-  user
+  userDepartment
+  userOrganization
 }
 
 enum KPIType {
