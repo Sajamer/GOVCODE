@@ -55,8 +55,6 @@ const BarChartComponent = <T,>({
                 content={<ChartTooltipContent indicator="dashed" />}
               />
               {Object.entries(chartConfig || {}).map(([key, config]) => {
-                console.log('key', key)
-
                 return (
                   <Bar key={key} dataKey={key} fill={config.color} radius={4} />
                 )

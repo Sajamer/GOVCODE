@@ -1,6 +1,15 @@
 import { z } from 'zod'
 
-const { object, string } = z
+const { object, array, string } = z
+
+const organizationDepartmentsSchema = z.object({
+  name: string({ required_error: 'This field is required.' })
+    .min(4, {
+      message: 'Be at least 4 characters long',
+    })
+    .max(128, { message: 'must be at most 128 characters' })
+    .trim(),
+})
 
 export const organizationSchema = object({
   name: string().min(3),
@@ -16,4 +25,9 @@ export const organizationSchema = object({
   postalCode: string().optional(),
   timezone: string().optional(),
   currency: string().optional(),
+  departments: array(organizationDepartmentsSchema, {
+    required_error: 'This field is required.',
+  }).min(1, {
+    message: 'At least one department is required',
+  }),
 })

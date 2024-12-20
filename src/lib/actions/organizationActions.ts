@@ -59,18 +59,62 @@ export const updateOrganizationById = async (
   dto: IOrganizationManipulator,
 ) => {
   try {
-    const organization = await prisma.organization.update({
+    const { departments, ...organizationData } = dto
+
+    const updatedOrganization = await prisma.organization.update({
       where: {
         id,
       },
       data: {
-        ...dto,
+        ...organizationData,
+        // If `departments` exists, update them as well
+        departments: departments
+          ? {
+              upsert: departments.map((department) => ({
+                where: { id: department.id || 0 }, // Use the department ID if it exists
+                update: {
+                  name: department.name,
+                  description: department.description || null,
+                },
+                create: {
+                  name: department.name,
+                  description: department.description || null,
+                },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        departments: true,
+      },
+    })
+
+    return updatedOrganization
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while updating organization and departments.')
+  }
+}
+
+export const createOrganization = async (dto: IOrganizationManipulator) => {
+  try {
+    const { departments, ...organizationData } = dto
+
+    const organization = await prisma.organization.create({
+      data: {
+        ...organizationData,
+        departments: {
+          create: departments || [],
+        },
+      },
+      include: {
+        departments: true,
       },
     })
 
     return organization
   } catch (error) {
     sendError(error)
-    throw new Error('Error while updating organization.')
+    throw new Error('Error while creating organization.')
   }
 }

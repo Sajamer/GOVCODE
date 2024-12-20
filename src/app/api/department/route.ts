@@ -7,12 +7,8 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(req: NextRequest): Promise<NextResponse> {
   return validate(
     {},
-    async (validateReq) => {
+    async () => {
       try {
-        const { session } = validateReq
-
-        console.log('Session:', session)
-
         const departments = await prisma.department.findMany({
           select: { id: true, name: true },
         })

@@ -45,8 +45,6 @@ const SignupForm = () => {
     try {
       const response = await createAccount(values)
 
-      console.log('Create account response:', response) // Debugging log
-
       if (response.error) {
         setErrorMessage(response.message || 'Failed to create account.')
       } else {
