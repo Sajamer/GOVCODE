@@ -69,7 +69,9 @@ const PageHeader: FC<IPageHeaderProps> = ({
             onInputClear={() => setSearchTerm('')}
           />
         )}
-        <div className="2xl:pt-0.5">{children}</div>
+        <div className="flex items-center justify-center gap-5 2xl:pt-0.5">
+          {children}
+        </div>
       </div>
     </div>
   )

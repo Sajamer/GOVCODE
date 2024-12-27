@@ -11,9 +11,10 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   departmentId Int?
-  department   Department? @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   accounts     Account[]
   sessions     Session[]
+  Invitation   Invitation[]
 }
 
 model Account {
@@ -71,4 +72,21 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Invitation {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  fullName     String
+  role         userRole @default(userDepartment)
+  departmentId Int?
+  token        String   @unique // Secure token for invitation link
+  status       String   @default("pending") // pending, accepted, or revoked
+  expiresAt    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitedByUserId String? // Reference to the user who invited
+  invitedBy       User?   @relation(fields: [invitedByUserId], references: [id], onDelete: SetNull)
 }

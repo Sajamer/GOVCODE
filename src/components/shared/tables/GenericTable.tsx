@@ -20,6 +20,7 @@ import TableComponent from './TableComponent'
 interface IGenericTableProps<T extends Record<string, unknown>> {
   title: string
   description: string
+  icon?: JSX.Element
   entityKey: keyof T
   sheetName: SheetNames
   data: T[]
@@ -34,6 +35,7 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
 const GenericComponent = <T extends Record<string, unknown>>({
   title,
   description,
+  icon,
   entityKey,
   sheetName,
   columns,
@@ -119,7 +121,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
           title={title}
           description={description}
           iconWrapper="bg-primary"
-          icon={<ChartSpline className="text-primary-foreground" />}
+          icon={icon ?? <ChartSpline className="text-primary-foreground" />}
         >
           <SheetComponent
             sheetName={sheetName as SheetNames}

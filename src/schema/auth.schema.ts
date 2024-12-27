@@ -19,3 +19,12 @@ export const loginSchema = () => {
     password: string().min(8).max(100),
   })
 }
+
+export const acceptInvitationSchema = () => {
+  return object({
+    password: string().min(8).max(100),
+    confirmPassword: string().min(8).max(100),
+  }).refine((data) => data.confirmPassword === data.password, {
+    message: 'Passwords do not match',
+  })
+}

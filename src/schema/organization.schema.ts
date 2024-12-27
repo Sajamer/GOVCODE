@@ -31,3 +31,13 @@ export const organizationSchema = object({
     message: 'At least one department is required',
   }),
 })
+
+export const DepartmentParamsSchema = z.object({
+  id: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      const parsed = parseInt(val, 10)
+      return isNaN(parsed) ? undefined : parsed
+    }
+    return val
+  }, z.number().int().positive().optional()),
+})

@@ -53,3 +53,9 @@ type TimeZone = {
 interface IIdObject {
   id?: number
 }
+
+interface IColumn {
+  key: string
+  isSortable: boolean
+  type: CellType
+}

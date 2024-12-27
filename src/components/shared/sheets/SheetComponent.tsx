@@ -65,7 +65,7 @@ const SheetComponent: FC<ISheetComponentProps> = ({
             <div className="line-clamp-1 max-w-full break-words text-2xl font-medium text-zinc-900">
               {title}
             </div>
-            <div className="line-clamp-1 max-w-full break-words text-sm text-zinc-500">
+            <div className="max-w-full break-words text-sm text-zinc-500">
               {subtitle}
             </div>
           </div>

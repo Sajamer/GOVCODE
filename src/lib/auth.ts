@@ -9,7 +9,7 @@ import NextAuth, {
 } from 'next-auth'
 import { JWT } from 'next-auth/jwt'
 import Credentials from 'next-auth/providers/credentials'
-import { comparePasswords } from './actions/userActions'
+import { comparePasswords } from './utils'
 
 interface CustomUser extends NextAuthUser {
   id: string
@@ -18,8 +18,6 @@ interface CustomUser extends NextAuthUser {
   fullName: string
   photo: string
   phone: string
-  bio: string
-  dateOfBirth: string
   departmentId: string
   access_token: string
   providerAccountId: string
@@ -33,8 +31,6 @@ interface CustomSession extends NextAuthSession {
     fullName: string
     photo: string
     phone: string
-    bio: string
-    dateOfBirth: string
     departmentId: string
     access_token: string
     providerAccountId: string
@@ -69,10 +65,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             fullName: true,
             photo: true,
             phone: true,
-            bio: true,
-            dateOfBirth: true,
             departmentId: true,
-            account: {
+            accounts: {
               select: {
                 provider: true,
                 providerAccountId: true,
@@ -126,8 +120,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.fullName = customUser.fullName
         token.photo = customUser.photo
         token.phone = customUser.phone
-        token.bio = customUser.bio
-        token.dateOfBirth = customUser.dateOfBirth
         token.departmentId = customUser.departmentId
         token.access_token = customUser.access_token
         token.providerAccountId = customUser.providerAccountId
@@ -149,8 +141,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       customSession.user.fullName = token.fullName as string
       customSession.user.photo = token.photo as string
       customSession.user.phone = token.phone as string
-      customSession.user.bio = token.bio as string
-      customSession.user.dateOfBirth = token.dateOfBirth as string
       customSession.user.departmentId = token.departmentId as string
       customSession.user.access_token = token.access_token as string
       customSession.user.providerAccountId = token.providerAccountId as string

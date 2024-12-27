@@ -14,6 +14,7 @@ interface IPasswordInputProps
   error?: string
   containerStyle?: string
   maxLength?: number
+  onGeneratePassword?: (generatedPassword: string) => void
 }
 
 const PasswordInput: FC<IPasswordInputProps> = ({
@@ -22,6 +23,7 @@ const PasswordInput: FC<IPasswordInputProps> = ({
   containerStyle,
   className,
   disabled,
+  onGeneratePassword,
   ...props
 }) => {
   const [passwordType, setPasswordType] = useState('password')
@@ -34,17 +36,35 @@ const PasswordInput: FC<IPasswordInputProps> = ({
     setPasswordType('password')
   }
 
+  const generateRandomPassword = (): void => {
+    const generatedPassword = Math.random().toString(36).slice(-10) + '@2025' // Generates a 10-character random string
+    if (onGeneratePassword) {
+      onGeneratePassword(generatedPassword)
+    }
+  }
+
   return (
-    <div className={cn('relative flex flex-col gap-1', containerStyle)}>
-      <Label>{label}</Label>
+    <div className={cn('relative flex flex-col w-full', containerStyle)}>
+      <div className="flex items-center justify-between gap-2">
+        <Label>{label}</Label>
+        <Button
+          type="button"
+          variant="link"
+          className="p-0 text-sm text-primary"
+          onClick={generateRandomPassword}
+        >
+          Generate Password
+        </Button>
+      </div>
       <div className="relative">
         <Input
           type={passwordType}
           maxLength={128}
           className={cn(
-            'shadow-none pr-[2.13rem] text-sm text-neutral-800 placeholder:text-neutral-500 disabled:placeholder:text-neutral-200',
+            'h-11 shadow-none pr-[2.13rem] text-sm text-neutral-800 placeholder:text-neutral-500 disabled:placeholder:text-neutral-200',
             className,
-            error && 'border-Cosmos bg-roseWhite focus-visible:ring-0',
+            error &&
+              'border-destructive focus-visible:ring-0 focus:border-destructive',
           )}
           disabled={disabled}
           {...props}

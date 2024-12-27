@@ -10,8 +10,6 @@ export const ourFileRouter = {
       return { input }
     })
     .onUploadComplete(async ({ file }) => {
-      console.log('file url', file.url)
-
       return { image: file.url }
     }),
 } satisfies FileRouter

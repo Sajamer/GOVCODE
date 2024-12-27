@@ -18,6 +18,14 @@ type AxiosErrorType = AxiosError<{
   statusCode: number
 }>
 
+type IActionResponse =
+  | { error: false; message: string; data: unknown }
+  | {
+      error: true
+      message: string
+      errorCode: unknown
+    }
+
 interface IValidatedRequest {
   body?: any
   query?: any
@@ -60,4 +68,13 @@ interface IMultiSelectOptions {
   id: number
   label: string
   value: string
+}
+
+interface IEmailOptions {
+  to: string // Recipient email
+  subject: string // Email subject
+  html: string // Email body as HTML
+  from?: string // Optional custom sender
+  cc?: string // Optional CC field
+  bcc?: string // Optional BCC field
 }
