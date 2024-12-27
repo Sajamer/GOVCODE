@@ -11,7 +11,7 @@ import { JWT } from 'next-auth/jwt'
 import Credentials from 'next-auth/providers/credentials'
 import { comparePasswords } from './utils'
 
-interface CustomUser extends NextAuthUser {
+export interface CustomUser extends NextAuthUser {
   id: string
   role: string
   email: string

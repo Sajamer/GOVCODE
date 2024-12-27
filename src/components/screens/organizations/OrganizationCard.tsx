@@ -14,7 +14,7 @@ const OrganizationCard: FC<IOrganizationCardProps> = ({ data }) => {
         <div className="flex items-center gap-4 md:gap-[1.875rem] lg:min-w-80 xl:min-w-[26.375rem]">
           <Image
             src={
-              data.logo.length > 0
+              data.logo && data.logo.length > 0
                 ? data.logo
                 : '/assets/images/organization.png'
             }
