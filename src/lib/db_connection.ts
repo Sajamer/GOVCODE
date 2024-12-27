@@ -9,25 +9,15 @@ let prisma: PrismaClient
 
 if (process.env.NODE_ENV === 'production') {
   prisma = new PrismaClient({
-    log: ['query', 'info', 'warn', 'error'],
+    log: ['warn', 'error'],
   })
 } else {
   if (!global.prisma) {
     global.prisma = new PrismaClient({
-      log: ['query', 'info', 'warn', 'error'],
+      log: ['warn', 'error'],
     })
   }
   prisma = global.prisma
 }
-
-async function cleanup() {
-  if (prisma) {
-    await prisma.$disconnect()
-    console.log('Prisma disconnected')
-  }
-}
-
-process.on('SIGINT', cleanup)
-process.on('SIGTERM', cleanup)
 
 export default prisma

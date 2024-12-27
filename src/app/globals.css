@@ -658,3 +658,8 @@
   margin: 0 !important;
   height: fit-content !important;
 }
+
+/* Remove default arrows */
+.p-organizationchart .p-node-toggler {
+  display: none;
+}

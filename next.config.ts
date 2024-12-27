@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   // eslint: {
   //   ignoreDuringBuilds: true,
   // },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'utfs.io',
+      },
+    ],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '100MB',

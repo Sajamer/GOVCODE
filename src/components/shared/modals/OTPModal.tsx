@@ -17,6 +17,7 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { verifyOTP } from '@/lib/actions/userActions'
+import { sendError } from '@/lib/utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
@@ -41,7 +42,7 @@ const OtpModal = ({ email }: OtpModalProps) => {
 
       if (sessionId) router.push('/')
     } catch (error) {
-      console.log('Failed to verify OTP', error)
+      sendError(error)
     }
 
     setIsLoading(false)

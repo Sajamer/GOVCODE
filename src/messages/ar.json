@@ -11,7 +11,8 @@
     "kpiAnalysis": "تحليل المؤشرات",
     "kpiStatus": "حالة المؤشرات",
     "kpiChart": "رسم بياني للمؤشرات",
-    "organizations": "المنظمات"
+    "organizations": "المنظمات",
+    "acceptInvitation": "قبول الدعوة"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -157,7 +158,12 @@
       "Increasing": "تصاعدي",
       "INCREASING": "تصاعدي",
       "Decreasing": "تنازلي",
-      "DECREASING": "تنازلي"
+      "DECREASING": "تنازلي",
+      "superAdmin": "مدير النظام",
+      "moderator": "مشرف",
+      "contributor": "مساهم",
+      "userDepartment": "قسم المستخدم",
+      "userOrganization": "منظمة المستخدم"
     },
     "current-target": "الهدف الحالي",
     "current-actual": "الفعلي الحالي",
@@ -177,6 +183,17 @@
     },
     "organizations": "المنظمات",
     "organization": "منظمة",
-    "organization-description": "إدارة جميع المنظمات المتاحة على المنصة."
+    "organization-description": "إدارة جميع المنظمات المتاحة على المنصة.",
+    "user-access": "صلاحيات المستخدم",
+    "user-access-description": "إدارة جميع صلاحيات المستخدمين المتاحة على المنصة.",
+    "invite-user": "دعوة مستخدم",
+    "user-manually": "إضافة مستخدم يدويًا",
+    "user-sheet-subtitle": "قم بإشراك أعضاء الفريق بسلاسة عن طريق إرسال دعوات مخصصة للانضمام إلى مؤسستك.",
+    "manual-user-subtitle": "قم بإنشاء مستخدم جديد عن طريق توفير تفاصيله يدويًا وتعيين الأدوار والأقسام.",
+    "role": "الدور",
+    "role-placeholder": "اختر الدور",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "create": "إنشاء"
   }
 }

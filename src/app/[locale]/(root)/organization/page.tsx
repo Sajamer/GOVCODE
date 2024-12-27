@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import OrganizationsComponent from '@/components/screens/organizations/OrganizationsComponent'
 import { getAllOrganizations } from '@/lib/actions/organizationActions'
-import { auth } from '@/lib/auth'
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from '@tanstack/react-query'
 import { getMessages } from 'next-intl/server'
 
 export async function generateMetadata({
@@ -19,10 +23,16 @@ export async function generateMetadata({
 }
 
 export default async function Organization() {
-  const data = await getAllOrganizations()
-  const session = await auth()
+  const queryClient = new QueryClient()
 
-  if (session && session.user && session.user.role === 'admin') {
-  }
-  return <OrganizationsComponent data={data} />
+  await queryClient.prefetchQuery({
+    queryKey: ['organizations'],
+    queryFn: async () => await getAllOrganizations(),
+  })
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <OrganizationsComponent />
+    </HydrationBoundary>
+  )
 }

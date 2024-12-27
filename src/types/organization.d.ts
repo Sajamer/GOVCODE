@@ -41,4 +41,9 @@ interface IOrganizationManipulator {
   postalCode: string
   timezone: string
   currency: string
+  departments: {
+    id?: number
+    name: string
+    description?: string
+  }[]
 }

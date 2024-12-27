@@ -1,30 +1,36 @@
 'use client'
 
+import OrganizationForm from '@/components/forms/OrganizationForm'
 import PageHeader from '@/components/shared/headers/PageHeader'
 import NoResultFound from '@/components/shared/NoResultFound'
 import SheetComponent from '@/components/shared/sheets/SheetComponent'
 import { Button } from '@/components/ui/button'
+import { getAllOrganizations } from '@/lib/actions/organizationActions'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
+import { useQuery } from '@tanstack/react-query'
 import { Building2, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { FC, useEffect, useMemo } from 'react'
 import OrganizationCard from './OrganizationCard'
 
-interface IOrganizationsComponentProps {
-  data: IOrganization[]
-}
-
-const OrganizationsComponent: FC<IOrganizationsComponentProps> = ({ data }) => {
+const OrganizationsComponent: FC = () => {
   const t = useTranslations('general')
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: async () => {
+      await getAllOrganizations()
+    },
+    staleTime: 5 * 60 * 1000, // 2 minutes
+  })
 
   const staticPageData = {
     title: 'organizations',
     subTitle: t('organization'),
     description: 'organization-description',
-    isLoading: false,
   }
 
   const { actions, sheetToOpen, isEdit } = useSheetStore((store) => store)
@@ -61,10 +67,7 @@ const OrganizationsComponent: FC<IOrganizationsComponentProps> = ({ data }) => {
                 : `${t('define-new')} ${staticPageData.subTitle}`
             }
           >
-            {sheetToOpen === 'kpis' ? (
-              // <KPIForm data={singleEntityData as unknown as IKpiResponse} />
-              <>form</>
-            ) : null}
+            {sheetToOpen === 'organization' ? <OrganizationForm /> : null}
           </SheetComponent>
           <Button
             variant="default"
@@ -83,14 +86,14 @@ const OrganizationsComponent: FC<IOrganizationsComponentProps> = ({ data }) => {
           </Button>
         </PageHeader>
         <div className="flex w-full flex-col gap-[1.88rem]">
-          {staticPageData.isLoading ? (
+          {isLoading ? (
             <div className="flex min-h-[200px] w-full items-center justify-center">
               <Loader2 className="size-16 animate-spin" />
             </div>
           ) : entityData.length > 0 ? (
-            <div className="w-full">
-              {entityData.map((entity) => (
-                <OrganizationCard key={entity.id} data={entity} />
+            <div className="w-full space-y-4">
+              {entityData.map((entity, index) => (
+                <OrganizationCard key={index} data={entity} />
               ))}
             </div>
           ) : (

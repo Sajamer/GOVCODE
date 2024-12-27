@@ -1,10 +1,44 @@
-import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
+import {
+  Calibration,
+  Frequency,
+  KPIType,
+  Units,
+  userRole,
+} from '@prisma/client'
 import { periodsByFrequency } from './kpi-constants'
 
 type TranslationFunction = (
   key: string,
   values?: Record<string, string | number>,
 ) => string
+
+export const getUserRoles = (t: TranslationFunction) => [
+  {
+    id: userRole.superAdmin,
+    label: t('options.superAdmin'),
+    value: userRole.superAdmin,
+  },
+  {
+    id: userRole.moderator,
+    label: t('options.moderator'),
+    value: userRole.moderator,
+  },
+  {
+    id: userRole.contributor,
+    label: t('options.contributor'),
+    value: userRole.contributor,
+  },
+  {
+    id: userRole.userDepartment,
+    label: t('options.userDepartment'),
+    value: userRole.userDepartment,
+  },
+  {
+    id: userRole.userOrganization,
+    label: t('options.userOrganization'),
+    value: userRole.userOrganization,
+  },
+]
 
 export const getKpiTypeOptions = (t: TranslationFunction) => [
   {

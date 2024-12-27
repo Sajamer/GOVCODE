@@ -2,7 +2,9 @@
 // import { Prisma } from '@prisma/client'
 import { Calibration, Prisma, Units } from '@prisma/client'
 import { type ClassValue, clsx } from 'clsx'
+import { pbkdf2Sync, randomBytes } from 'crypto'
 import moment from 'moment'
+
 import { cloneElement } from 'react'
 import { twMerge } from 'tailwind-merge'
 
@@ -366,4 +368,33 @@ export const calculateStatus = (
   if (diff >= 0 && defaultTrend === Calibration.INCREASING) return true
   else if (diff <= 0 && defaultTrend === Calibration.DECREASING) return true
   else return false
+}
+
+export const hashPassword = async (
+  password: string,
+  salt: string,
+): Promise<string> => {
+  const hash = pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex')
+  return hash
+}
+
+export const generateSalt = async (): Promise<string> => {
+  return randomBytes(16).toString('hex')
+}
+
+export const createHashedPassword = async (
+  password: string,
+): Promise<{ salt: string; hash: string }> => {
+  const salt = await generateSalt()
+  const hash = await hashPassword(password, salt)
+  return { salt, hash }
+}
+
+export const comparePasswords = async (
+  password: string,
+  salt: string,
+  hash: string,
+): Promise<boolean> => {
+  const newHash = await hashPassword(password, salt)
+  return newHash === hash
 }

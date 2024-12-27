@@ -1,38 +1,12 @@
 'use server'
 
 import prisma from '@/lib/db_connection'
-import { pbkdf2Sync, randomBytes } from 'crypto'
-import { getSession, signIn } from 'next-auth/react'
-import { sendError } from '../utils'
-
-export const hashPassword = async (
-  password: string,
-  salt: string,
-): Promise<string> => {
-  const hash = pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex')
-  return hash
-}
-
-export const generateSalt = async (): Promise<string> => {
-  return randomBytes(16).toString('hex')
-}
-
-export const createHashedPassword = async (
-  password: string,
-): Promise<{ salt: string; hash: string }> => {
-  const salt = await generateSalt()
-  const hash = await hashPassword(password, salt)
-  return { salt, hash }
-}
-
-export const comparePasswords = async (
-  password: string,
-  salt: string,
-  hash: string,
-): Promise<boolean> => {
-  const newHash = await hashPassword(password, salt)
-  return newHash === hash
-}
+import {
+  IManualManipulator,
+  IUserUpdateManipulator,
+} from '@/schema/user.schema'
+import { IUsers } from '@/types/users'
+import { createHashedPassword, sendError } from '../utils'
 
 // Unified error handler
 const handleError = (error: unknown, message: string) => {
@@ -40,13 +14,6 @@ const handleError = (error: unknown, message: string) => {
   throw new Error(message)
 }
 
-type IActionResponse =
-  | { error: false; message: string; data: unknown }
-  | {
-      error: true
-      message: string
-      errorCode: unknown
-    }
 // Create account logic with OTP
 export const createAccount = async ({
   fullName,
@@ -79,7 +46,6 @@ export const createAccount = async ({
       }
 
     // we need to hash and salt the password
-
     const { salt, hash } = await createHashedPassword(password)
 
     // create user
@@ -88,7 +54,7 @@ export const createAccount = async ({
       data: {
         fullName,
         email,
-        account: {
+        accounts: {
           create: {
             provider: 'credentials',
             providerAccountId: email,
@@ -124,55 +90,6 @@ export const createAccount = async ({
   }
 }
 
-// Sign-in user logic
-export const signInUser = async ({
-  email,
-  otp,
-}: {
-  email: string
-  otp: string
-}) => {
-  try {
-    // Verify OTP
-    const isValid = await verifyOTP(email, otp)
-    if (!isValid) throw new Error('Invalid OTP')
-
-    // Check if the user exists
-    const user = await prisma.user.findUnique({ where: { email } })
-    if (!user) throw new Error('User not found')
-
-    // Perform sign-in using next-auth
-    const signInResponse = await signIn('credentials', {
-      email,
-      redirect: true,
-      callbackUrl: '/',
-    })
-    if (!signInResponse?.ok) throw new Error('Failed to sign in user')
-
-    return { accountId: user.id, message: 'User signed in successfully' }
-  } catch (error) {
-    sendError(error)
-    handleError(error, 'Failed to sign in user')
-  }
-}
-
-// Get the current logged-in user
-export const getCurrentUser = async () => {
-  try {
-    const session = await getSession()
-    if (!session || !session.user?.email) return null
-
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    })
-    return user || null
-  } catch (error) {
-    console.error(error)
-    sendError(error)
-    return null
-  }
-}
-
 export async function verifyOTP(
   email: string,
   inputOtp: string,
@@ -191,4 +108,140 @@ export async function verifyOTP(
   }
 
   return false
+}
+
+export const getAllOrganizationUsers = async (
+  searchParams?: Record<string, string>,
+) => {
+  try {
+    const params = searchParams || {}
+
+    const organizationId = +(params?.organizationId ?? 0)
+    const limit = +(params?.limit ?? '10')
+    const page = +(params?.page ?? '1')
+
+    const skip = (page - 1) * limit
+
+    // Fetch users through the organization->departments->users relationship
+    const users = await prisma.user.findMany({
+      skip,
+      take: limit,
+      where: {
+        department: {
+          organizationId, // Match organization ID via department
+        },
+      },
+      include: {
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if (!users || users.length === 0) {
+      return []
+    }
+
+    return users as IUsers[]
+  } catch (error) {
+    sendError(error)
+    handleError(error, 'Failed to fetch users')
+    throw new Error('Failed to fetch users by organization')
+  }
+}
+
+export const addUserManually = async (dto: IManualManipulator) => {
+  try {
+    const { fullName, email, password, departmentId, role } = dto
+    // Check if the user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+
+    if (existingUser)
+      return {
+        error: true,
+        errorCode: 'USER_ALREADY_EXISTS',
+        message: 'User already exists',
+      }
+
+    // we need to hash and salt the password
+    const { salt, hash } = await createHashedPassword(password)
+
+    // create user
+
+    const user = await prisma.user.create({
+      data: {
+        fullName,
+        email,
+        departmentId,
+        role,
+        accounts: {
+          create: {
+            provider: 'credentials',
+            providerAccountId: email,
+            type: 'email',
+          },
+        },
+      },
+    })
+
+    // save the password to the user
+    await prisma.password.create({
+      data: {
+        userId: user.id,
+        salt,
+        hash,
+      },
+    })
+
+    // send the verification email to user.
+    return {
+      error: false,
+      message: 'Account created successfully',
+      data: user,
+    }
+  } catch (error) {
+    sendError(error)
+    handleError(error, 'Failed to create account')
+    return {
+      error: true,
+      errorCode: 'CREATE_ACCOUNT_FAILED',
+      message: 'Failed to create account',
+    }
+  }
+}
+
+export const deleteUser = async (id: string) => {
+  try {
+    const user = await prisma.user.delete({
+      where: { id },
+    })
+
+    return user
+  } catch (error) {
+    sendError(error)
+    handleError(error, 'Failed to delete user')
+    throw new Error('Failed to delete user')
+  }
+}
+
+export const updateUser = async (id: string, dto: IUserUpdateManipulator) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        fullName: dto.fullName,
+        role: dto.role,
+        departmentId: dto.departmentId,
+      },
+    })
+
+    return user
+  } catch (error) {
+    sendError(error)
+    handleError(error, 'Failed to update user')
+    throw new Error('Failed to update user')
+  }
 }

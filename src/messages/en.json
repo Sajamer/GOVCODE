@@ -11,7 +11,8 @@
     "kpiAnalysis": "KPI Analysis",
     "kpiStatus": "KPI Status",
     "kpiChart": "KPI Chart",
-    "organizations": "Organizations"
+    "organizations": "Organizations",
+    "acceptInvitation": "Accept Invitation"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -157,7 +158,12 @@
       "Increasing": "Increasing",
       "INCREASING": "Increasing",
       "Decreasing": "Decreasing",
-      "DECREASING": "Decreasing"
+      "DECREASING": "Decreasing",
+      "superAdmin": "Super Admin",
+      "moderator": "Moderator",
+      "contributor": "Contributor",
+      "userDepartment": "User Department",
+      "userOrganization": "User Organization"
     },
     "current-target": "Current Target",
     "current-actual": "Current Actual",
@@ -177,6 +183,21 @@
     },
     "organizations": "Organizations",
     "organization": "Organization",
-    "organization-description": "Manage organizations and departments from here"
+    "organization-description": "Manage organizations and departments from here",
+    "user-access": "User Access",
+    "user-access-description": "Manage user access to organization and departments",
+    "invite-user": "Invite User",
+    "user-manually": "User Manually",
+    "user-sheet-subtitle": "Seamlessly onboard team members by sending personalized invitations to join your organization.",
+    "manual-user-subtitle": "user by providing their details manually and assigning roles and departments.",
+    "role": "Role",
+    "Role": "Role",
+    "role-placeholder": "Select user role",
+    "fullName": "Full Name",
+    "FullName": "Full Name",
+    "email": "Email",
+    "Email": "Email",
+    "Department": "Department",
+    "create": "Create"
   }
 }
