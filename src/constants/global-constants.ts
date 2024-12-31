@@ -1,5 +1,6 @@
 import {
   Calibration,
+  ChartTypes,
   Frequency,
   KPIType,
   Units,
@@ -116,6 +117,24 @@ export const getCalibrationOptions = (t: TranslationFunction) => [
   //   label: t('options.Neutral'),
   //   value: Calibration.NEUTRAL,
   // },
+]
+
+export const getChartTypeOptions = (t: TranslationFunction) => [
+  {
+    id: ChartTypes.line,
+    label: t('options.line'),
+    value: ChartTypes.line,
+  },
+  {
+    id: ChartTypes.bar,
+    label: t('options.bar'),
+    value: ChartTypes.bar,
+  },
+  {
+    id: ChartTypes.pie,
+    label: t('options.pie'),
+    value: ChartTypes.pie,
+  },
 ]
 
 export const frequencyMapping: Record<

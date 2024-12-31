@@ -26,6 +26,7 @@ model KPI {
   KPIProcess    KPIProcess[]
   KPITarget     KPITarget[]
   KPIActual     KPIActual[]
+  DashboardKPI  DashboardKPI[]
 }
 
 model KPITarget {
@@ -54,6 +55,16 @@ model KPIActual {
   kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
 
   @@unique([kpiId, year, period])
+}
+
+model Dashboard {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  chartType ChartTypes @default(bar)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  dashboardKPIs DashboardKPI[] // Relationship with selected KPIs
 }
 
 model Objective {
@@ -114,4 +125,25 @@ model KPIProcess {
   process   Process @relation(fields: [processId], references: [id])
 
   @@id([kpiId, processId])
+}
+
+model DashboardKPI {
+  id Int @id @default(autoincrement())
+
+  dashboardId Int // Foreign key to Dashboard
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  kpiId Int // Foreign key to KPI
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dashboardId, kpiId]) // Prevent duplicate KPI selections for the same dashboard
+}
+
+enum ChartTypes {
+  bar
+  line
+  pie
 }

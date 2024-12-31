@@ -12,7 +12,8 @@
     "kpiStatus": "KPI Status",
     "kpiChart": "KPI Chart",
     "organizations": "Organizations",
-    "acceptInvitation": "Accept Invitation"
+    "acceptInvitation": "Accept Invitation",
+    "dashboard": "Dashboard"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -54,6 +55,7 @@
     "edit": "Edit",
     "delete": "Delete",
     "save": "Save",
+    "view": "View",
     "cancel": "Cancel",
     "close": "Close",
     "yes": "Yes",
@@ -163,7 +165,10 @@
       "moderator": "Moderator",
       "contributor": "Contributor",
       "userDepartment": "User Department",
-      "userOrganization": "User Organization"
+      "userOrganization": "User Organization",
+      "line": "Line",
+      "bar": "Bar",
+      "pie": "Pie"
     },
     "current-target": "Current Target",
     "current-actual": "Current Actual",
@@ -198,6 +203,14 @@
     "email": "Email",
     "Email": "Email",
     "Department": "Department",
-    "create": "Create"
+    "create": "Create",
+    "update": "Update",
+    "dashboard": "Dashboard",
+    "dashboard-description": "Your central hub for insights, analytics, and management tools.",
+    "dashboard-title": "Dashboard Title",
+    "dashboard-placeholder": "Enter Dashboard Title",
+    "chartType": "Chart Type",
+    "chartType-placeholder": "Select Chart Type",
+    "kpi-placeholder": "Select KPIs"
   }
 }

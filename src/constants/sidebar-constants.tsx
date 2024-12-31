@@ -3,6 +3,7 @@ import {
   ChartColumnIncreasing,
   ChartSpline,
   Clock5,
+  LayoutDashboard,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
@@ -30,6 +31,11 @@ export const SidebarItems = () => {
       icon: <Building2 className="size-5 min-w-5" />,
       href: '/organization',
       permissions: ['superAdmin', 'moderator'],
+    },
+    {
+      title: t('dashboard'),
+      icon: <LayoutDashboard className="size-5 min-w-5" />,
+      href: '/dashboard',
     },
   ]
 }

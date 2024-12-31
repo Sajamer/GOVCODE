@@ -6,6 +6,7 @@ export type SheetNames =
   | 'organization'
   | 'userAccess'
   | 'userAccessManually'
+  | 'dashboard'
 
 type SheetProps = {
   rowId?: string

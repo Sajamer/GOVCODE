@@ -12,7 +12,8 @@
     "kpiStatus": "حالة المؤشرات",
     "kpiChart": "رسم بياني للمؤشرات",
     "organizations": "المنظمات",
-    "acceptInvitation": "قبول الدعوة"
+    "acceptInvitation": "قبول الدعوة",
+    "dashboard": "لوحة التحكم"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -53,6 +54,7 @@
     "add-new": "أضف",
     "edit": "تعديل",
     "delete": "حذف",
+    "view": "عرض",
     "save": "حفظ",
     "cancel": "إلغاء",
     "close": "إغلاق",
@@ -163,7 +165,10 @@
       "moderator": "مشرف",
       "contributor": "مساهم",
       "userDepartment": "قسم المستخدم",
-      "userOrganization": "منظمة المستخدم"
+      "userOrganization": "منظمة المستخدم",
+      "line": "خط",
+      "bar": "شريط",
+      "pie": "دائري"
     },
     "current-target": "الهدف الحالي",
     "current-actual": "الفعلي الحالي",
@@ -194,6 +199,8 @@
     "role-placeholder": "اختر الدور",
     "fullName": "الاسم الكامل",
     "email": "البريد الإلكتروني",
-    "create": "إنشاء"
+    "create": "إنشاء",
+    "dashboard": "لوحة التحكم",
+    "dashboard-description": "مركزك الرئيسي للحصول على الرؤى والتحليلات وأدوات الإدارة."
   }
 }
