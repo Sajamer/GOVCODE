@@ -1,5 +1,5 @@
-import { createHashedPassword } from '@/lib/utils'
 import { PrismaClient } from '@prisma/client'
+import { pbkdf2Sync, randomBytes } from 'crypto'
 import { compliances, objectives, Processes } from './utils/GlobalSeed'
 import { organization } from './utils/OrganizationSeed' // Array of organizations to seed
 
@@ -56,7 +56,8 @@ async function main() {
   console.log('Seeding users!')
   const email = 'moustafa.a.tlais@gmail.com'
   const password = 'pass123123'
-  const { salt, hash } = await createHashedPassword(password)
+  const salt = randomBytes(16).toString('hex')
+  const hash = pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex')
 
   const user = await prisma.user.create({
     data: {
