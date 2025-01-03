@@ -1,3 +1,4 @@
+import { createHashedPassword } from '@/lib/utils'
 import { PrismaClient } from '@prisma/client'
 import { compliances, objectives, Processes } from './utils/GlobalSeed'
 import { organization } from './utils/OrganizationSeed' // Array of organizations to seed
@@ -13,7 +14,7 @@ async function main() {
   await prisma.kPICompliance.deleteMany() // Clear KPICompliance
   await prisma.kPIObjective.deleteMany() // Clear KPIObjective
   await prisma.kPI.deleteMany() // Clear KPIs
-
+  await prisma.user.deleteMany() // Clear users
   await prisma.department.deleteMany() // Clear departments first
   await prisma.organization.deleteMany() // Then clear organizations
   await prisma.objective.deleteMany() // Clear objectives
@@ -51,6 +52,35 @@ async function main() {
       data: compliance,
     })
   }
+
+  console.log('Seeding users!')
+  const email = 'moustafa.a.tlais@gmail.com'
+  const password = 'pass123123'
+  const { salt, hash } = await createHashedPassword(password)
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      fullName: 'Moustafa Tlais',
+      role: 'superAdmin',
+      departmentId: 1,
+      accounts: {
+        create: {
+          provider: 'credentials',
+          providerAccountId: email,
+          type: 'email',
+        },
+      },
+    },
+  })
+
+  await prisma.password.create({
+    data: {
+      userId: user.id,
+      salt,
+      hash,
+    },
+  })
 
   console.log('Seeding completed!')
 }
