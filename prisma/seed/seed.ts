@@ -64,7 +64,6 @@ async function main() {
       email,
       fullName: 'Moustafa Tlais',
       role: 'superAdmin',
-      departmentId: 1,
       accounts: {
         create: {
           provider: 'credentials',
