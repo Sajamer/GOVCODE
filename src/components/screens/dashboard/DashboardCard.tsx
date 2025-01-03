@@ -36,6 +36,12 @@ const DashboardCard: FC<IDashboardCardProps> = ({ data }) => {
         return '/assets/images/line.png'
       case 'pie':
         return '/assets/images/pie.png'
+      case 'radar':
+        return '/assets/images/radar.png'
+      case 'area':
+        return '/assets/images/area.png'
+      case 'barStacked':
+        return '/assets/images/stacked-bar.png'
       default:
         return '/assets/images/bar.png'
     }

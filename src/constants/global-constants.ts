@@ -135,6 +135,21 @@ export const getChartTypeOptions = (t: TranslationFunction) => [
     label: t('options.pie'),
     value: ChartTypes.pie,
   },
+  {
+    id: ChartTypes.radar,
+    label: t('options.radar'),
+    value: ChartTypes.radar,
+  },
+  {
+    id: ChartTypes.area,
+    label: t('options.area'),
+    value: ChartTypes.area,
+  },
+  {
+    id: ChartTypes.barStacked,
+    label: t('options.barStacked'),
+    value: ChartTypes.barStacked,
+  },
 ]
 
 export const frequencyMapping: Record<

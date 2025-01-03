@@ -168,7 +168,10 @@
       "userOrganization": "منظمة المستخدم",
       "line": "خط",
       "bar": "شريط",
-      "pie": "دائري"
+      "pie": "دائري",
+      "radar": "رادار",
+      "area": "منطقة",
+      "barStacked": "شريط مكدس"
     },
     "current-target": "الهدف الحالي",
     "current-actual": "الفعلي الحالي",

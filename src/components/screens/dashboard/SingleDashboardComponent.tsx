@@ -1,15 +1,22 @@
 'use client'
 
+import AreaChartComponent from '@/components/shared/charts/AreaChartComponent'
 import BarChartComponent from '@/components/shared/charts/BarChartComponent'
 import LineChartComponent from '@/components/shared/charts/LineChartComponent'
 import PieChartComponent from '@/components/shared/charts/PieChartComponent'
+import RadarLinesOnlyChartComponent from '@/components/shared/charts/RadarLinesOnlyChartComponent'
+import StackedBarChartComponent from '@/components/shared/charts/StackedBarChartComponent'
 import BasicDropdown from '@/components/shared/dropdowns/BasicDropdown'
 import { getFrequencyOptions } from '@/constants/global-constants'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
 import { getDashboardById } from '@/lib/actions/dashboard.actions'
-import { IDashboardKPIs, ISingleDashboardResponse } from '@/types/dashboard'
+import {
+  IDashboardKPIs,
+  IDashboardKPIWithKPIs,
+  ISingleDashboardResponse,
+} from '@/types/dashboard'
 import { IMultipleChartData } from '@/types/kpi'
-import { Frequency } from '@prisma/client'
+import { ChartTypes, Frequency } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { FC, useState } from 'react'
@@ -129,6 +136,77 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     },
   }
 
+  const chartToShow = (
+    chartType: ChartTypes,
+    kpiItem: IDashboardKPIWithKPIs,
+    singleChartData: IMultipleChartData[],
+  ) => {
+    console.log('chartType', chartType)
+
+    switch (chartType) {
+      case 'radar':
+        return (
+          <RadarLinesOnlyChartComponent
+            title={kpiItem.kpi.name}
+            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            year={selectedYear}
+            chartData={singleChartData}
+            chartConfig={multipleChartConfig}
+          />
+        )
+      case 'pie':
+        return (
+          <PieChartComponent
+            title={kpiItem.kpi.name}
+            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            year={selectedYear}
+            chartData={singleChartData}
+            config={multipleChartConfig}
+          />
+        )
+      case 'line':
+        return (
+          <LineChartComponent
+            title={kpiItem.kpi.name}
+            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            year={selectedYear}
+            chartData={singleChartData}
+            chartConfig={multipleChartConfig}
+          />
+        )
+      case 'area':
+        return (
+          <AreaChartComponent
+            title={kpiItem.kpi.name}
+            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            year={selectedYear}
+            chartData={singleChartData}
+            chartConfig={multipleChartConfig}
+          />
+        )
+      case 'barStacked':
+        return (
+          <StackedBarChartComponent
+            title={kpiItem.kpi.name}
+            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            year={selectedYear}
+            chartData={singleChartData}
+            chartConfig={multipleChartConfig}
+          />
+        )
+      default:
+        return (
+          <BarChartComponent
+            title={kpiItem.kpi.name}
+            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            year={selectedYear}
+            chartData={singleChartData}
+            chartConfig={multipleChartConfig}
+          />
+        )
+    }
+  }
+
   return (
     <div className="flex w-full flex-col gap-10">
       <div className="flex w-full items-center justify-end gap-5">
@@ -164,52 +242,15 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
           if (!singleChartData.length) {
             return null
           }
-          if (data.chartType === 'pie') {
-            return (
-              <div
-                key={idx}
-                className="flex w-full items-start justify-start gap-5"
-              >
-                <PieChartComponent
-                  title={kpiItem.kpi.name}
-                  description={`Showing differences between actuals and targets for year ${selectedYear}`}
-                  year={selectedYear}
-                  chartData={singleChartData}
-                  config={multipleChartConfig}
-                />
-              </div>
-            )
-          } else if (data.chartType === 'line') {
-            return (
-              <div
-                key={idx}
-                className="flex w-full items-start justify-start gap-5"
-              >
-                <LineChartComponent
-                  title={kpiItem.kpi.name}
-                  description={`Showing differences between actuals and targets for year ${selectedYear}`}
-                  year={selectedYear}
-                  chartData={singleChartData}
-                  chartConfig={multipleChartConfig}
-                />
-              </div>
-            )
-          } else {
-            return (
-              <div
-                key={idx}
-                className="flex w-full items-start justify-start gap-5"
-              >
-                <BarChartComponent
-                  title={kpiItem.kpi.name}
-                  description={`Showing differences between actuals and targets for year ${selectedYear}`}
-                  year={selectedYear}
-                  chartData={singleChartData}
-                  chartConfig={multipleChartConfig}
-                />
-              </div>
-            )
-          }
+
+          return (
+            <div
+              key={idx}
+              className="flex w-full items-start justify-start gap-5"
+            >
+              {chartToShow(data.chartType, kpiItem, singleChartData)}
+            </div>
+          )
         })}
       </div>
     </div>

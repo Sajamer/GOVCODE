@@ -146,4 +146,7 @@ enum ChartTypes {
   bar
   line
   pie
+  radar
+  area
+  barStacked
 }

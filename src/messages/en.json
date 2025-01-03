@@ -168,7 +168,10 @@
       "userOrganization": "User Organization",
       "line": "Line",
       "bar": "Bar",
-      "pie": "Pie"
+      "pie": "Pie",
+      "radar": "Radar",
+      "area": "Area",
+      "barStacked": "Bar Stacked"
     },
     "current-target": "Current Target",
     "current-actual": "Current Actual",
