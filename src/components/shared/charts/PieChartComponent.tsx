@@ -28,8 +28,6 @@ const PieChartComponent = <T,>({
   description,
   chartData,
 }: IPieChartComponentProps<T>) => {
-  console.log(chartData)
-
   const colors = [
     '#ef4444',
     '#f97316',

@@ -39,8 +39,6 @@ const DashboardForm: FC = () => {
     enabled: isEdit,
   })
 
-  console.log('dashboardData: ', dashboardData)
-
   const { data: kpisData } = useQuery({
     queryKey: ['kpis'],
     queryFn: async () => await getAllKPI(),

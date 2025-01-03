@@ -141,8 +141,6 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     kpiItem: IDashboardKPIWithKPIs,
     singleChartData: IMultipleChartData[],
   ) => {
-    console.log('chartType', chartType)
-
     switch (chartType) {
       case 'radar':
         return (
