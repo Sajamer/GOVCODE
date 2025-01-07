@@ -2,22 +2,60 @@
 
 import prisma from '@/lib/db_connection'
 import { IKpiManipulator, IKpiTargetManipulator } from '@/types/kpi'
+import { userRole } from '@prisma/client'
 import { sendError } from '../utils'
 
-export const getAllKPI = async (searchParams?: Record<string, string>) => {
+export const getAllKPI = async (
+  role: userRole,
+  organizationId?: number,
+  departmentId?: number,
+) => {
   try {
-    const params = searchParams || {}
+    let whereCondition = {}
 
-    const limit = +(params?.limit ?? '10')
-    const page = +(params?.page ?? '1')
+    switch (role) {
+      case 'superAdmin':
+        if (organizationId) {
+          whereCondition = {
+            department: {
+              organizationId,
+            },
+          }
+        }
+        break
 
-    // we need to use skip and take in prisma to get the data
+      case 'moderator':
+      case 'userOrganization':
+        if (!organizationId) {
+          throw new Error(
+            'Organization ID required for moderator or userOrganization',
+          )
+        }
+        whereCondition = {
+          department: {
+            organizationId,
+          },
+        }
+        break
 
-    const skip = (page - 1) * limit
+      case 'contributor':
+      case 'userDepartment':
+        if (!departmentId) {
+          throw new Error(
+            'Department ID required for contributor or userDepartment',
+          )
+        }
+        whereCondition = {
+          departmentId,
+        }
+        break
+
+      default:
+        throw new Error('Invalid role')
+    }
 
     const rawKpis = await prisma.kPI.findMany({
-      skip,
-      take: limit,
+      where: whereCondition,
       include: {
         KPITarget: true,
         KPIActual: true,
@@ -54,7 +92,7 @@ export const getAllKPI = async (searchParams?: Record<string, string>) => {
       },
     })
 
-    if (!rawKpis) {
+    if (!rawKpis || rawKpis.length === 0) {
       return []
     }
 
@@ -77,11 +115,10 @@ export const getAllKPI = async (searchParams?: Record<string, string>) => {
       }),
     )
 
-    return kpis ?? []
+    return kpis
   } catch (error) {
     console.error('Error fetching KPIs:', error)
-    sendError(error)
-    throw new Error('Error fetching KPIs')
+    throw error
   }
 }
 

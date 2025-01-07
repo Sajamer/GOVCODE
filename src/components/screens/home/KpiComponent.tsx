@@ -2,15 +2,29 @@
 
 import GenericComponent from '@/components/shared/tables/GenericTable'
 import { getAllKPI } from '@/lib/actions/kpiActions'
+import { CustomUser } from '@/lib/auth'
+import { useGlobalStore } from '@/stores/global-store'
 import { IKpiResponse } from '@/types/kpi'
+import { userRole } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
 import { FC } from 'react'
 
 const KpiComponent: FC = () => {
+  const { departmentId, organizationId } = useGlobalStore((store) => store)
+
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
+
   const { data, isLoading } = useQuery({
-    queryKey: ['kpis'],
+    queryKey: ['kpis', userData?.role, organizationId, departmentId],
     queryFn: async () => {
-      await getAllKPI()
+      if (!userData?.role) throw new Error('User role not found')
+      return await getAllKPI(
+        userData.role as userRole,
+        organizationId,
+        departmentId,
+      )
     },
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
@@ -33,9 +47,6 @@ const KpiComponent: FC = () => {
         { key: 'frequency', isSortable: false, type: 'translated' },
         { key: 'unit', isSortable: false, type: 'translated' },
         { key: 'type', isSortable: false, type: 'translated' },
-        // { key: 'measurementDenominator', isSortable: false, type: 'string' },
-        // { key: 'measurementNumerator', isSortable: false, type: 'string' },
-        // { key: 'measurementNumber', isSortable: false, type: 'string' },
       ]}
     />
   )

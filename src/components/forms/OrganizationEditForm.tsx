@@ -24,6 +24,7 @@ interface IOrganizationEditFormProps {
 
 const OrganizationEditForm: FC<IOrganizationEditFormProps> = ({ data }) => {
   const queryClient = useQueryClient()
+
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editValue, setEditValue] = useState<string>('')

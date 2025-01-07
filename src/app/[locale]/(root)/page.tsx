@@ -2,6 +2,8 @@
 import KpiComponent from '@/components/screens/home/KpiComponent'
 import { routing } from '@/i18n/routing'
 import { getAllKPI } from '@/lib/actions/kpiActions'
+import { auth, CustomUser } from '@/lib/auth'
+import { userRole } from '@prisma/client'
 import {
   dehydrate,
   HydrationBoundary,
@@ -32,12 +34,25 @@ const queryClient = new QueryClient()
 export default async function Home(data: {
   searchParams: Promise<Record<string, string>>
 }) {
-  // const user = await auth()
+  const user = await auth()
+  const userData = user?.user as CustomUser | undefined
+
   const params = await data.searchParams
+
+  const organizationId = params.organizationId || userData?.organizationId
+  const departmentId = params.departmentId || userData?.departmentId
+
+  if (!organizationId) console.error('organizationId is missing.')
+  if (!departmentId) console.error('departmentId is missing.')
 
   await queryClient.prefetchQuery({
     queryKey: ['kpis'],
-    queryFn: async () => await getAllKPI(params),
+    queryFn: async () =>
+      await getAllKPI(
+        userData?.role as userRole,
+        organizationId ? +organizationId : undefined,
+        departmentId ? +departmentId : undefined,
+      ),
   })
 
   return (

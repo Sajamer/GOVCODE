@@ -6,9 +6,11 @@ import NoResultFound from '@/components/shared/NoResultFound'
 import SheetComponent from '@/components/shared/sheets/SheetComponent'
 import { Button } from '@/components/ui/button'
 import { getAllOrganizations } from '@/lib/actions/organizationActions'
+import { CustomUser } from '@/lib/auth'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, Loader2, Plus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { FC, useEffect, useMemo } from 'react'
@@ -18,6 +20,8 @@ const OrganizationsComponent: FC = () => {
   const t = useTranslations('general')
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
 
   const { data, isLoading } = useQuery({
     queryKey: ['organizations'],
@@ -69,21 +73,23 @@ const OrganizationsComponent: FC = () => {
           >
             {sheetToOpen === 'organization' ? <OrganizationForm /> : null}
           </SheetComponent>
-          <Button
-            variant="default"
-            onClick={() =>
-              openSheet({
-                sheetToOpen: 'organization' as SheetNames,
-                isEdit: false,
-              })
-            }
-            className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
-          >
-            <Plus size="24" className="text-primary-foreground" />
-            <span className="hidden text-sm font-medium lg:flex">
-              {t('add-new') + ' ' + staticPageData.subTitle}
-            </span>
-          </Button>
+          {userData?.role === 'superAdmin' && (
+            <Button
+              variant="default"
+              onClick={() =>
+                openSheet({
+                  sheetToOpen: 'organization' as SheetNames,
+                  isEdit: false,
+                })
+              }
+              className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
+            >
+              <Plus size="24" className="text-primary-foreground" />
+              <span className="hidden text-sm font-medium lg:flex">
+                {t('add-new') + ' ' + staticPageData.subTitle}
+              </span>
+            </Button>
+          )}
         </PageHeader>
         <div className="flex w-full flex-col gap-[1.88rem]">
           {isLoading ? (

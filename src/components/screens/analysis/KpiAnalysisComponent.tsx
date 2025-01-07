@@ -1,6 +1,10 @@
+'use client'
+
 import Tooltips from '@/components/shared/tooltips/Tooltips'
 import { quarters } from '@/constants/global-constants'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
+import { getAllKPI } from '@/lib/actions/kpiActions'
+import { CustomUser } from '@/lib/auth'
 import { trendIndicatorSwitch } from '@/lib/functions'
 import {
   calculateTrend,
@@ -8,17 +12,38 @@ import {
   cn,
   switchUnit,
 } from '@/lib/utils'
+import { useGlobalStore } from '@/stores/global-store'
 import { IKpiResponse, MonthlyData } from '@/types/kpi'
-import { Calibration, KPIActual } from '@prisma/client'
+import { Calibration, KPIActual, userRole } from '@prisma/client'
+import { useQuery } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
 import { FC, Fragment } from 'react'
 
 interface IKpiAnalysisProps {
   data?: IKpiResponse[] // Array of KPI data
 }
 
-const KpiAnalysisComponent: FC<IKpiAnalysisProps> = ({ data }) => {
+const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
   const months = periodsByFrequency.monthly
   const currentYear = new Date().getFullYear()
+
+  const { departmentId, organizationId } = useGlobalStore((store) => store)
+
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
+
+  const { data } = useQuery({
+    queryKey: ['kpis', userData?.role, organizationId, departmentId],
+    queryFn: async () => {
+      if (!userData?.role) throw new Error('User role not found')
+      return await getAllKPI(
+        userData.role as userRole,
+        organizationId,
+        departmentId,
+      )
+    },
+    staleTime: 5 * 60 * 1000, // 2 minutes
+  })
 
   // Function to map KPI data to monthly data
   const mapFrequencyToMonths = (

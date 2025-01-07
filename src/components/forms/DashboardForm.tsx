@@ -14,11 +14,14 @@ import {
 } from '@/schema/dashboard.schema'
 import { useSheetStore } from '@/stores/sheet-store'
 import { IDashboardResponse } from '@/types/dashboard'
-import { ChartTypes } from '@prisma/client'
+import { ChartTypes, userRole } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { useTranslations } from 'next-intl'
 // import { usePathname } from 'next/navigation'
+import { CustomUser } from '@/lib/auth'
+import { useGlobalStore } from '@/stores/global-store'
+import { useSession } from 'next-auth/react'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import BasicDropdown from '../shared/dropdowns/BasicDropdown'
@@ -29,7 +32,11 @@ import { Button } from '../ui/button'
 const DashboardForm: FC = () => {
   const queryClient = useQueryClient()
   const t = useTranslations('general')
+  const { departmentId, organizationId } = useGlobalStore((store) => store)
+
   // const isArabic = usePathname().includes('/ar')
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
   const { isEdit, rowId } = useSheetStore((store) => store)
 
   const { data: dashboardData } = useQuery({
@@ -40,8 +47,15 @@ const DashboardForm: FC = () => {
   })
 
   const { data: kpisData } = useQuery({
-    queryKey: ['kpis'],
-    queryFn: async () => await getAllKPI(),
+    queryKey: ['kpis', userData?.role, organizationId, departmentId],
+    queryFn: async () => {
+      if (!userData?.role) throw new Error('User role not found')
+      return await getAllKPI(
+        userData.role as userRole,
+        organizationId,
+        departmentId,
+      )
+    },
     staleTime: 1000 * 60 * 5,
   })
 
