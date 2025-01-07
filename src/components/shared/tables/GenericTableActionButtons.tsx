@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/routing'
+import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import {
   ChartNoAxesColumnIncreasing,
@@ -24,28 +25,33 @@ const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
 }) => {
   const { openSheet } = useSheetStore((store) => store.actions)
   const t = useTranslations('general')
+  const { hasPermission } = useGlobalStore((store) => store)
 
   return (
     <div className="flex items-center justify-end gap-2">
-      <Tooltips content={t('edit')} variant="bold" position="top" asChild>
-        <button
-          onClick={() =>
-            openSheet({
-              sheetToOpen: sheetName,
-              rowId,
-              isEdit: true,
-            })
-          }
-          className="text-gray-700"
-        >
-          <Edit2 size={16} />
-        </button>
-      </Tooltips>
-      <Tooltips content={t('delete')} variant="bold" position="top" asChild>
-        <button onClick={callback} className="text-red-600">
-          <Trash size={16} />
-        </button>
-      </Tooltips>
+      {hasPermission && (
+        <>
+          <Tooltips content={t('edit')} variant="bold" position="top" asChild>
+            <button
+              onClick={() =>
+                openSheet({
+                  sheetToOpen: sheetName,
+                  rowId,
+                  isEdit: true,
+                })
+              }
+              className="text-gray-700"
+            >
+              <Edit2 size={16} />
+            </button>
+          </Tooltips>
+          <Tooltips content={t('delete')} variant="bold" position="top" asChild>
+            <button onClick={callback} className="text-red-600">
+              <Trash size={16} />
+            </button>
+          </Tooltips>
+        </>
+      )}
       <Tooltips content={t('target')} variant="bold" position="top" asChild>
         <Link href={`/kpi-target/${rowId}`}>
           <Target size={16} className="text-secondary" />

@@ -18,7 +18,10 @@ export interface CustomUser extends NextAuthUser {
   fullName: string
   photo: string
   phone: string
-  departmentId: string
+  departmentId: number
+  department: string
+  organizationId: number
+  organization: string
   access_token: string
   providerAccountId: string
 }
@@ -31,7 +34,10 @@ interface CustomSession extends NextAuthSession {
     fullName: string
     photo: string
     phone: string
-    departmentId: string
+    departmentId: number
+    department: string
+    organizationId: number
+    organization: string
     access_token: string
     providerAccountId: string
   }
@@ -66,6 +72,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             photo: true,
             phone: true,
             departmentId: true,
+            department: {
+              select: {
+                name: true,
+                organizationId: true,
+                organization: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
             accounts: {
               select: {
                 provider: true,
@@ -92,7 +109,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           passwordData.hash,
         )
 
-        if (isValid) return user
+        if (isValid)
+          return {
+            ...user,
+            department: user.department?.name || '',
+            organizationId: user.department?.organizationId || '',
+            organization: user.department?.organization?.name || '',
+          }
         return null
       },
     }),
@@ -121,6 +144,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.photo = customUser.photo
         token.phone = customUser.phone
         token.departmentId = customUser.departmentId
+        token.department = customUser.department
+        token.organizationId = customUser.organizationId
+        token.organization = customUser.organization
         token.access_token = customUser.access_token
         token.providerAccountId = customUser.providerAccountId
       }
@@ -141,7 +167,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       customSession.user.fullName = token.fullName as string
       customSession.user.photo = token.photo as string
       customSession.user.phone = token.phone as string
-      customSession.user.departmentId = token.departmentId as string
+      customSession.user.departmentId = token.departmentId as number
+      customSession.user.department = token.department as string
+      customSession.user.organizationId = token.organizationId as number
+      customSession.user.organization = token.organization as string
       customSession.user.access_token = token.access_token as string
       customSession.user.providerAccountId = token.providerAccountId as string
 

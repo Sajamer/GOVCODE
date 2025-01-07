@@ -5,13 +5,14 @@ import Tooltips from '@/components/shared/tooltips/Tooltips'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from '@/hooks/use-toast'
 import { deleteDashboard } from '@/lib/actions/dashboard.actions'
+import { useGlobalStore } from '@/stores/global-store'
 import { useSheetStore } from '@/stores/sheet-store'
 import { IDashboardResponse } from '@/types/dashboard'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Edit2, Eye, Trash } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { FC, useState } from 'react'
 
 interface IDashboardCardProps {
@@ -21,7 +22,8 @@ interface IDashboardCardProps {
 const DashboardCard: FC<IDashboardCardProps> = ({ data }) => {
   const queryClient = useQueryClient()
   const t = useTranslations('general')
-  const router = useRouter()
+  const { hasPermission } = useGlobalStore((store) => store)
+
   const title = data?.name
 
   const { openSheet } = useSheetStore((store) => store.actions)
@@ -90,45 +92,49 @@ const DashboardCard: FC<IDashboardCardProps> = ({ data }) => {
                   position="top"
                   asChild
                 >
-                  <button
-                    onClick={() => router.push(`/dashboard/${data?.id}`)}
+                  <Link
+                    href={`/dashboard/${data?.id}`}
                     className="text-gray-700"
                   >
                     <Eye size={20} />
-                  </button>
+                  </Link>
                 </Tooltips>
-                <Tooltips
-                  content={t('edit')}
-                  variant="bold"
-                  position="top"
-                  asChild
-                >
-                  <button
-                    onClick={() =>
-                      openSheet({
-                        sheetToOpen: 'dashboard',
-                        rowId: String(data?.id) ?? '',
-                        isEdit: true,
-                      })
-                    }
-                    className="text-gray-700"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                </Tooltips>
-                <Tooltips
-                  content={t('delete')}
-                  variant="bold"
-                  position="top"
-                  asChild
-                >
-                  <button
-                    onClick={() => setOpenConfirmation(true)}
-                    className="text-red-600"
-                  >
-                    <Trash size={16} />
-                  </button>
-                </Tooltips>
+                {hasPermission && (
+                  <>
+                    <Tooltips
+                      content={t('edit')}
+                      variant="bold"
+                      position="top"
+                      asChild
+                    >
+                      <button
+                        onClick={() =>
+                          openSheet({
+                            sheetToOpen: 'dashboard',
+                            rowId: String(data?.id) ?? '',
+                            isEdit: true,
+                          })
+                        }
+                        className="text-gray-700"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    </Tooltips>
+                    <Tooltips
+                      content={t('delete')}
+                      variant="bold"
+                      position="top"
+                      asChild
+                    >
+                      <button
+                        onClick={() => setOpenConfirmation(true)}
+                        className="text-red-600"
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </Tooltips>
+                  </>
+                )}
               </div>
             </div>
           </CardTitle>

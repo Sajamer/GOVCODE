@@ -6,6 +6,7 @@ import NoResultFound from '@/components/shared/NoResultFound'
 import SheetComponent from '@/components/shared/sheets/SheetComponent'
 import { Button } from '@/components/ui/button'
 import { getAllDashboards } from '@/lib/actions/dashboard.actions'
+import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { useQuery } from '@tanstack/react-query'
 import { LayoutDashboard, Loader2, Plus } from 'lucide-react'
@@ -33,6 +34,7 @@ const DashboardComponent: FC = () => {
     description: 'dashboard-description',
   }
 
+  const { hasPermission } = useGlobalStore((store) => store)
   const { actions, sheetToOpen, isEdit } = useSheetStore((store) => store)
   const { openSheet, setSearchTerm } = actions
 
@@ -68,22 +70,24 @@ const DashboardComponent: FC = () => {
         >
           {sheetToOpen === 'dashboard' ? <DashboardForm /> : null}
         </SheetComponent>
-        <Button
-          variant="default"
-          onClick={() =>
-            openSheet({
-              sheetToOpen: 'dashboard' as SheetNames,
-              rowId: undefined,
-              isEdit: false,
-            })
-          }
-          className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
-        >
-          <Plus size="24" className="text-primary-foreground" />
-          <span className="hidden text-sm font-medium lg:flex">
-            {t('add-new') + ' ' + staticPageData.subTitle}
-          </span>
-        </Button>
+        {hasPermission && (
+          <Button
+            variant="default"
+            onClick={() =>
+              openSheet({
+                sheetToOpen: 'dashboard' as SheetNames,
+                rowId: undefined,
+                isEdit: false,
+              })
+            }
+            className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
+          >
+            <Plus size="24" className="text-primary-foreground" />
+            <span className="hidden text-sm font-medium lg:flex">
+              {t('add-new') + ' ' + staticPageData.subTitle}
+            </span>
+          </Button>
+        )}
       </PageHeader>
       <div className="flex w-full flex-col gap-[1.88rem]">
         {isLoading ? (

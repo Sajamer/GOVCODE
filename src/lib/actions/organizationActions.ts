@@ -25,7 +25,7 @@ export const getAllOrganizations = async (
       return []
     }
 
-    return rawOrganizations
+    return rawOrganizations as IOrganization[]
   } catch (error) {
     sendError(error)
     throw new Error('Error while fetching organizations.')

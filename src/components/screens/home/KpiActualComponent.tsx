@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast'
 import { saveKPIActualTarget } from '@/lib/actions/kpiActions'
 import { cn } from '@/lib/utils'
 import { kpiTargetSchema } from '@/schema/kpi-target.schema'
+import { useGlobalStore } from '@/stores/global-store'
 import { IKpiActualTargetResponse, IKpiTargetManipulator } from '@/types/kpi'
 import { useMutation } from '@tanstack/react-query'
 import { useFormik } from 'formik'
@@ -20,6 +21,8 @@ interface IKpiActualComponentProps {
 }
 
 const KpiActualComponent: FC<IKpiActualComponentProps> = ({ data }) => {
+  const { hasPermission } = useGlobalStore((store) => store)
+
   const { id, code, name, frequency, unit, KPIActual } = data
   const currentYear = new Date().getFullYear()
 
@@ -115,19 +118,24 @@ const KpiActualComponent: FC<IKpiActualComponentProps> = ({ data }) => {
           <p className="font-medium capitalize text-black">{frequencyKey}</p>
         </div>
       </div>
-      <div className="flex w-full items-center justify-end">
-        <Button
-          variant={'secondary'}
-          type="button"
-          className="w-40"
-          onClick={handleAddYear}
-        >
-          Add Actual
-        </Button>
-      </div>
+      {hasPermission && (
+        <div className="flex w-full items-center justify-end">
+          <Button
+            variant={'secondary'}
+            type="button"
+            className="w-40"
+            onClick={handleAddYear}
+          >
+            Add Actual
+          </Button>
+        </div>
+      )}
       <form
         onSubmit={handleSubmit}
-        className="mt-2 flex w-full flex-col items-center justify-center gap-14"
+        className={cn(
+          'flex w-full flex-col items-center justify-center gap-14',
+          hasPermission ? 'mt-2' : 'mt-10',
+        )}
       >
         {uniqueYears.length > 0 ? (
           uniqueYears.map((year) => (
@@ -157,6 +165,7 @@ const KpiActualComponent: FC<IKpiActualComponentProps> = ({ data }) => {
                       min={0}
                       placeholder="Target"
                       className="max-w-28"
+                      disabled={isPending || !hasPermission}
                       value={
                         values.find(
                           (target) =>
@@ -186,7 +195,7 @@ const KpiActualComponent: FC<IKpiActualComponentProps> = ({ data }) => {
         )}
 
         <div className="flex w-full items-center justify-center gap-2">
-          {uniqueYears.length > 0 && (
+          {uniqueYears.length > 0 && hasPermission && (
             <Button
               type="submit"
               className="w-40"
