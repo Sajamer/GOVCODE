@@ -65,6 +65,7 @@ model Dashboard {
   updatedAt DateTime   @updatedAt
 
   dashboardKPIs DashboardKPI[] // Relationship with selected KPIs
+  screenshots   Screenshot[]
 }
 
 model Objective {
@@ -140,6 +141,22 @@ model DashboardKPI {
   updatedAt DateTime @updatedAt
 
   @@unique([dashboardId, kpiId]) // Prevent duplicate KPI selections for the same dashboard
+}
+
+model Screenshot {
+  id Int @id @default(autoincrement())
+
+  image String
+  hash  String @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dashboardId Int // Foreign key to Dashboard
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum ChartTypes {

@@ -2,7 +2,7 @@
 // import { Prisma } from '@prisma/client'
 import { Calibration, Prisma, Units } from '@prisma/client'
 import { type ClassValue, clsx } from 'clsx'
-import { pbkdf2Sync, randomBytes } from 'crypto'
+import { createHash, pbkdf2Sync, randomBytes } from 'crypto'
 import moment from 'moment'
 
 import { cloneElement } from 'react'
@@ -397,4 +397,8 @@ export const comparePasswords = async (
 ): Promise<boolean> => {
   const newHash = await hashPassword(password, salt)
   return newHash === hash
+}
+
+export const generateHash = (data: Record<string, unknown>): string => {
+  return createHash('sha256').update(JSON.stringify(data)).digest('hex')
 }

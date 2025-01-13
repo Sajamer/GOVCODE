@@ -7,9 +7,18 @@ import PieChartComponent from '@/components/shared/charts/PieChartComponent'
 import RadarLinesOnlyChartComponent from '@/components/shared/charts/RadarLinesOnlyChartComponent'
 import StackedBarChartComponent from '@/components/shared/charts/StackedBarChartComponent'
 import BasicDropdown from '@/components/shared/dropdowns/BasicDropdown'
+import Tooltips from '@/components/shared/tooltips/Tooltips'
+import { Button } from '@/components/ui/button'
 import { getFrequencyOptions } from '@/constants/global-constants'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
-import { getDashboardById } from '@/lib/actions/dashboard.actions'
+import { toast } from '@/hooks/use-toast'
+import {
+  checkScreenshotIfExists,
+  createScreenshot,
+  getDashboardById,
+} from '@/lib/actions/dashboard.actions'
+import { CustomUser } from '@/lib/auth'
+import { uploadFiles } from '@/lib/uploadthing'
 import {
   IDashboardKPIs,
   IDashboardKPIWithKPIs,
@@ -18,8 +27,12 @@ import {
 import { IMultipleChartData } from '@/types/kpi'
 import { ChartTypes, Frequency } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
+import { createHash } from 'crypto'
+import html2canvas from 'html2canvas-pro'
+import { Loader2, Scan } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
-import { FC, useState } from 'react'
+import { FC, useRef, useState } from 'react'
 
 interface ISingleDashboardComponentProps {
   dashboardId: number
@@ -30,6 +43,10 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
 }) => {
   const t = useTranslations('general')
   const currentYear = new Date().getFullYear()
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
+
+  const componentRef = useRef<HTMLDivElement>(null)
 
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear().toString(),
@@ -37,6 +54,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
   const [selectedFrequency, setSelectedFrequency] = useState<
     Frequency | undefined
   >(undefined)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const { data } = useQuery<ISingleDashboardResponse>({
     queryKey: ['dashboard', dashboardId, selectedYear],
@@ -136,6 +154,79 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     },
   }
 
+  const takeScreenshot = async () => {
+    if (!componentRef.current) return
+    setIsLoading(true)
+
+    try {
+      const hash = createHash('sha256')
+        .update(JSON.stringify(data))
+        .digest('hex')
+
+      const existingScreenshot = await checkScreenshotIfExists(hash)
+      if (existingScreenshot) {
+        toast({
+          variant: 'warning',
+          title: 'Screenshot already exists',
+          description: 'Screenshot already exists for this dashboard',
+        })
+        return
+      }
+
+      const canvas = await html2canvas(componentRef.current)
+      const imageBlob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob((blob) => resolve(blob!), 'image/png'),
+      )
+
+      const file = new File([imageBlob], `${dashboardId}-screenshot.png`, {
+        type: 'image/png',
+      })
+
+      console.log('file: ', file)
+
+      // Upload the file using Uploadthing
+      const uploadResponse = await uploadFiles('imageUploader', {
+        files: [file],
+        input: {
+          image: `Screenshot of dashboard ${dashboardId}`,
+        },
+      })
+
+      console.log('uploadResponse: ', uploadResponse)
+
+      if (!uploadResponse || !uploadResponse[0]?.url) {
+        throw new Error('Failed to upload screenshot')
+      }
+
+      const imageUrl = uploadResponse[0].url
+
+      console.log('imageUrl: ', imageUrl)
+
+      const screenshot = await createScreenshot({
+        userId: userData?.id ?? '',
+        image: imageUrl,
+        hash,
+        dashboardId,
+      })
+
+      if (screenshot) {
+        toast({
+          variant: 'success',
+          title: 'Screenshot taken',
+          description: 'Screenshot successfully taken',
+        })
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Screenshot failed',
+        description: `Failed to take screenshot: ${error}`,
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const chartToShow = (
     chartType: ChartTypes,
     kpiItem: IDashboardKPIWithKPIs,
@@ -230,7 +321,10 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
           callback={handleYearChange}
         />
       </div>
-      <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-3">
+      <div
+        ref={componentRef}
+        className="grid w-full grid-cols-1 gap-5 md:grid-cols-3"
+      >
         {data?.dashboardKPIs?.map((kpiItem, idx) => {
           const singleChartData = transformKPIData(
             kpiItem.kpi,
@@ -250,6 +344,28 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
             </div>
           )
         })}
+      </div>
+      <div className="flex w-full items-center justify-end">
+        <Tooltips
+          content={'Take screenshot'}
+          variant="bold"
+          position="left"
+          asChild
+        >
+          <Button
+            variant={'icon'}
+            size={'icon_sm'}
+            className="bg-primary p-0"
+            disabled={isLoading}
+            onClick={() => takeScreenshot()}
+          >
+            {isLoading ? (
+              <Loader2 className="size-5 animate-spin text-white" />
+            ) : (
+              <Scan size={20} className="text-white" />
+            )}
+          </Button>
+        </Tooltips>
       </div>
     </div>
   )

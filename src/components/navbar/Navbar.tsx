@@ -28,9 +28,10 @@ const Navbar: FC = () => {
       await getAllOrganizations()
     },
     staleTime: 5 * 60 * 1000,
+    enabled: !!userData,
   })
 
-  const organizationData: IOrganization[] = dbOrgData ?? []
+  const organizationData: IOrganization[] = dbOrgData || []
   const organizationOptions = organizationData?.map((option) => ({
     id: String(option?.id),
     label: option?.name,

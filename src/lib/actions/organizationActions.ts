@@ -12,8 +12,6 @@ export const getAllOrganizations = async (
     const limit = +(params?.limit ?? '10')
     const page = +(params?.page ?? '1')
 
-    // we need to use skip and take in prisma to get the data
-
     const skip = (page - 1) * limit
 
     const rawOrganizations = await prisma.organization.findMany({
@@ -21,11 +19,7 @@ export const getAllOrganizations = async (
       take: limit,
     })
 
-    if (!rawOrganizations) {
-      return []
-    }
-
-    return rawOrganizations as IOrganization[]
+    return (rawOrganizations as IOrganization[]) || []
   } catch (error) {
     sendError(error)
     throw new Error('Error while fetching organizations.')

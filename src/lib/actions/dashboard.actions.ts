@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/db_connection'
 import { IDashboardManipulator } from '@/schema/dashboard.schema'
+import { IScreenshotManipulation } from '@/types/dashboard'
 import { sendError } from '../utils'
 
 export const getAllDashboards = async (
@@ -157,5 +158,40 @@ export const getDashboardById = async (id: number, selectedYear?: string) => {
   } catch (error) {
     sendError(error)
     throw new Error('Error while fetching dashboard.')
+  }
+}
+
+export const createScreenshot = async (dto: IScreenshotManipulation) => {
+  try {
+    const newScreenshot = await prisma.screenshot.create({
+      data: {
+        image: dto.image,
+        hash: dto.hash,
+        user: {
+          connect: { id: dto.userId },
+        },
+        dashboard: {
+          connect: { id: dto.dashboardId },
+        },
+      },
+    })
+
+    return newScreenshot
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while creating screenshot.')
+  }
+}
+
+export const checkScreenshotIfExists = async (hash: string) => {
+  try {
+    const screenshot = await prisma.screenshot.findUnique({
+      where: { hash },
+    })
+
+    return screenshot
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while checking screenshot.')
   }
 }
