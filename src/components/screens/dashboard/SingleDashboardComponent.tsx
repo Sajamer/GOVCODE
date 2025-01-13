@@ -182,8 +182,6 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         type: 'image/png',
       })
 
-      console.log('file: ', file)
-
       // Upload the file using Uploadthing
       const uploadResponse = await uploadFiles('imageUploader', {
         files: [file],
@@ -192,15 +190,11 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         },
       })
 
-      console.log('uploadResponse: ', uploadResponse)
-
       if (!uploadResponse || !uploadResponse[0]?.url) {
         throw new Error('Failed to upload screenshot')
       }
 
       const imageUrl = uploadResponse[0].url
-
-      console.log('imageUrl: ', imageUrl)
 
       const screenshot = await createScreenshot({
         userId: userData?.id ?? '',
