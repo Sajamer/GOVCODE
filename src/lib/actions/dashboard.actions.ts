@@ -126,6 +126,16 @@ export const getDashboardById = async (id: number, selectedYear?: string) => {
             },
           },
         },
+        screenshots: {
+          select: {
+            id: true,
+            image: true,
+            userId: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     })
 
@@ -153,6 +163,7 @@ export const getDashboardById = async (id: number, selectedYear?: string) => {
           actuals: row.kpi.KPIActual,
         },
       })),
+      screenshots: rawDashboard.screenshots,
     }
     return dashboard
   } catch (error) {

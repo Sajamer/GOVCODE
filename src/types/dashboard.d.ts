@@ -12,11 +12,18 @@ interface IDashboardKPI {
   kpiId: number
 }
 
+export interface IScreenshot {
+  id: number
+  image: string
+  userId: string
+}
+
 export interface IDashboardResponse {
   id: number
   name: string
   chartType: ChartTypes
   dashboardKPIs: IDashboardKPI[]
+  screenshots: IScreenshot[]
 }
 
 export interface IDashboardKPIs {

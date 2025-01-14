@@ -7,6 +7,7 @@ import PieChartComponent from '@/components/shared/charts/PieChartComponent'
 import RadarLinesOnlyChartComponent from '@/components/shared/charts/RadarLinesOnlyChartComponent'
 import StackedBarChartComponent from '@/components/shared/charts/StackedBarChartComponent'
 import BasicDropdown from '@/components/shared/dropdowns/BasicDropdown'
+import ImageModal from '@/components/shared/modals/ImageModal'
 import Tooltips from '@/components/shared/tooltips/Tooltips'
 import { Button } from '@/components/ui/button'
 import { getFrequencyOptions } from '@/constants/global-constants'
@@ -55,6 +56,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     Frequency | undefined
   >(undefined)
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { data } = useQuery<ISingleDashboardResponse>({
     queryKey: ['dashboard', dashboardId, selectedYear],
@@ -73,6 +75,8 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     ...option,
     label: t(`year-options.${option.label}`),
   }))
+
+  const screenShots = data?.screenshots || []
 
   const handleYearChange = (option: IDropdown) => {
     setSelectedYear(option.id)
@@ -339,7 +343,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
           )
         })}
       </div>
-      <div className="flex w-full items-center justify-end">
+      <div className="flex w-full items-center justify-end gap-5">
         <Tooltips
           content={'Take screenshot'}
           variant="bold"
@@ -360,7 +364,20 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
             )}
           </Button>
         </Tooltips>
+        {screenShots && screenShots?.length > 0 && (
+          <Button size="lg" onClick={() => setIsModalOpen(true)}>
+            Show Screenshots
+          </Button>
+        )}
       </div>
+
+      {isModalOpen && (
+        <ImageModal
+          screenshots={screenShots}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   )
 }
