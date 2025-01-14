@@ -214,6 +214,10 @@
     "dashboard-placeholder": "Enter Dashboard Title",
     "chartType": "Chart Type",
     "chartType-placeholder": "Select Chart Type",
-    "kpi-placeholder": "Select KPIs"
+    "kpi-placeholder": "Select KPIs",
+    "import-excel": "Import Excel",
+    "export-excel": "Export Excel",
+    "please-provide-data": "Please provide data",
+    "no-data-to-export": "No data to export"
   }
 }

@@ -7,7 +7,7 @@ import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { IKpiResponse } from '@/types/kpi'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChartSpline, Loader2, Plus } from 'lucide-react'
+import { ChartSpline, Import, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -24,6 +24,7 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
   icon?: JSX.Element
   entityKey: keyof T
   sheetName: SheetNames
+  showImportExcel?: boolean
   data: T[]
   isLoading?: boolean
   columns: Array<{
@@ -39,6 +40,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   icon,
   entityKey,
   sheetName,
+  showImportExcel = false,
   columns,
   isLoading,
   data,
@@ -144,21 +146,35 @@ const GenericComponent = <T extends Record<string, unknown>>({
             ) : null}
           </SheetComponent>
           {hasPermission && (
-            <Button
-              variant="default"
-              onClick={() =>
-                openSheet({
-                  sheetToOpen: sheetName as SheetNames,
-                  isEdit: false,
-                })
-              }
-              className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
-            >
-              <Plus size="24" className="text-primary-foreground" />
-              <span className="hidden text-sm font-medium lg:flex">
-                {t('add-new') + ' ' + localizedTitle}
-              </span>
-            </Button>
+            <>
+              {showImportExcel && (
+                <Button
+                  variant="default"
+                  className="flex size-[2.375rem] items-center justify-center !gap-1 px-3 lg:h-11 lg:w-fit lg:px-0 2xl:w-[13.75rem]"
+                >
+                  <Import size="24" className="text-primary-foreground" />
+                  <span className="hidden text-sm font-medium lg:flex">
+                    {t('import-excel')}
+                  </span>
+                </Button>
+              )}
+
+              <Button
+                variant="default"
+                onClick={() =>
+                  openSheet({
+                    sheetToOpen: sheetName as SheetNames,
+                    isEdit: false,
+                  })
+                }
+                className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
+              >
+                <Plus size="24" className="text-primary-foreground" />
+                <span className="hidden text-sm font-medium lg:flex">
+                  {t('add-new') + ' ' + localizedTitle}
+                </span>
+              </Button>
+            </>
           )}
         </PageHeader>
         <div className="flex w-full flex-col gap-[1.88rem]">

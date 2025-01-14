@@ -1,5 +1,6 @@
 'use client'
 
+import ExportButton from '@/components/shared/buttons/ExportButton'
 import GenericComponent from '@/components/shared/tables/GenericTable'
 import { getAllKPI } from '@/lib/actions/kpiActions'
 import { CustomUser } from '@/lib/auth'
@@ -32,23 +33,49 @@ const KpiComponent: FC = () => {
   const kpiData = data || []
 
   return (
-    <GenericComponent<IKpiResponse>
-      title="kpis"
-      description="kpiDescription"
-      entityKey="id"
-      sheetName={'kpis'}
-      data={kpiData}
-      isLoading={isLoading}
-      columns={[
-        { key: 'code', isSortable: true, type: 'string' },
-        { key: 'name', isSortable: false, type: 'string' },
-        { key: 'calibration', isSortable: false, type: 'translated' },
-        { key: 'description', isSortable: false, type: 'string' },
-        { key: 'frequency', isSortable: false, type: 'translated' },
-        { key: 'unit', isSortable: false, type: 'translated' },
-        { key: 'type', isSortable: false, type: 'translated' },
-      ]}
-    />
+    <>
+      <GenericComponent<IKpiResponse>
+        title="kpis"
+        description="kpiDescription"
+        entityKey="id"
+        sheetName={'kpis'}
+        data={kpiData}
+        isLoading={isLoading}
+        showImportExcel
+        columns={[
+          { key: 'code', isSortable: true, type: 'string' },
+          { key: 'name', isSortable: false, type: 'string' },
+          { key: 'calibration', isSortable: false, type: 'translated' },
+          { key: 'description', isSortable: false, type: 'string' },
+          { key: 'frequency', isSortable: false, type: 'translated' },
+          { key: 'unit', isSortable: false, type: 'translated' },
+          { key: 'type', isSortable: false, type: 'translated' },
+        ]}
+      />
+
+      {kpiData && kpiData?.length > 0 && (
+        <div className="mt-10 flex w-full justify-end gap-4">
+          <ExportButton
+            data={kpiData}
+            name={'kpis'}
+            headers={{
+              code: 'KPI Code',
+              name: 'KPI',
+              description: 'Description',
+              owner: 'Owner',
+              measurementNumerator: 'Numerator',
+              measurementDenominator: 'Denominator',
+              measurementNumber: 'Measurement Number',
+              resources: 'Resources',
+              unit: 'Unit',
+              frequency: 'Frequency',
+              type: 'Type',
+              calibration: 'Calibration',
+            }}
+          />
+        </div>
+      )}
+    </>
   )
 }
 

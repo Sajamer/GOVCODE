@@ -204,6 +204,10 @@
     "email": "البريد الإلكتروني",
     "create": "إنشاء",
     "dashboard": "لوحة التحكم",
-    "dashboard-description": "مركزك الرئيسي للحصول على الرؤى والتحليلات وأدوات الإدارة."
+    "dashboard-description": "مركزك الرئيسي للحصول على الرؤى والتحليلات وأدوات الإدارة.",
+    "import-excel": "استيراد من Excel",
+    "export-excel": "تصدير إلى Excel",
+    "please-provide-data": "يرجى تقديم البيانات",
+    "no-data-to-export": "لا توجد بيانات للتصدير"
   }
 }
