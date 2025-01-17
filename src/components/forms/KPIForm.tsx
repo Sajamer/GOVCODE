@@ -7,9 +7,11 @@ import {
   getUnitOptions,
 } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
+import { getDepartmentsByOrganizationId } from '@/lib/actions/department.actions'
 import { createKPI, updateKPI } from '@/lib/actions/kpiActions'
 import { axiosGet } from '@/lib/axios'
 import { BodySchema } from '@/schema/kpi.schema'
+import { useGlobalStore } from '@/stores/global-store'
 import { useSheetStore } from '@/stores/sheet-store'
 import {
   IKpiFormDropdownData,
@@ -40,12 +42,13 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const t = useTranslations('general')
   const isArabic = usePathname().includes('/ar')
 
+  const { organizationId } = useGlobalStore((store) => store)
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
 
   const { data: departmentData } = useQuery({
-    queryKey: ['departments'],
-    queryFn: () => axiosGet<IDepartment[]>('department'),
+    queryKey: ['departments', organizationId],
+    queryFn: async () => await getDepartmentsByOrganizationId(organizationId),
     staleTime: 1000 * 60 * 5,
   })
 
@@ -60,7 +63,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     staleTime: 1000 * 60 * 5,
   })
 
-  const departmentOptions = departmentData?.data?.map((option) => ({
+  const departmentOptions = departmentData?.map((option) => ({
     id: String(option.id),
     label: option.name,
     value: option.name,

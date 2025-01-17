@@ -2,6 +2,7 @@
 import KpiComponent from '@/components/screens/home/KpiComponent'
 import { routing } from '@/i18n/routing'
 import { getAllKPI } from '@/lib/actions/kpiActions'
+import { getAllOrganizations } from '@/lib/actions/organizationActions'
 import { auth, CustomUser } from '@/lib/auth'
 import { userRole } from '@prisma/client'
 import {
@@ -53,6 +54,11 @@ export default async function Home(data: {
         organizationId ? +organizationId : undefined,
         departmentId ? +departmentId : undefined,
       ),
+  })
+
+  await queryClient.prefetchQuery({
+    queryKey: ['organizations'],
+    queryFn: async () => await getAllOrganizations(),
   })
 
   return (

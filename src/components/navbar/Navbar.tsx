@@ -16,22 +16,21 @@ const Navbar: FC = () => {
   const locale = useLocale()
   const isArabic = locale === 'ar'
 
-  const { data } = useSession()
-  const userData = data?.user as CustomUser | undefined
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
 
   const { organizationId, actions } = useGlobalStore((state) => state)
   const { setOrganizationId, setDepartmentId, setHasPermission } = actions
 
-  const { data: dbOrgData, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
       await getAllOrganizations()
     },
-    staleTime: 5 * 60 * 1000,
-    enabled: !!userData,
+    staleTime: 5 * 60 * 1000, // 2 minutes
   })
 
-  const organizationData: IOrganization[] = dbOrgData || []
+  const organizationData: IOrganization[] = data || []
   const organizationOptions = organizationData?.map((option) => ({
     id: String(option?.id),
     label: option?.name,
@@ -98,7 +97,7 @@ const Navbar: FC = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userData])
+  }, [userData, data])
 
   return (
     <div
