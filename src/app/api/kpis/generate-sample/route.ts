@@ -34,15 +34,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
             where: { organizationId },
             select: { id: true, name: true },
           }),
-          // prisma.process.findMany({
-          //   select: { id: true, name: true },
-          // }),
-          // prisma.compliance.findMany({
-          //   select: { id: true, name: true },
-          // }),
-          // prisma.objective.findMany({
-          //   select: { id: true, name: true },
-          // }),
         ])
 
         // Create a new workbook
@@ -104,30 +95,40 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           }
         })
 
-        // Add dropdown validations to the main sheet
-        const addValidation = (cellRange: string, formulaRange: string) => {
-          sheet.getCell(cellRange).dataValidation = {
-            type: 'list',
-            allowBlank: true,
-            formulae: [formulaRange],
+        // Updated addValidation to iterate over each cell in the range
+        const addValidation = (
+          startColumn: string,
+          endColumn: string,
+          formulaRange: string,
+        ) => {
+          for (let row = 2; row <= 100; row++) {
+            const cellAddress = `${startColumn}${row}`
+            sheet.getCell(cellAddress).dataValidation = {
+              type: 'list',
+              allowBlank: true,
+              formulae: [formulaRange],
+            }
           }
         }
 
         // Reference ranges in the hidden sheet
         addValidation(
-          'E2:E100',
+          'E',
+          'E',
           `'Dropdown Values'!$A$2:$A${departmentNames.length + 1}`,
         ) // Departments
-        addValidation('H2:H100', `'Dropdown Values'!$E$2:$E${units.length + 1}`) // Units
+        addValidation('H', 'H', `'Dropdown Values'!$E$2:$E${units.length + 1}`) // Units
         addValidation(
-          'I2:I100',
+          'I',
+          'I',
           `'Dropdown Values'!$F$2:$F${frequencies.length + 1}`,
         ) // Frequencies
         addValidation(
-          'J2:J100',
+          'J',
+          'J',
           `'Dropdown Values'!$G$2:$G${calibration.length + 1}`,
         ) // Calibration
-        addValidation('K2:K100', `'Dropdown Values'!$H$2:$H${types.length + 1}`) // Types
+        addValidation('K', 'K', `'Dropdown Values'!$H$2:$H${types.length + 1}`) // Types
 
         // Generate the Excel file
         const buffer = await workbook.xlsx.writeBuffer()
