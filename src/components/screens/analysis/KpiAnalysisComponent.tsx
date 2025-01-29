@@ -83,7 +83,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
         const halfMonth = period === 's1' ? 'Jun' : 'Dec'
         target[halfMonth] = value
       } else if (period === 'yearly') {
-        target.December = value
+        target.Dec = value
       } else {
         const capitalizedPeriod = capitalizeFirstLetter(period) as Month
 
@@ -157,7 +157,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
                     <th className="relative h-12 w-20 border border-gray-300 p-2.5">
-                      <div className="absolute left-0 top-0 text-sm font-bold">
+                      <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
                         <Tooltips
                           content={'Actual Current Year'}
                           variant="bold"
@@ -167,7 +167,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                           <span>CY</span>
                         </Tooltips>
                       </div>
-                      <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+                      <div className="absolute bottom-0 right-1 text-xs font-semibold">
                         <Tooltips
                           content={'Trend'}
                           variant="bold"
@@ -177,7 +177,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                           <span>TRD</span>
                         </Tooltips>
                       </div>
-                      <div className="absolute bottom-0 right-0 text-xs font-medium">
+                      <div className="absolute right-1 top-0 text-xs font-medium">
                         <Tooltips
                           content={'Actual Previous Year'}
                           variant="bold"
@@ -231,10 +231,10 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                               : '',
                           )}
                         >
-                          <div className="absolute left-0 top-0 text-sm font-bold">
+                          <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
                             {cy ?? ''}
                           </div>
-                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+                          <div className="absolute bottom-0 right-1 text-xs font-semibold">
                             {!cy
                               ? ''
                               : !py
@@ -247,7 +247,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                                         : 'NEUTRAL',
                                   )}
                           </div>
-                          <div className="absolute bottom-0 right-0 text-xs font-medium">
+                          <div className="absolute right-1 top-0 text-xs font-medium">
                             {!cy ? (py ?? '') : (py ?? '')}
                             {/* {!cy ? (py ?? '') : (py ?? 'N/A')} */}
                           </div>
