@@ -108,7 +108,7 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
               type="button"
               variant={'outline'}
               className={cn(
-                'h-10 min-w-[3.5rem] md:!justify-between w-full bg-transparent py-2.5 px-3.5 rounded-[0.875rem] flex items-center gap-1.5',
+                'h-10 min-w-[3.5rem] md:!justify-between w-full bg-white py-2.5 px-3.5 rounded-[0.875rem] flex items-center gap-1.5',
                 triggerStyle,
                 error && 'border-destructive',
               )}

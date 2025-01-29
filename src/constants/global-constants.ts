@@ -163,8 +163,8 @@ export const frequencyMapping: Record<
 }
 
 export const quarters = {
-  q1: ['January', 'February', 'March'],
-  q2: ['April', 'May', 'June'],
-  q3: ['July', 'August', 'September'],
-  q4: ['October', 'November', 'December'],
+  q1: ['Jan', 'Feb', 'Mar'],
+  q2: ['Apr', 'May', 'Jun'],
+  q3: ['Jul', 'Aug', 'Sep'],
+  q4: ['Oct', 'Nov', 'Dec'],
 }

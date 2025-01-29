@@ -72,15 +72,15 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
       if (period.startsWith('q')) {
         const quarterMonth =
           period === 'q1'
-            ? 'March'
+            ? 'Mar'
             : period === 'q2'
-              ? 'June'
+              ? 'Jun'
               : period === 'q3'
-                ? 'September'
-                : 'December'
+                ? 'Sep'
+                : 'Dec'
         target[quarterMonth] = value
       } else if (period === 's1' || period === 's2') {
-        const halfMonth = period === 's1' ? 'June' : 'December'
+        const halfMonth = period === 's1' ? 'Jun' : 'Dec'
         target[halfMonth] = value
       } else if (period === 'yearly') {
         target.December = value
@@ -106,7 +106,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
             <th />
             <th />
             <th />
-            <th colSpan={36} className="border border-gray-300 p-2.5">
+            <th colSpan={12} className="border border-gray-300 p-2.5">
               Year {currentYear}
             </th>
           </tr>
@@ -119,7 +119,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
             {Object.keys(quarters).map((quarter) => (
               <th
                 key={quarter}
-                colSpan={9}
+                colSpan={3}
                 className="border border-gray-300 p-2.5"
               >
                 {quarter.toUpperCase()}
@@ -138,7 +138,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                   <th
                     key={month}
                     className="border border-gray-300 p-2.5"
-                    colSpan={3}
+                    colSpan={1}
                   >
                     {month}
                   </th>
@@ -156,30 +156,38 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
               <Fragment key={quarter}>
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
-                    <Tooltips
-                      content={'Actual Current Year'}
-                      variant="bold"
-                      position="top"
-                      asChild
-                    >
-                      <th className="border border-gray-300 p-2.5">CY</th>
-                    </Tooltips>
-                    <Tooltips
-                      content={'Actual Previous Year'}
-                      variant="bold"
-                      position="top"
-                      asChild
-                    >
-                      <th className="border border-gray-300 p-2.5">PY</th>
-                    </Tooltips>
-                    <Tooltips
-                      content={'Trend'}
-                      variant="bold"
-                      position="top"
-                      asChild
-                    >
-                      <th className="border border-gray-300 p-2.5">TRD</th>
-                    </Tooltips>
+                    <th className="relative h-12 w-20 border border-gray-300 p-2.5">
+                      <div className="absolute left-0 top-0 text-sm font-bold">
+                        <Tooltips
+                          content={'Actual Current Year'}
+                          variant="bold"
+                          position="top"
+                          asChild
+                        >
+                          <span>CY</span>
+                        </Tooltips>
+                      </div>
+                      <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+                        <Tooltips
+                          content={'Trend'}
+                          variant="bold"
+                          position="top"
+                          asChild
+                        >
+                          <span>TRD</span>
+                        </Tooltips>
+                      </div>
+                      <div className="absolute bottom-0 right-0 text-xs font-medium">
+                        <Tooltips
+                          content={'Actual Previous Year'}
+                          variant="bold"
+                          position="top"
+                          asChild
+                        >
+                          <span>PY</span>
+                        </Tooltips>
+                      </div>
+                    </th>
                   </Fragment>
                 ))}
               </Fragment>
@@ -214,33 +222,23 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                       const trend = calculateTrend(kpi.calibration, cy, py)
 
                       return (
-                        <Fragment key={month}>
-                          <td
-                            className={cn(
-                              'border border-gray-300 p-2.5 text-center',
-                              !cy ? 'bg-secondary border-gray-700' : '',
-                            )}
-                          >
+                        <td
+                          key={month}
+                          className={cn(
+                            'relative h-12 border border-gray-300 p-2.5 text-center',
+                            !cy
+                              ? 'bg-gray-200 border-dashed border-gray-300'
+                              : '',
+                          )}
+                        >
+                          <div className="absolute left-0 top-0 text-sm font-bold">
                             {cy ?? ''}
-                          </td>
-                          <td
-                            className={cn(
-                              'border border-gray-300 p-2.5 text-center',
-                              !cy && !py ? 'bg-secondary border-gray-700' : '',
-                            )}
-                          >
-                            {!cy ? (py ?? '') : (py ?? 'N/A')}
-                          </td>
-                          <td
-                            className={cn(
-                              'border border-gray-300 p-2.5 text-center',
-                              !cy && !py ? 'bg-secondary border-gray-700' : '',
-                            )}
-                          >
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center text-xs font-bold">
                             {!cy
                               ? ''
                               : !py
-                                ? '-'
+                                ? ''
                                 : trendIndicatorSwitch(
                                     trend
                                       ? Calibration.INCREASING
@@ -248,8 +246,12 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                                         ? Calibration.DECREASING
                                         : 'NEUTRAL',
                                   )}
-                          </td>
-                        </Fragment>
+                          </div>
+                          <div className="absolute bottom-0 right-0 text-xs font-medium">
+                            {!cy ? (py ?? '') : (py ?? '')}
+                            {/* {!cy ? (py ?? '') : (py ?? 'N/A')} */}
+                          </div>
+                        </td>
                       )
                     })}
                   </Fragment>
