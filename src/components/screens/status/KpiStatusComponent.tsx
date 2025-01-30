@@ -67,18 +67,18 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
       if (period.startsWith('q')) {
         const quarterMonth =
           period === 'q1'
-            ? 'March'
+            ? 'Mar'
             : period === 'q2'
-              ? 'June'
+              ? 'Jun'
               : period === 'q3'
-                ? 'September'
-                : 'December'
+                ? 'Sep'
+                : 'Dec'
         monthlyData[quarterMonth] = value
       } else if (period === 's1' || period === 's2') {
-        const halfMonth = period === 's1' ? 'June' : 'December'
+        const halfMonth = period === 's1' ? 'Jun' : 'Dec'
         monthlyData[halfMonth] = value
       } else if (period === 'yearly') {
-        monthlyData.December = value
+        monthlyData.Dec = value
       } else {
         const capitalizedPeriod = capitalizeFirstLetter(period) as Month
 
@@ -95,17 +95,20 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
     <div className="max-w-full overflow-x-auto">
       <table className="min-w-full border-collapse">
         <thead>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
             <th />
             <th />
             <th />
             <th />
-            <th colSpan={36} className="border border-gray-300 p-2.5">
+            <th
+              colSpan={12}
+              className="border border-gray-300 p-2.5 dark:border-gray-800"
+            >
               Year {currentYear}
             </th>
           </tr>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
             <th />
             <th />
@@ -114,14 +117,14 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
             {Object.keys(quarters).map((quarter) => (
               <th
                 key={quarter}
-                colSpan={9}
-                className="border border-gray-300 p-2.5"
+                colSpan={3}
+                className="border border-gray-300 p-2.5 dark:border-gray-800"
               >
                 {quarter.toUpperCase()}
               </th>
             ))}
           </tr>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
             <th />
             <th />
@@ -132,8 +135,8 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <th
                     key={month}
-                    className="border border-gray-300 p-2.5"
-                    colSpan={3}
+                    className="border border-gray-300 p-2.5 dark:border-gray-800"
+                    colSpan={1}
                   >
                     {month}
                   </th>
@@ -141,40 +144,58 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
               </Fragment>
             ))}
           </tr>
-          <tr className="bg-gray-100">
-            <th className="border border-gray-300 p-2.5">Code</th>
-            <th className="border border-gray-300 p-2.5">KPI Name</th>
-            <th className="border border-gray-300 p-2.5">Frequency</th>
-            <th className="border border-gray-300 p-2.5">Unit</th>
-            <th className="border border-gray-300 p-2.5">Trend</th>
+          <tr className="bg-gray-100 dark:bg-gray-300">
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Code
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              KPI Name
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Frequency
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Unit
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Trend
+            </th>
             {Object.keys(quarters).map((quarter) => (
               <Fragment key={quarter}>
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
-                    <Tooltips
-                      content={'Current Target'}
-                      variant="bold"
-                      position="top"
-                      asChild
-                    >
-                      <th className="border border-gray-300 p-2.5">CT</th>
-                    </Tooltips>
-                    <Tooltips
-                      content={'Current Actual'}
-                      variant="bold"
-                      position="top"
-                      asChild
-                    >
-                      <th className="border border-gray-300 p-2.5">CA</th>
-                    </Tooltips>
-                    <Tooltips
-                      content={'Status'}
-                      variant="bold"
-                      position="top"
-                      asChild
-                    >
-                      <th className="border border-gray-300 p-2.5">ST</th>
-                    </Tooltips>
+                    <th className="relative h-12 w-20 border border-gray-300 p-2.5 dark:border-gray-800">
+                      <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
+                        <Tooltips
+                          content={'Current Target'}
+                          variant="bold"
+                          position="top"
+                          asChild
+                        >
+                          <span>CT</span>
+                        </Tooltips>
+                      </div>
+                      <div className="absolute bottom-0 right-1 text-xs font-semibold">
+                        <Tooltips
+                          content={'Status'}
+                          variant="bold"
+                          position="top"
+                          asChild
+                        >
+                          <span>ST</span>
+                        </Tooltips>
+                      </div>
+                      <div className="absolute right-1 top-0 text-xs font-medium">
+                        <Tooltips
+                          content={'Current Actual'}
+                          variant="bold"
+                          position="top"
+                          asChild
+                        >
+                          <span>CA</span>
+                        </Tooltips>
+                      </div>
+                    </th>
                   </Fragment>
                 ))}
               </Fragment>
@@ -192,16 +213,23 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
             )
 
             return (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="border border-gray-300 p-2.5">{kpi.code}</td>
-                <td className="border border-gray-300 p-2.5">{kpi.name}</td>
-                <td className="border border-gray-300 p-2.5 capitalize">
+              <tr
+                key={index}
+                className="hover:bg-gray-50 dark:hover:bg-gray-400"
+              >
+                <td className="border border-gray-300 p-2.5 dark:border-gray-800">
+                  {kpi.code}
+                </td>
+                <td className="border border-gray-300 p-2.5 dark:border-gray-800">
+                  {kpi.name}
+                </td>
+                <td className="border border-gray-300 p-2.5 capitalize dark:border-gray-800">
                   {kpi.frequency?.toLowerCase()}
                 </td>
-                <td className="border border-gray-300 p-2.5 text-center">
+                <td className="border border-gray-300 p-2.5 text-center dark:border-gray-800">
                   {switchUnit(kpi.unit)}
                 </td>
-                <td className="border border-gray-300 p-2.5 text-center">
+                <td className="border border-gray-300 p-2.5 text-center dark:border-gray-800">
                   <div className="flex items-center justify-center">
                     {trendIndicatorSwitch(kpi.calibration)}
                   </div>
@@ -222,43 +250,29 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                         <Fragment key={month}>
                           <td
                             className={cn(
-                              'border border-gray-300 p-2.5 text-center',
+                              'relative h-12 border border-gray-300 dark:border-gray-800 p-2.5 text-center',
                               target === undefined && actual !== undefined
                                 ? ''
                                 : target === undefined
-                                  ? 'bg-secondary border-gray-700'
+                                  ? 'bg-gray-200 border-dashed border-gray-300 dark:border-gray-800 dark:bg-gray-400'
                                   : '',
                             )}
                           >
-                            {actual !== undefined && target === undefined
-                              ? 'N/A'
-                              : (target ?? '')}
-                          </td>
-                          <td
-                            className={cn(
-                              'border border-gray-300 p-2.5 text-center',
-                              !actual && target !== undefined
+                            <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
+                              {actual !== undefined && target === undefined
                                 ? ''
-                                : !actual
-                                  ? 'bg-secondary border-gray-700'
-                                  : '',
-                            )}
-                          >
-                            {target !== undefined && actual === undefined
-                              ? 'N/A'
-                              : (actual ?? '')}
-                          </td>
-                          <td
-                            className={cn(
-                              'border border-gray-300 p-2.5 text-center',
-                              target === undefined && actual === undefined
-                                ? 'bg-secondary border-gray-700'
-                                : '',
-                            )}
-                          >
-                            {target !== undefined && actual !== undefined
-                              ? statusIndicatorSwitch(status)
-                              : ''}
+                                : (target ?? '')}
+                            </div>
+                            <div className="absolute right-1 top-1 text-xs font-semibold">
+                              {target !== undefined && actual === undefined
+                                ? ''
+                                : (actual ?? '')}
+                            </div>
+                            <div className="absolute bottom-1 right-1 text-xs font-medium">
+                              {target !== undefined && actual !== undefined
+                                ? statusIndicatorSwitch(status)
+                                : ''}
+                            </div>
                           </td>
                         </Fragment>
                       )
