@@ -100,17 +100,20 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
     <div className="max-w-full overflow-x-auto">
       <table className="min-w-full border-collapse">
         <thead>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
             <th />
             <th />
             <th />
             <th />
-            <th colSpan={12} className="border border-gray-300 p-2.5">
+            <th
+              colSpan={12}
+              className="border border-gray-300 p-2.5 dark:border-gray-800"
+            >
               Year {currentYear}
             </th>
           </tr>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
             <th />
             <th />
@@ -120,13 +123,13 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
               <th
                 key={quarter}
                 colSpan={3}
-                className="border border-gray-300 p-2.5"
+                className="border border-gray-300 p-2.5 dark:border-gray-800"
               >
                 {quarter.toUpperCase()}
               </th>
             ))}
           </tr>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
             <th />
             <th />
@@ -137,7 +140,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <th
                     key={month}
-                    className="border border-gray-300 p-2.5"
+                    className="border border-gray-300 p-2.5 dark:border-gray-800"
                     colSpan={1}
                   >
                     {month}
@@ -146,17 +149,27 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
               </Fragment>
             ))}
           </tr>
-          <tr className="bg-gray-100">
-            <th className="border border-gray-300 p-2.5">Code</th>
-            <th className="border border-gray-300 p-2.5">KPI Name</th>
-            <th className="border border-gray-300 p-2.5">Frequency</th>
-            <th className="border border-gray-300 p-2.5">Unit</th>
-            <th className="border border-gray-300 p-2.5">Trend</th>
+          <tr className="bg-gray-100 dark:bg-gray-300">
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Code
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              KPI Name
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Frequency
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Unit
+            </th>
+            <th className="border border-gray-300 p-2.5 dark:border-gray-800">
+              Trend
+            </th>
             {Object.keys(quarters).map((quarter) => (
               <Fragment key={quarter}>
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
-                    <th className="relative h-12 w-20 border border-gray-300 p-2.5">
+                    <th className="relative h-12 w-20 border border-gray-300 p-2.5 dark:border-gray-800">
                       <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
                         <Tooltips
                           content={'Actual Current Year'}
@@ -200,16 +213,23 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
               mapFrequencyToMonths(kpi.actuals, currentYear)
 
             return (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="border border-gray-300 p-2.5">{kpi.code}</td>
-                <td className="border border-gray-300 p-2.5">{kpi.name}</td>
-                <td className="border border-gray-300 p-2.5 capitalize">
+              <tr
+                key={index}
+                className="hover:bg-gray-50 dark:hover:bg-gray-400"
+              >
+                <td className="border border-gray-300 p-2.5 dark:border-gray-800">
+                  {kpi.code}
+                </td>
+                <td className="border border-gray-300 p-2.5 dark:border-gray-800">
+                  {kpi.name}
+                </td>
+                <td className="border border-gray-300 p-2.5 capitalize dark:border-gray-800">
                   {kpi.frequency?.toLowerCase()}
                 </td>
-                <td className="border border-gray-300 p-2.5 text-center">
+                <td className="border border-gray-300 p-2.5 text-center dark:border-gray-800">
                   {switchUnit(kpi.unit)}
                 </td>
-                <td className="border border-gray-300 p-2.5 text-center">
+                <td className="border border-gray-300 p-2.5 text-center dark:border-gray-800">
                   <div className="flex items-center justify-center">
                     {trendIndicatorSwitch(kpi.calibration)}
                   </div>
@@ -225,9 +245,9 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                         <td
                           key={month}
                           className={cn(
-                            'relative h-12 border border-gray-300 p-2.5 text-center',
+                            'relative h-12 border border-gray-300 dark:border-gray-800 p-2.5 text-center',
                             !cy
-                              ? 'bg-gray-200 border-dashed border-gray-300'
+                              ? 'bg-gray-200 border-dashed border-gray-300 dark:border-gray-800 dark:bg-gray-400'
                               : '',
                           )}
                         >
