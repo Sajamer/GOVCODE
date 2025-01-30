@@ -27,6 +27,7 @@ model KPI {
   KPITarget     KPITarget[]
   KPIActual     KPIActual[]
   DashboardKPI  DashboardKPI[]
+  tasks         TaskManagement[]
 }
 
 model KPITarget {
