@@ -117,7 +117,7 @@
     --destructive-foreground: #eb5e551a;
 
     --background: 200, 97%, 15%; /* #01324b */
-    --foreground: 0 0% 98%;
+    --foreground: 0 0% 9%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
@@ -130,8 +130,6 @@
     --muted-foreground: 0 0% 63.9%;
     --accent: 0 0% 14.9%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
