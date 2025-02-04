@@ -53,6 +53,8 @@
     "add": "أضف",
     "add-new": "أضف",
     "edit": "تعديل",
+    "assignTask": "تعيين مهمة",
+    "AssignTo": "تعيين إلى",
     "delete": "حذف",
     "view": "عرض",
     "save": "حفظ",
@@ -171,7 +173,13 @@
       "pie": "دائري",
       "radar": "رادار",
       "area": "منطقة",
-      "barStacked": "شريط مكدس"
+      "barStacked": "شريط مكدس",
+      "low": "منخفض",
+      "medium": "متوسط",
+      "high": "عالي",
+      "todo": "للقيام به",
+      "inProgress": "قيد التنفيذ",
+      "done": "تم"
     },
     "current-target": "الهدف الحالي",
     "current-actual": "الفعلي الحالي",
@@ -205,7 +213,7 @@
     "create": "إنشاء",
     "dashboard": "لوحة التحكم",
     "dashboard-description": "مركزك الرئيسي للحصول على الرؤى والتحليلات وأدوات الإدارة.",
-    "import-excel": "استيراد من Excel",
+    "import-csv": "استيراد من CSV",
     "export-excel": "تصدير إلى Excel",
     "please-provide-data": "يرجى تقديم البيانات",
     "no-data-to-export": "لا توجد بيانات للتصدير"

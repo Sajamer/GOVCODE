@@ -7,6 +7,7 @@ import {
   Edit2,
   Target,
   Trash,
+  UserRoundCheck,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
@@ -15,12 +16,14 @@ import Tooltips from '../tooltips/Tooltips'
 interface IGenericTableActionButtonsProps {
   rowId: string
   callback: () => void
+  assignTask: () => void
   sheetName: SheetNames
 }
 
 const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
   rowId,
   callback,
+  assignTask,
   sheetName,
 }) => {
   const { openSheet } = useSheetStore((store) => store.actions)
@@ -31,6 +34,16 @@ const GenericTableActionButtons: FC<IGenericTableActionButtonsProps> = ({
     <div className="flex items-center justify-end gap-2">
       {hasPermission && (
         <>
+          <Tooltips
+            content={t('assignTask')}
+            variant="bold"
+            position="top"
+            asChild
+          >
+            <button onClick={assignTask} className="text-gray-700">
+              <UserRoundCheck size={16} />
+            </button>
+          </Tooltips>
           <Tooltips content={t('edit')} variant="bold" position="top" asChild>
             <button
               onClick={() =>

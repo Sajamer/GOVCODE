@@ -1,22 +1,30 @@
 model TaskManagement {
-  id      Int        @id @default(autoincrement())
-  status  TaskStatus
-  comment String?
+  id       Int        @id @default(autoincrement())
+  status   TaskStatus
+  priority Priority
+  comment  String?
+  dueDate  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  assignToId  String
   allocatorId String
   kpiId       Int
 
-  assignTo  User @relation(fields: [assignToId], references: [id], name: "AssignedTask")
-  allocator User @relation(fields: [allocatorId], references: [id], name: "AllocatedTask")
-  KPI       KPI  @relation(fields: [kpiId], references: [id])
+  // The user who allocated/created the task (remains a single relation)
+  allocator User   @relation(fields: [allocatorId], references: [id], name: "AllocatedTask")
+  KPI       KPI    @relation(fields: [kpiId], references: [id])
+  assignees User[] @relation("AssignedTask")
 }
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
   DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
 }

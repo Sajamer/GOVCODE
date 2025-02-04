@@ -89,6 +89,24 @@ export const getAllKPI = async (
             },
           },
         },
+        tasks: {
+          include: {
+            allocator: {
+              select: {
+                id: true,
+                fullName: true,
+                photo: true,
+              },
+            },
+            assignees: {
+              select: {
+                id: true,
+                fullName: true,
+                photo: true,
+              },
+            },
+          },
+        },
       },
     })
 
@@ -104,6 +122,7 @@ export const getAllKPI = async (
         KPIProcess,
         KPIActual,
         KPITarget,
+        tasks,
         ...rest
       }) => ({
         ...rest,
@@ -112,6 +131,12 @@ export const getAllKPI = async (
         processes: KPIProcess.map(({ process }) => process),
         targets: KPITarget,
         actuals: KPIActual,
+        tasks,
+        assignTo: tasks
+          .flatMap((task) =>
+            task.assignees.map((assignee) => assignee.fullName),
+          )
+          .join(', '),
       }),
     )
 

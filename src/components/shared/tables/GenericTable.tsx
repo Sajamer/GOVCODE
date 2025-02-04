@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChangeEvent, useEffect, useMemo, useState } from 'react'
 import PageHeader from '../headers/PageHeader'
+import AssignTaskDialog from '../modals/AssignTaskDialog'
 import ConfirmationDialog from '../modals/ConfirmationDialog'
 import NoResultFound from '../NoResultFound'
 import ResourceComponent from '../ResourceComponent'
@@ -71,6 +72,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   const { hasPermission, organizationId } = useGlobalStore((store) => store)
 
   const [openConfirmation, setOpenConfirmation] = useState(false)
+  const [openAssignTask, setOpenAssignTask] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false)
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined)
@@ -120,6 +122,10 @@ const GenericComponent = <T extends Record<string, unknown>>({
       callback={() => {
         setSelectedId(rowData[entityKey] as string)
         setOpenConfirmation(true)
+      }}
+      assignTask={() => {
+        setSelectedId(rowData[entityKey] as string)
+        setOpenAssignTask(true)
       }}
       sheetName={sheetName as SheetNames}
     />
@@ -215,7 +221,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
                 >
                   <Import size="24" className="text-primary-foreground" />
                   <span className="hidden text-sm font-medium lg:flex">
-                    {t('import-excel')}
+                    {t('import-csv')}
                   </span>
                 </Button>
               )}
@@ -259,10 +265,11 @@ const GenericComponent = <T extends Record<string, unknown>>({
                 rel="noopener noreferrer"
                 className="text-xs text-neutral-500"
               >
-                Download CSV{' '}
-                <span className="font-medium text-neutral-800">
-                  Sample File
+                Download Sample
+                <span className="px-1 font-medium text-neutral-800">
+                  KPI CSV
                 </span>
+                Template
               </Link>
               <div
                 className={cn(
@@ -361,6 +368,11 @@ const GenericComponent = <T extends Record<string, unknown>>({
         onClose={() => setOpenConfirmation(false)}
         isLoading={isPending}
         callback={() => mutate()}
+      />
+      <AssignTaskDialog
+        open={openAssignTask}
+        kpiId={Number(selectedId)}
+        onClose={() => setOpenAssignTask(false)}
       />
     </>
   )

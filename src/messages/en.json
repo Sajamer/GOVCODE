@@ -53,6 +53,8 @@
     "add": "Add",
     "add-new": "Add New",
     "edit": "Edit",
+    "assignTask": "Assign Task",
+    "AssignTo": "Assigned To",
     "delete": "Delete",
     "save": "Save",
     "view": "View",
@@ -171,7 +173,13 @@
       "pie": "Pie",
       "radar": "Radar",
       "area": "Area",
-      "barStacked": "Bar Stacked"
+      "barStacked": "Bar Stacked",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "todo": "ToDo",
+      "inProgress": "In Progress",
+      "done": "Done"
     },
     "current-target": "Current Target",
     "current-actual": "Current Actual",
@@ -215,7 +223,7 @@
     "chartType": "Chart Type",
     "chartType-placeholder": "Select Chart Type",
     "kpi-placeholder": "Select KPIs",
-    "import-excel": "Import Excel",
+    "import-csv": "Import CSV",
     "export-excel": "Export Excel",
     "please-provide-data": "Please provide data",
     "no-data-to-export": "No data to export"

@@ -9,6 +9,7 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { getDepartmentsByOrganizationId } from '@/lib/actions/department.actions'
 import { createKPI, updateKPI } from '@/lib/actions/kpiActions'
+import { CustomUser } from '@/lib/auth'
 import { axiosGet } from '@/lib/axios'
 import { BodySchema } from '@/schema/kpi.schema'
 import { useGlobalStore } from '@/stores/global-store'
@@ -21,6 +22,7 @@ import {
 import { Calibration, Frequency, KPIType, Units } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { FC } from 'react'
@@ -42,7 +44,10 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   const t = useTranslations('general')
   const isArabic = usePathname().includes('/ar')
 
-  const { organizationId } = useGlobalStore((store) => store)
+  const { data: session } = useSession()
+  const userData = session?.user as CustomUser | undefined
+
+  const { organizationId, departmentId } = useGlobalStore((store) => store)
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
 
@@ -158,7 +163,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     mutationFn: async () => await createKPI(values),
     onSuccess: (newKPI) => {
       queryClient.setQueryData(
-        ['kpis'],
+        ['kpis', userData?.role, organizationId, departmentId],
         (oldData: IKpiManipulator[] | undefined) => {
           return oldData ? [...oldData, newKPI] : [newKPI]
         },
@@ -183,7 +188,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     mutationFn: async (id: number) => await updateKPI(id, values),
     onSuccess: (updatedKPI, id) => {
       queryClient.setQueryData(
-        ['kpis'],
+        ['kpis', userData?.role, organizationId, departmentId],
         (oldData: IKpiResponse[] | undefined) => {
           if (!oldData) return []
 

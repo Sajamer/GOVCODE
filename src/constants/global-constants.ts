@@ -3,6 +3,8 @@ import {
   ChartTypes,
   Frequency,
   KPIType,
+  Priority,
+  TaskStatus,
   Units,
   userRole,
 } from '@prisma/client'
@@ -117,6 +119,42 @@ export const getCalibrationOptions = (t: TranslationFunction) => [
   //   label: t('options.Neutral'),
   //   value: Calibration.NEUTRAL,
   // },
+]
+
+export const getPriorityOptions = (t: TranslationFunction) => [
+  {
+    id: Priority.LOW,
+    label: t('options.low'),
+    value: Priority.LOW,
+  },
+  {
+    id: Priority.MEDIUM,
+    label: t('options.medium'),
+    value: Priority.MEDIUM,
+  },
+  {
+    id: Priority.HIGH,
+    label: t('options.high'),
+    value: Priority.HIGH,
+  },
+]
+
+export const getTaskStatusOptions = (t: TranslationFunction) => [
+  {
+    id: TaskStatus.TODO,
+    label: t('options.todo'),
+    value: TaskStatus.TODO,
+  },
+  {
+    id: TaskStatus.IN_PROGRESS,
+    label: t('options.inProgress'),
+    value: TaskStatus.IN_PROGRESS,
+  },
+  {
+    id: TaskStatus.DONE,
+    label: t('options.done'),
+    value: TaskStatus.DONE,
+  },
 ]
 
 export const getChartTypeOptions = (t: TranslationFunction) => [

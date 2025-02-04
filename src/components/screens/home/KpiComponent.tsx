@@ -32,6 +32,8 @@ const KpiComponent: FC = () => {
 
   const kpiData = data || []
 
+  console.log('kpiData', kpiData)
+
   return (
     <>
       <GenericComponent<IKpiResponse>
@@ -48,8 +50,7 @@ const KpiComponent: FC = () => {
           { key: 'calibration', isSortable: false, type: 'translated' },
           { key: 'description', isSortable: false, type: 'string' },
           { key: 'frequency', isSortable: false, type: 'translated' },
-          { key: 'unit', isSortable: false, type: 'translated' },
-          { key: 'type', isSortable: false, type: 'translated' },
+          { key: 'assignTo', isSortable: false, type: 'string' },
         ]}
       />
 

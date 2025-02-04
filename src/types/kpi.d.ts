@@ -6,11 +6,24 @@ import {
   KPIActual,
   KPITarget,
   KPIType,
+  TaskManagement,
   Units,
 } from '@prisma/client'
 
 interface IKpiTarget extends KPITarget {}
 interface IKpiActualTarget extends KPIActual {}
+interface ITaskManagement extends TaskManagement {}
+
+interface ITaskUser {
+  id: string
+  fullName: string | null
+  photo: string | null
+}
+
+interface ITaskManagementResponse extends ITaskManagement {
+  assignees: ITaskUser[]
+  allocator: ITaskUser
+}
 
 export type MonthlyData = Record<string, number | undefined>
 export type IChartData =
@@ -67,7 +80,8 @@ export interface IKpiResponse extends KPI {
   processes: IDatabaseStaticData[]
   targets: IKpiTarget[]
   actuals: IKpiActualTarget[]
-
+  tasks: ITaskManagementResponse[]
+  assignTo: string
   [key: string]: unknown
 }
 
