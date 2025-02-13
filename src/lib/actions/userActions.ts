@@ -3,6 +3,7 @@
 import prisma from '@/lib/db_connection'
 import {
   IManualManipulator,
+  IMyProfileManipulator,
   IUserUpdateManipulator,
 } from '@/schema/user.schema'
 import { IUsers } from '@/types/users'
@@ -235,6 +236,67 @@ export const updateUser = async (id: string, dto: IUserUpdateManipulator) => {
         fullName: dto.fullName,
         role: dto.role,
         departmentId: dto.departmentId,
+      },
+    })
+
+    return user
+  } catch (error) {
+    sendError(error)
+    handleError(error, 'Failed to update user')
+    throw new Error('Failed to update user')
+  }
+}
+
+export const getUserById = async (id: string) => {
+  try {
+    const data = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        assignedTasks: {
+          select: {
+            id: true,
+            comment: true,
+            dueDate: true,
+            status: true,
+            priority: true,
+            KPI: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!data) {
+      return null
+    }
+
+    return data
+  } catch (error) {
+    sendError(error)
+    handleError(error, 'Failed to fetch user')
+    throw new Error('Failed to fetch user')
+  }
+}
+
+export const updateProfile = async (id: string, dto: IMyProfileManipulator) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        fullName: dto.fullName,
+        phone: dto.phone,
+        photo: dto.photo,
       },
     })
 

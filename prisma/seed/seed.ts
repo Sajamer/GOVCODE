@@ -13,6 +13,7 @@ async function main() {
   await prisma.kPIProcess.deleteMany() // Clear KPIProcess
   await prisma.kPICompliance.deleteMany() // Clear KPICompliance
   await prisma.kPIObjective.deleteMany() // Clear KPIObjective
+  await prisma.taskManagement.deleteMany() // Clear KPIs
   await prisma.kPI.deleteMany() // Clear KPIs
   await prisma.user.deleteMany() // Clear users
   await prisma.department.deleteMany() // Clear departments first

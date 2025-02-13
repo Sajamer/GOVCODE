@@ -32,8 +32,6 @@ const KpiComponent: FC = () => {
 
   const kpiData = data || []
 
-  console.log('kpiData', kpiData)
-
   return (
     <>
       <GenericComponent<IKpiResponse>

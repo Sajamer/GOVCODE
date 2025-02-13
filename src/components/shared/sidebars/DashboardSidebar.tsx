@@ -2,6 +2,7 @@
 
 import { Icons } from '@/components/icons/Icons'
 import Tooltips from '@/components/shared/tooltips/Tooltips'
+import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { SidebarItems } from '@/constants/sidebar-constants'
 import { useAdminDashboard } from '@/hooks/useAdminDashboard'
@@ -13,12 +14,12 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FC } from 'react'
+import AccordionSidebar from '../accordion/AccordionSidebar'
 
 const DashboardSidebar: FC = () => {
   const { isSidebarOpened, setIsSidebarOpened } = useAdminDashboard()
   const sidebarItems = SidebarItems()
   const t = useTranslations('AuthenticationPage')
-
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
   const normalizedPathname = isArabic
@@ -71,61 +72,104 @@ const DashboardSidebar: FC = () => {
           )}
         />
       </Button>
+
       <div className="size-full">
         <div
           className={cn(
-            'flex items-center justify-start gap-3 px-4',
+            'flex items-center justify-center gap-3 px-4',
             isSidebarOpened && 'px-3',
           )}
         >
           <h1
             className={cn(
-              'text-2xl font-bold text-secondary-foreground whitespace-nowrap transition-opacity duration-500 pt-[1.5rem]',
+              'text-3xl font-bold text-primary dark:text-white text-center whitespace-nowrap transition-opacity duration-500 pt-[1.5rem]',
               isSidebarOpened ? 'opacity-100' : 'opacity-0',
             )}
           >
-            logo + Govcode
+            GovCode
           </h1>
         </div>
 
-        <nav className="styleScrollbar mt-6 flex h-[calc(100%-140px)] w-full flex-col overflow-y-auto overflow-x-hidden">
+        <nav className="styleScrollbar mt-6 flex h-[calc(100%-200px)] w-full flex-col items-center justify-start overflow-y-auto overflow-x-hidden">
           {filteredSidebarItems.map((item, index) => (
-            <Link
-              key={index}
-              href={item.href}
-              className={cn(
-                'flex items-center justify-start gap-2 px-6 py-3 w-full',
-                normalizedPathname === item.href
-                  ? 'bg-primary hover:opacity-90 text-primary-foreground'
-                  : 'hover:bg-primary hover:opacity-80 hover:text-primary-foreground',
-                normalizedPathname !== item.href && !isSidebarOpened && 'py-0',
-              )}
-            >
-              {isSidebarOpened ? (
-                item.icon
+            <div key={index} className="flex w-full flex-col items-center px-4">
+              {item.submenu ? (
+                <AccordionSidebar
+                  title={item.title}
+                  path={item.href || ''}
+                  icon={item.icon}
+                  data={item.submenu.map((sub) => sub.title)}
+                />
               ) : (
-                <Tooltips content={item.title} variant="bold" position="bottom">
-                  {item.icon}
-                </Tooltips>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'w-full flex justify-center items-center gap-3 font-semibold text-base duration-75 py-2 hover:text-primary lg:justify-start lg:pl-5',
+                    normalizedPathname === item.href
+                      ? 'bg-primary rounded-xl text-white hover:text-white'
+                      : ' dark:text-white dark:hover:text-primary',
+                  )}
+                >
+                  {isSidebarOpened ? (
+                    item.icon
+                  ) : (
+                    <Tooltips
+                      content={item.title}
+                      variant="bold"
+                      position="bottom"
+                    >
+                      {item.icon}
+                    </Tooltips>
+                  )}
+                  <p
+                    className={cn(
+                      'text-base font-medium transition-opacity duration-500',
+                      isSidebarOpened ? 'opacity-100' : 'opacity-0',
+                    )}
+                  >
+                    {item.title}
+                  </p>
+                </Link>
               )}
-
-              <p
-                className={cn(
-                  'text-lg font-medium transition-opacity duration-500',
-                  isSidebarOpened ? 'opacity-100' : 'opacity-0',
-                )}
-              >
-                {item.title}
-              </p>
-            </Link>
+            </div>
           ))}
         </nav>
 
-        <div className="w-full px-4">
-          <Button className="w-full justify-start" onClick={() => signOut()}>
-            <Icons.PowerSymbol />
-            {isSidebarOpened && t('logout')}
-          </Button>
+        <div className="relative flex w-full flex-col items-center justify-start gap-5 font-semibold text-accent duration-75 dark:text-white lg:justify-start lg:px-6">
+          <div className="flex w-full items-center justify-center gap-4 lg:justify-start">
+            <Avatar className="size-10">
+              <AvatarImage
+                src={userData?.image || '/assets/images/avatar-placeholder.png'}
+                alt="avatar"
+              />
+            </Avatar>
+            <div
+              className={cn(
+                'flex-col',
+                isSidebarOpened ? 'flex duration-200' : 'hidden',
+              )}
+            >
+              <span className="text-xs font-semibold text-gray-400">
+                Logged in as
+              </span>
+              <Link
+                href={'/my-profile'}
+                className="line-clamp-1 whitespace-normal text-sm font-semibold text-black hover:underline dark:text-white"
+              >
+                {userData?.fullName}
+              </Link>
+            </div>
+          </div>
+          <div className="w-full">
+            <Button
+              variant={'outline'}
+              className="w-full justify-center border border-primary text-primary hover:bg-primary hover:text-white"
+              onClick={() => signOut()}
+            >
+              <Icons.PowerSymbol />
+              {isSidebarOpened && t('logout')}
+            </Button>
+          </div>
         </div>
       </div>
     </aside>

@@ -25,6 +25,13 @@ export const userUpdateSchema = object({
   departmentId: number(),
 })
 
+export const myProfileSchema = object({
+  fullName: string().min(3, { message: 'Be at least 3 characters long' }),
+  phone: string().nullable(),
+  photo: string().nullable(),
+})
+
 export type IInvitationManipulator = z.infer<typeof invitationSchema>
 export type IManualManipulator = z.infer<typeof manualSchema>
 export type IUserUpdateManipulator = z.infer<typeof userUpdateSchema>
+export type IMyProfileManipulator = z.infer<typeof myProfileSchema>
