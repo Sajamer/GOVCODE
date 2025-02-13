@@ -92,10 +92,10 @@
     --destructive-light: #eb5e5533;
     --destructive-foreground: #eb5e551a;
 
-    --accent: #14181f;
-    --accent-disabled: #323c49;
-    --accent-light: #6f7c8e;
-    --accent-foreground: #929eaa;
+    --accent: #edeff3;
+    --accent-disabled: #d3d8df;
+    --accent-light: #9ea9b5;
+    --accent-foreground: #8895a3;
 
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;

@@ -136,7 +136,7 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
 
         <PopoverContent
           className={cn(
-            'm-0 overflow-hidden rounded-[1.25rem] p-0 backdrop-blur-[2.5rem] shadow-dropdown bg-neutral-50',
+            'm-0 overflow-hidden rounded-[1.25rem] p-0 backdrop-blur-[2.5rem] shadow-dropdown bg-white',
             wrapperStyle,
           )}
           align={align}
@@ -216,7 +216,7 @@ const MenuList = React.memo(function MenuList({
           {data.map((status) => (
             <CommandItem
               className={cn(
-                'flex items-center justify-between px-3.5 py-2.5',
+                'flex items-center justify-between px-3.5 py-2.5 ',
                 dropdownItemStyle,
                 splitLabel && 'p-0',
               )}
