@@ -29,6 +29,7 @@ model Organization {
   updatedAt DateTime @updatedAt
 
   departments Department[]
+  taskStatus  TaskStatus[]
 }
 
 model Department {

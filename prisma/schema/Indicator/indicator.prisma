@@ -1,0 +1,159 @@
+model Area {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  version     String?
+
+  reference String?
+  domains   Domain[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Domain {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  goal        String?
+  version     String?
+
+  areaId   Int
+  area     Area      @relation(fields: [areaId], references: [id])
+  controls Control[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Dimension {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Control Control[]
+}
+
+model Control {
+  id           String  @id @default(cuid())
+  name         String
+  description  String?
+  version      String?
+  dependencies String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  domainId       Int
+  domain         Domain          @relation(fields: [domainId], references: [id])
+  dimensionId    Int?
+  dimension      Dimension?      @relation(fields: [dimensionId], references: [id])
+  specifications Specification[]
+}
+
+model Specification {
+  id          String  @id @default(cuid())
+  name        String
+  color       String?
+  label       String?
+  description String?
+  priority    String?
+  version     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  controlId        String
+  control          Control            @relation(fields: [controlId], references: [id])
+  mappingFramework MappingFramework[]
+  evidence         Evidence[]
+}
+
+model MappingFramework {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+
+  evidenceId    Int?
+  evidence      Evidence?      @relation(fields: [evidenceId], references: [id])
+  specId        String?
+  specification Specification? @relation(fields: [specId], references: [id])
+}
+
+model Evidence {
+  id                 Int     @id @default(autoincrement())
+  name               String
+  acceptanceCriteria String?
+
+  specId           String?
+  specification    Specification?     @relation(fields: [specId], references: [id])
+  mappingFramework MappingFramework[]
+  auditCycleCase   AuditCycleCase[]
+}
+
+model AuditCycle {
+  id                     Int       @id @default(autoincrement())
+  name                   String
+  description            String?
+  startDate              DateTime
+  endDate                DateTime?
+  comment                String?
+  resultLevel            String?
+  resultName             String?
+  alternativeResultLevel String?
+  alternativeResultName  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditBy         String?
+  user            User?            @relation(fields: [auditBy], references: [id])
+  auditCycleCases AuditCycleCase[]
+}
+
+model AuditCycleCase {
+  id      Int     @id @default(autoincrement())
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  evidenceId         Int
+  evidence           Evidence             @relation(fields: [evidenceId], references: [id])
+  auditCycleId       Int
+  auditCycle         AuditCycle           @relation(fields: [auditCycleId], references: [id])
+  complianceStatusId Int?
+  complianceStatus   ComplianceStatus?    @relation(fields: [complianceStatusId], references: [id])
+  relatedEvidenceDoc RelatedEvidenceDoc[]
+  taskManagement     TaskManagement[]
+}
+
+model ComplianceStatus {
+  id       Int      @id @default(autoincrement())
+  name     String
+  show     Boolean?
+  sequence Int?
+  color    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditCycleCase AuditCycleCase[]
+}
+
+model RelatedEvidenceDoc {
+  id     Int     @id @default(autoincrement())
+  name   String
+  object String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditCycleCaseId Int?
+  auditCycleCase   AuditCycleCase? @relation(fields: [auditCycleCaseId], references: [id])
+  taskManagementId Int?
+  taskManagement   TaskManagement? @relation(fields: [taskManagementId], references: [id])
+}
