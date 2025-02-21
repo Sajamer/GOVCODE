@@ -13,7 +13,8 @@
     "kpiChart": "KPI Chart",
     "organizations": "Organizations",
     "acceptInvitation": "Accept Invitation",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "taskManagement": "Task Management"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -226,6 +227,9 @@
     "import-csv": "Import CSV",
     "export-excel": "Export Excel",
     "please-provide-data": "Please provide data",
-    "no-data-to-export": "No data to export"
+    "no-data-to-export": "No data to export",
+    "task-management": "Task Management",
+    "tasks": "Tasks",
+    "taskDescription": "Manage all the tasks available on the platform."
   }
 }

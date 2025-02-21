@@ -6,17 +6,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import {
-  getPriorityOptions,
-  getTaskStatusOptions,
-} from '@/constants/global-constants'
+import { getPriorityOptions } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
 import { createTask } from '@/lib/actions/task.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
 import { ITaskManagementManipulator, taskSchema } from '@/schema/task.schema'
 import { useGlobalStore } from '@/stores/global-store'
-import { Priority, TaskStatus } from '@prisma/client'
+import { Priority } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { useSession } from 'next-auth/react'
@@ -56,7 +53,6 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
   })
 
   const priorityOptions = getPriorityOptions(t)
-  const taskStatusOptions = getTaskStatusOptions(t)
 
   const userOptions = allUsersData?.map((user) => ({
     id: user.id,
@@ -74,7 +70,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
     touched,
   } = useFormik<ITaskManagementManipulator>({
     initialValues: {
-      status: TaskStatus.TODO,
+      status: '',
       priority: Priority.LOW,
       kpiId,
       dueDate: '',
@@ -171,7 +167,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
                 {...getFieldProps('priority')}
                 callback={(option) => setFieldValue('priority', option.value)}
               />
-              <BasicDropdown
+              {/* <BasicDropdown
                 data={taskStatusOptions ?? []}
                 label={'Task Status'}
                 triggerStyle="h-11"
@@ -182,7 +178,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
                 error={errors.status && touched.status ? errors.status : ''}
                 {...getFieldProps('status')}
                 callback={(option) => setFieldValue('status', option.value)}
-              />
+              /> */}
             </div>
             <div className="w-full">
               <label className="mb-2 block text-sm font-medium">Due Date</label>

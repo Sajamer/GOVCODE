@@ -13,7 +13,8 @@
     "kpiChart": "رسم بياني للمؤشرات",
     "organizations": "المنظمات",
     "acceptInvitation": "قبول الدعوة",
-    "dashboard": "لوحة التحكم"
+    "dashboard": "لوحة التحكم",
+    "taskManagement": "إدارة المهام"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -216,6 +217,9 @@
     "import-csv": "استيراد من CSV",
     "export-excel": "تصدير إلى Excel",
     "please-provide-data": "يرجى تقديم البيانات",
-    "no-data-to-export": "لا توجد بيانات للتصدير"
+    "no-data-to-export": "لا توجد بيانات للتصدير",
+    "task-management": "إدارة المهام",
+    "tasks": "المهام",
+    "taskDescription": "إدارة جميع المهام المتاحة على المنصة."
   }
 }

@@ -1,4 +1,4 @@
-import { Priority, TaskStatus } from '@prisma/client'
+import { Priority } from '@prisma/client'
 import { FC } from 'react'
 import Badge from './Badge'
 
@@ -12,20 +12,13 @@ type VariantColor =
   | 'dark'
 
 interface IStatusBadgeProps {
-  status: TaskStatus | Priority
+  status: Priority
 }
 
 const StatusBadge: FC<IStatusBadgeProps> = ({ status }) => {
   let variantColor: VariantColor = 'warning'
 
   switch (status) {
-    case 'DONE':
-      variantColor = 'success'
-      break
-    case 'TODO':
-      variantColor = 'secondary'
-      break
-    case 'IN_PROGRESS':
     case 'MEDIUM':
       variantColor = 'warning'
       break

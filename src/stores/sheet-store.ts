@@ -7,6 +7,7 @@ export type SheetNames =
   | 'userAccess'
   | 'userAccessManually'
   | 'dashboard'
+  | 'tasks-management'
 
 type SheetProps = {
   rowId?: string

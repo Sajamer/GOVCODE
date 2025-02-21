@@ -1,4 +1,5 @@
 import KPIForm from '@/components/forms/KPIForm'
+import TaskManagementForm from '@/components/forms/TaskManagementForm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +10,7 @@ import { importKpis } from '@/queries/kpiQueries'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { IKpiResponse } from '@/types/kpi'
+import { ITasksManagementResponse } from '@/types/tasks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ChartSpline,
@@ -207,6 +209,10 @@ const GenericComponent = <T extends Record<string, unknown>>({
           >
             {sheetToOpen === 'kpis' ? (
               <KPIForm data={singleEntityData as unknown as IKpiResponse} />
+            ) : sheetToOpen === 'tasks-management' ? (
+              <TaskManagementForm
+                data={singleEntityData as unknown as ITasksManagementResponse}
+              />
             ) : null}
           </SheetComponent>
           {hasPermission && (
