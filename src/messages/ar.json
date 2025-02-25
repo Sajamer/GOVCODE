@@ -51,6 +51,7 @@
     "kpi-status": "حالة المؤشر",
     "kpiDescription": "إدارة جميع المؤشرات المتاحة على المنصة.",
     "search": "بحث",
+    "archive": "أرشيف",
     "add": "أضف",
     "add-new": "أضف",
     "edit": "تعديل",
@@ -220,6 +221,11 @@
     "no-data-to-export": "لا توجد بيانات للتصدير",
     "task-management": "إدارة المهام",
     "tasks": "المهام",
-    "taskDescription": "إدارة جميع المهام المتاحة على المنصة."
+    "taskDescription": "إدارة جميع المهام المتاحة على المنصة.",
+    "StartDate": "تاريخ البدء",
+    "DueDate": "تاريخ الاستحقاق",
+    "ActualEndDate": "تاريخ الانتهاء الفعلي",
+    "Priority": "الأولوية",
+    "restore-archive": "استعادة من الأرشيف"
   }
 }

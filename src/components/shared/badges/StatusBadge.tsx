@@ -1,4 +1,4 @@
-import { Priority } from '@prisma/client'
+import { ITaskStatus } from '@/types/tasks'
 import { FC } from 'react'
 import Badge from './Badge'
 
@@ -12,21 +12,28 @@ type VariantColor =
   | 'dark'
 
 interface IStatusBadgeProps {
-  status: Priority
+  status: ITaskStatus['name']
 }
 
 const StatusBadge: FC<IStatusBadgeProps> = ({ status }) => {
   let variantColor: VariantColor = 'warning'
 
-  switch (status) {
-    case 'MEDIUM':
-      variantColor = 'warning'
+  switch (status?.toLowerCase()) {
+    case 'in progress':
+      variantColor = 'primary'
       break
-    case 'HIGH':
+    case 'on hold':
+      variantColor = 'secondary'
+      break
+    case 'rejected':
       variantColor = 'destructive'
       break
-    case 'LOW':
+    case 'todo':
       variantColor = 'dark'
+      break
+    case 'done':
+    case 'completed':
+      variantColor = 'success'
       break
     default:
       variantColor = 'warning'
@@ -34,8 +41,10 @@ const StatusBadge: FC<IStatusBadgeProps> = ({ status }) => {
   }
 
   return (
-    <Badge variant={variantColor} size={'sm'} className="px-2.5 py-0.5">
-      <span className="text-xs font-normal capitalize">{status}</span>
+    <Badge variant={variantColor} size={'sm'} className="w-fit px-2.5 py-0.5">
+      <span className="text-sm font-normal capitalize">
+        {status?.toLowerCase()}
+      </span>
     </Badge>
   )
 }

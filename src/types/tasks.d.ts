@@ -21,9 +21,16 @@ export interface ITasksManagementResponse {
   kpiId: number | null
   lastAssigneeId: string | null
   auditCycleCaseId: number | null
+  status: string
   assignees: {
     id: string
   }[]
 
   [key: string]: any
+}
+export interface ITaskStatus {
+  id: number
+  name: string
+  color: string
+  organizationId: number
 }

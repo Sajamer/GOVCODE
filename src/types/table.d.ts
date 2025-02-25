@@ -10,6 +10,8 @@ type CellType =
   | 'created_date'
   | 'custom'
   | 'translated'
+  | 'priority'
+  | 'status'
 
 interface ITableHeader<T> {
   isSortable: boolean

@@ -13,6 +13,7 @@ import { ITasksManagementResponse } from '@/types/tasks'
 import { Priority } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
+import moment from 'moment'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { FC } from 'react'
@@ -59,6 +60,12 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
     staleTime: 5 * 60 * 1000,
   })
 
+  const statusOptions = taskStatusData?.map((user) => ({
+    id: String(user.id),
+    label: user.name,
+    value: user.name,
+  }))
+
   // Format dates for initial values
   const initialValues = {
     name: tasksData?.name ?? '',
@@ -76,7 +83,9 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
     percentDone: tasksData?.percentDone ?? 0,
     reason: tasksData?.reason ?? '',
     comment: tasksData?.comment ?? '',
-    statusId: tasksData?.statusId ?? 0,
+    statusId:
+      tasksData?.statusId ||
+      (statusOptions?.length ? Number(statusOptions[0].id) : 0),
     allocatorId: tasksData?.allocatorId || user?.id || '',
     kpiId: tasksData?.kpiId || null,
     auditCycleCaseId: tasksData?.auditCycleCaseId || null,
@@ -96,7 +105,6 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
     },
   })
 
-  // Use formik destructured values
   const {
     values,
     errors,
@@ -113,12 +121,6 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
     id: user.id,
     label: user.fullName,
     value: user.fullName,
-  }))
-
-  const statusOptions = taskStatusData?.map((user) => ({
-    id: String(user.id),
-    label: user.name,
-    value: user.name,
   }))
 
   const { mutate: addMutation, isPending: addLoading } = useMutation({
@@ -189,7 +191,7 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
       onSubmit={handleSubmit}
       className="styleScrollbar flex size-full max-h-full flex-col justify-between overflow-y-auto"
     >
-      <div className="flex w-full flex-col items-center gap-5">
+      <div className="flex w-full flex-col items-center gap-3">
         <LabeledInput
           label={'Name'}
           placeholder={'Enter task name'}
@@ -210,10 +212,9 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           label={'Task Status'}
           triggerStyle="h-11"
           placeholder={'Select Status'}
-          defaultValue={
-            statusOptions?.find((option) => +option.id === values.statusId) ||
-            statusOptions?.[0]
-          }
+          defaultValue={statusOptions?.find(
+            (option) => +option.id === values.statusId,
+          )}
           {...getFieldProps('statusId')}
           callback={(option) => setFieldValue('statusId', +option.id)}
           error={errors.statusId && touched.statusId ? errors.statusId : ''}
@@ -259,7 +260,7 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           }}
         />
 
-        {/* <LabeledInput
+        <LabeledInput
           label={'Start Date'}
           placeholder={'Enter start date'}
           type="date"
@@ -282,7 +283,7 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           placeholder={'Enter due date'}
           type="date"
           value={
-            values.startDate ? moment(values.dueDate).format('YYYY-MM-DD') : ''
+            values.dueDate ? moment(values.dueDate).format('YYYY-MM-DD') : ''
           }
           onChange={(e) => {
             setFieldValue('dueDate', new Date(e.target.value))
@@ -290,7 +291,40 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           error={
             touched.dueDate && errors.dueDate ? String(errors.dueDate) : ''
           }
-        /> */}
+        />
+        {isEdit && (
+          <div className="flex w-full flex-col items-center gap-3">
+            <LabeledInput
+              label={'Actual End Date'}
+              placeholder={'Enter actual end date'}
+              type="date"
+              value={
+                values.actualEndDate
+                  ? moment(values.actualEndDate).format('YYYY-MM-DD')
+                  : ''
+              }
+              onChange={(e) => {
+                setFieldValue('actualEndDate', new Date(e.target.value))
+              }}
+              error={
+                touched.actualEndDate && errors.actualEndDate
+                  ? String(errors.actualEndDate)
+                  : ''
+              }
+            />
+            <LabeledInput
+              label={'Percentage Done'}
+              type="number"
+              placeholder={'Enter percentage done'}
+              {...getFieldProps('percentDone')}
+              error={
+                touched.percentDone && errors.percentDone
+                  ? errors.percentDone
+                  : ''
+              }
+            />
+          </div>
+        )}
         <LabeledTextArea
           label={'Comment'}
           placeholder={'Enter comment here'}
@@ -299,7 +333,7 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           error={touched.comment && errors.comment ? errors.comment : ''}
         />
       </div>
-      <div className="mt-5 flex w-full items-center justify-center gap-3">
+      <div className="mt-5 flex w-full items-center justify-end gap-3">
         <Button
           type="button"
           variant={'outline'}

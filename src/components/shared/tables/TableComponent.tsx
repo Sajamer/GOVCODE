@@ -6,11 +6,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { useSheetStore, type SheetNames } from '@/stores/sheet-store'
+import { Priority } from '@prisma/client'
 import { ArrowUp } from 'iconsax-react'
 import _ from 'lodash'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter } from 'next/navigation'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import PriorityBadge from '../badges/PriorityBadge'
+import StatusBadge from '../badges/StatusBadge'
 import Date from './tableColumnComponents/Date'
 
 interface ITableComponentProps<T extends object> {
@@ -362,12 +365,12 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
   const isArabic = usePathname().includes('/ar')
   const t = useTranslations('general')
 
-  const translatedValue = value as string
-  translatedValue?.toLowerCase()
+  const translatedKey =
+    typeof value === 'string' ? value.toLowerCase() : String(value)
 
   switch (type.toLowerCase()) {
     case 'date':
-      return <Date date={value as string} />
+      return value ? <Date date={value as string} /> : <>-</>
     case 'translated':
       return (
         <div
@@ -376,9 +379,13 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
             isArabic && 'text-right',
           )}
         >
-          {t(`options.${translatedValue}`) ?? '-'}
+          {t(`options.${translatedKey}`) ?? '-'}
         </div>
       )
+    case 'priority':
+      return <PriorityBadge status={value as Priority} />
+    case 'status':
+      return <StatusBadge status={value as string} />
     default:
       return (
         <div
