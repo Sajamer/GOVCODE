@@ -14,7 +14,8 @@
     "organizations": "المنظمات",
     "acceptInvitation": "قبول الدعوة",
     "dashboard": "لوحة التحكم",
-    "taskManagement": "إدارة المهام"
+    "taskManagement": "إدارة المهام",
+    "indicators": "المؤشرات"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -226,6 +227,8 @@
     "DueDate": "تاريخ الاستحقاق",
     "ActualEndDate": "تاريخ الانتهاء الفعلي",
     "Priority": "الأولوية",
-    "restore-archive": "استعادة من الأرشيف"
+    "restore-archive": "استعادة من الأرشيف",
+    "indicators": "المؤشرات",
+    "indicator-description": "إدارة جميع المؤشرات المتاحة على المنصة."
   }
 }

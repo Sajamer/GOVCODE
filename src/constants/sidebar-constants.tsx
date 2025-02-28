@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   Building2,
   ChartColumnIncreasing,
   ChartSpline,
@@ -63,6 +64,11 @@ export const SidebarItems = () => {
       title: t('task-management'),
       icon: <LayoutList className="size-4 min-w-4" />,
       href: '/task-management',
+    },
+    {
+      title: t('indicators'),
+      icon: <BadgeCheck className="size-4 min-w-4" />,
+      href: '/indicators',
     },
   ]
 }

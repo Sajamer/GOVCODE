@@ -14,7 +14,8 @@
     "organizations": "Organizations",
     "acceptInvitation": "Accept Invitation",
     "dashboard": "Dashboard",
-    "taskManagement": "Task Management"
+    "taskManagement": "Task Management",
+    "indicators": "Indicators"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -237,6 +238,8 @@
     "DueDate": "Due Date",
     "ActualEndDate": "Actual End Date",
     "Priority": "Priority",
-    "restore-archive": "Restore Archive"
+    "restore-archive": "Restore Archive",
+    "indicators": "Indicators",
+    "indicator-description": "Manage all the indicators available on the platform."
   }
 }

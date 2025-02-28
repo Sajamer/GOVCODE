@@ -8,6 +8,7 @@ export type SheetNames =
   | 'userAccessManually'
   | 'dashboard'
   | 'tasks-management'
+  | 'indicator'
 
 type SheetProps = {
   rowId?: string
