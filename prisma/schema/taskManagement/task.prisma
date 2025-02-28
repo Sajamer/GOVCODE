@@ -1,26 +1,55 @@
 model TaskManagement {
-  id       Int        @id @default(autoincrement())
-  status   TaskStatus
-  priority Priority
-  comment  String?
-  dueDate  DateTime?
+  id            Int       @id @default(autoincrement())
+  name          String
+  description   String?
+  priority      Priority  @default(LOW)
+  note          String?
+  startDate     DateTime
+  dueDate       DateTime
+  actualEndDate DateTime?
+  isArchived    Boolean   @default(false)
+  percentDone   Int       @default(0)
+
+  reason  String?
+  comment String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  allocatorId String
-  kpiId       Int
-
-  // The user who allocated/created the task (remains a single relation)
-  allocator User   @relation(fields: [allocatorId], references: [id], name: "AllocatedTask")
-  KPI       KPI    @relation(fields: [kpiId], references: [id])
-  assignees User[] @relation("AssignedTask")
+  assignees          User[]               @relation("AssignedTask")
+  taskHistory        TaskHistory[]
+  statusId           Int
+  status             TaskStatus           @relation(fields: [statusId], references: [id])
+  allocatorId        String
+  allocator          User                 @relation(fields: [allocatorId], references: [id], name: "AllocatedTask")
+  kpiId              Int?
+  KPI                KPI?                 @relation(fields: [kpiId], references: [id])
+  lastAssigneeId     String? // Tracks the most recent assignee
+  lastAssignee       User?                @relation(fields: [lastAssigneeId], references: [id], name: "LastAssignee")
+  auditCycleCaseId   Int?
+  auditCycleCase     AuditCycleCase?      @relation(fields: [auditCycleCaseId], references: [id])
+  relatedEvidenceDoc RelatedEvidenceDoc[]
 }
 
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  DONE
+model TaskHistory {
+  id           Int      @id @default(autoincrement())
+  taskId       Int
+  assignedById String // Who assigned the task
+  assignedToId String // To whom it was assigned
+  assignedAt   DateTime @default(now())
+
+  task       TaskManagement @relation(fields: [taskId], references: [id])
+  assignedBy User           @relation(fields: [assignedById], references: [id], name: "TaskAssignedBy")
+  assignedTo User           @relation(fields: [assignedToId], references: [id], name: "TaskAssignedTo")
+}
+
+model TaskStatus {
+  id             Int              @id @default(autoincrement())
+  name           String
+  color          String
+  tasks          TaskManagement[]
+  organizationId Int
+  organization   Organization     @relation(fields: [organizationId], references: [id])
 }
 
 enum Priority {

@@ -13,7 +13,9 @@
     "kpiChart": "KPI Chart",
     "organizations": "Organizations",
     "acceptInvitation": "Accept Invitation",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "taskManagement": "Task Management",
+    "indicators": "Indicators"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -50,6 +52,7 @@
     "kpi-status": "KPI Status",
     "kpiDescription": "Manage all the kpi available on the platform.",
     "search": "Search",
+    "archive": "Archive",
     "add": "Add",
     "add-new": "Add New",
     "edit": "Edit",
@@ -184,6 +187,7 @@
     "current-target": "Current Target",
     "current-actual": "Current Actual",
     "status": "Status",
+    "Status": "Status",
     "kpi-charts": "KPI Charts",
     "year-options": {
       "2021": "2021",
@@ -226,6 +230,16 @@
     "import-csv": "Import CSV",
     "export-excel": "Export Excel",
     "please-provide-data": "Please provide data",
-    "no-data-to-export": "No data to export"
+    "no-data-to-export": "No data to export",
+    "task-management": "Task Management",
+    "tasks": "Tasks",
+    "taskDescription": "Manage all the tasks available on the platform.",
+    "StartDate": "Start Date",
+    "DueDate": "Due Date",
+    "ActualEndDate": "Actual End Date",
+    "Priority": "Priority",
+    "restore-archive": "Restore Archive",
+    "indicators": "Indicators",
+    "indicator-description": "Manage all the indicators available on the platform."
   }
 }

@@ -9,12 +9,12 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary text-neutral-800',
-        primary: 'bg-primary text-neutral-800',
+        primary: 'bg-primary text-neutral-200',
         secondary: 'bg-secondary-light text-secondary',
         warning: 'bg-warning-foreground text-warning',
         destructive: 'bg-destructive-foreground text-destructive',
         success: 'bg-success-foreground text-success',
-        dark: 'bg-neutral-alpha_100 text-accent-disabled',
+        dark: 'bg-neutral-alpha_100 text-accent-light',
       },
       size: {
         default: 'text-[0.75rem]',

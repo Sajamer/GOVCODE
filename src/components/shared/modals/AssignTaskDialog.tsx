@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -5,26 +7,25 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import {
-  getPriorityOptions,
-  getTaskStatusOptions,
-} from '@/constants/global-constants'
+import { getPriorityOptions } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
+import { getAllStatusByOrganizationId } from '@/lib/actions/status.actions'
 import { createTask } from '@/lib/actions/task.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
 import { ITaskManagementManipulator, taskSchema } from '@/schema/task.schema'
 import { useGlobalStore } from '@/stores/global-store'
-import { Priority, TaskStatus } from '@prisma/client'
+import { Priority } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
+import moment from 'moment'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import BasicDropdown from '../dropdowns/BasicDropdown'
 import MultiSelect from '../dropdowns/MultiSelect'
+import LabeledInput from '../inputs/LabeledInput'
 import LabeledTextArea from '../textArea/LabeledTextArea'
 
 interface IAssignTaskDialogProps {
@@ -56,12 +57,24 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
   })
 
   const priorityOptions = getPriorityOptions(t)
-  const taskStatusOptions = getTaskStatusOptions(t)
 
   const userOptions = allUsersData?.map((user) => ({
     id: user.id,
     label: user.fullName,
     value: user.fullName,
+  }))
+
+  const { data: taskStatusData } = useQuery({
+    queryKey: ['task-status', organizationId],
+    queryFn: () => getAllStatusByOrganizationId(organizationId),
+    staleTime: 30 * 60 * 1000,
+    enabled: !!organizationId,
+  })
+
+  const statusOptions = taskStatusData?.map((user) => ({
+    id: String(user.id),
+    label: user.name,
+    value: user.name,
   }))
 
   const {
@@ -74,26 +87,42 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
     touched,
   } = useFormik<ITaskManagementManipulator>({
     initialValues: {
-      status: TaskStatus.TODO,
+      name: '',
+      description: '',
       priority: Priority.LOW,
-      kpiId,
-      dueDate: '',
+      note: '',
+      startDate: new Date(),
+      dueDate: new Date(),
+      actualEndDate: null,
+      isArchived: false,
+      percentDone: 0,
+      reason: '',
       comment: '',
+      statusId: 0,
       allocatorId: user?.id ?? '',
+      kpiId: 0,
+      auditCycleCaseId: null,
       assignees: [],
     },
-    enableReinitialize: true,
+    enableReinitialize: false,
     validationSchema: toFormikValidationSchema(taskSchema),
     onSubmit: () => {
       addMutation()
     },
   })
 
+  useEffect(() => {
+    setFieldValue('kpiId', Number(kpiId))
+  }, [kpiId, setFieldValue])
+
   const { mutate: addMutation, isPending: addLoading } = useMutation({
     mutationFn: async () => await createTask(values),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['kpis', user?.role, organizationId, departmentId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tasks-management'],
       })
       toast({
         variant: 'success',
@@ -128,33 +157,52 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
           className="styleScrollbar flex size-full max-h-full flex-col justify-between overflow-y-auto"
         >
           <div className="flex w-full flex-col items-center gap-5">
-            <MultiSelect
-              instanceId={'users'}
-              label={'Select Users to assign task*'}
-              placeholder={'Select users'}
-              data={userOptions ?? []}
-              hasArrow
-              isMulti
-              name="users"
-              defaultValue={userOptions?.filter((option) =>
-                values.assignees.includes(option.id),
-              )}
-              error={
-                touched.assignees && errors.assignees
-                  ? typeof errors.assignees === 'string'
-                    ? errors.assignees
-                    : String(errors.assignees)
-                  : undefined
-              }
-              onBlur={handleBlur}
-              onChange={(newValue) => {
-                const selectedOptions = newValue as IMultiSelectOptions[]
+            <div className="flex w-full items-center justify-center gap-5">
+              <LabeledInput
+                label={'Task Name'}
+                placeholder={'Enter task name'}
+                {...getFieldProps('name')}
+                error={touched.name && errors.name ? errors.name : ''}
+              />
+              <MultiSelect
+                instanceId={'users'}
+                label={'Assign task to'}
+                placeholder={'Select users'}
+                data={userOptions ?? []}
+                hasArrow
+                isMulti
+                name="users"
+                defaultValue={userOptions?.filter((option) =>
+                  values.assignees.includes(option.id),
+                )}
+                error={
+                  touched.assignees && errors.assignees
+                    ? typeof errors.assignees === 'string'
+                      ? errors.assignees
+                      : String(errors.assignees)
+                    : undefined
+                }
+                onBlur={handleBlur}
+                onChange={(newValue) => {
+                  const selectedOptions = newValue as IMultiSelectOptions[]
 
-                setFieldValue(
-                  'assignees',
-                  selectedOptions.map((option) => option.id),
-                )
-              }}
+                  setFieldValue(
+                    'assignees',
+                    selectedOptions.map((option) => option.id),
+                  )
+                }}
+              />
+            </div>
+            <LabeledTextArea
+              label={'Task Description'}
+              placeholder={'Enter task description here'}
+              className="resize-none"
+              {...getFieldProps('description')}
+              error={
+                touched.description && errors.description
+                  ? errors.description
+                  : ''
+              }
             />
             <div className="flex w-full items-center justify-center gap-5">
               <BasicDropdown
@@ -172,24 +220,56 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
                 callback={(option) => setFieldValue('priority', option.value)}
               />
               <BasicDropdown
-                data={taskStatusOptions ?? []}
+                data={statusOptions ?? []}
                 label={'Task Status'}
                 triggerStyle="h-11"
                 placeholder={'Select Status'}
-                defaultValue={taskStatusOptions?.find(
-                  (option) => option.id === values.status,
+                defaultValue={statusOptions?.find(
+                  (option) => +option.id === values.statusId,
                 )}
-                error={errors.status && touched.status ? errors.status : ''}
-                {...getFieldProps('status')}
-                callback={(option) => setFieldValue('status', option.value)}
+                {...getFieldProps('statusId')}
+                callback={(option) => setFieldValue('statusId', +option.id)}
+                error={
+                  errors.statusId && touched.statusId ? errors.statusId : ''
+                }
               />
             </div>
-            <div className="w-full">
-              <label className="mb-2 block text-sm font-medium">Due Date</label>
-              <Input
-                type="datetime-local"
-                {...getFieldProps('dueDate')}
-                // error={touched.dueDate && errors.dueDate ? errors.dueDate : ''}
+            <div className="flex w-full items-center justify-center gap-5">
+              <LabeledInput
+                label={'Start Date'}
+                placeholder={'Enter start date'}
+                type="date"
+                value={
+                  values.startDate
+                    ? moment(values.startDate).format('YYYY-MM-DD')
+                    : ''
+                }
+                onChange={(e) => {
+                  setFieldValue('startDate', new Date(e.target.value))
+                }}
+                error={
+                  touched.startDate && errors.startDate
+                    ? String(errors.startDate)
+                    : ''
+                }
+              />
+              <LabeledInput
+                label={'Due Date'}
+                placeholder={'Enter due date'}
+                type="date"
+                value={
+                  values.dueDate
+                    ? moment(values.dueDate).format('YYYY-MM-DD')
+                    : ''
+                }
+                onChange={(e) => {
+                  setFieldValue('dueDate', new Date(e.target.value))
+                }}
+                error={
+                  touched.dueDate && errors.dueDate
+                    ? String(errors.dueDate)
+                    : ''
+                }
               />
             </div>
             <LabeledTextArea

@@ -25,9 +25,7 @@ const OrganizationsComponent: FC = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ['organizations'],
-    queryFn: async () => {
-      await getAllOrganizations()
-    },
+    queryFn: async () => await getAllOrganizations(),
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
 

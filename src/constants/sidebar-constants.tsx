@@ -1,9 +1,11 @@
 import {
+  BadgeCheck,
   Building2,
   ChartColumnIncreasing,
   ChartSpline,
   Clock5,
   LayoutDashboard,
+  LayoutList,
   ListCollapse,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -57,6 +59,16 @@ export const SidebarItems = () => {
       title: t('dashboard'),
       icon: <LayoutDashboard className="size-4 min-w-4" />,
       href: '/dashboard',
+    },
+    {
+      title: t('task-management'),
+      icon: <LayoutList className="size-4 min-w-4" />,
+      href: '/task-management',
+    },
+    {
+      title: t('indicators'),
+      icon: <BadgeCheck className="size-4 min-w-4" />,
+      href: '/indicators',
     },
   ]
 }

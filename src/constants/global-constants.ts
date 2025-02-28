@@ -4,7 +4,6 @@ import {
   Frequency,
   KPIType,
   Priority,
-  TaskStatus,
   Units,
   userRole,
 } from '@prisma/client'
@@ -136,24 +135,6 @@ export const getPriorityOptions = (t: TranslationFunction) => [
     id: Priority.HIGH,
     label: t('options.high'),
     value: Priority.HIGH,
-  },
-]
-
-export const getTaskStatusOptions = (t: TranslationFunction) => [
-  {
-    id: TaskStatus.TODO,
-    label: t('options.todo'),
-    value: TaskStatus.TODO,
-  },
-  {
-    id: TaskStatus.IN_PROGRESS,
-    label: t('options.inProgress'),
-    value: TaskStatus.IN_PROGRESS,
-  },
-  {
-    id: TaskStatus.DONE,
-    label: t('options.done'),
-    value: TaskStatus.DONE,
   },
 ]
 

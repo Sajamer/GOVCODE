@@ -1,20 +1,24 @@
-import { Priority, TaskStatus } from '@prisma/client'
-import { z } from 'zod'
+import { Priority } from '@prisma/client'
+import { boolean, z } from 'zod'
 
-const { object, string, number, array, nativeEnum } = z
+const { object, string, number, array, date, nativeEnum } = z
 
 export const taskSchema = object({
-  status: nativeEnum(TaskStatus).default(TaskStatus.TODO),
+  name: string(),
+  description: string().optional(),
   priority: nativeEnum(Priority).default(Priority.LOW),
-  kpiId: number(),
-  dueDate: string()
-    .refine((val) => !val || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val), {
-      message: 'Invalid date format',
-    })
-    .optional()
-    .nullable(),
+  note: string().optional(),
+  startDate: date(),
+  dueDate: date(),
+  actualEndDate: date().nullable(),
+  isArchived: boolean().default(false),
+  percentDone: number().default(0),
+  reason: string().optional(),
   comment: string().optional(),
+  statusId: number(),
   allocatorId: string(),
+  kpiId: number().nullable(),
+  auditCycleCaseId: number().nullable(),
   assignees: array(string()),
 })
 

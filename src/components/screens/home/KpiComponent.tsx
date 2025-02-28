@@ -45,9 +45,9 @@ const KpiComponent: FC = () => {
         columns={[
           { key: 'code', isSortable: true, type: 'string' },
           { key: 'name', isSortable: false, type: 'string' },
-          { key: 'calibration', isSortable: false, type: 'translated' },
+          { key: 'calibration', isSortable: false, type: 'string' },
           { key: 'description', isSortable: false, type: 'string' },
-          { key: 'frequency', isSortable: false, type: 'translated' },
+          { key: 'frequency', isSortable: false, type: 'string' },
           { key: 'assignTo', isSortable: false, type: 'string' },
         ]}
       />
