@@ -24,13 +24,29 @@ async function connectToMongoDB() {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
-      return mongoose
-    })
+    const options = {
+      bufferCommands: true,
+    }
+
+    cached.promise = mongoose
+      .connect(MONGODB_URI, options)
+      .then((mongoose) => {
+        console.log('MongoDB connected successfully')
+        return mongoose
+      })
+      .catch((error) => {
+        console.error('MongoDB connection error:', error)
+        throw error
+      })
   }
 
-  cached.conn = await cached.promise
-  return cached.conn
+  try {
+    cached.conn = await cached.promise
+    return cached.conn
+  } catch (error) {
+    cached.promise = null
+    throw error
+  }
 }
 
 export default connectToMongoDB

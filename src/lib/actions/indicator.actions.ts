@@ -1,0 +1,96 @@
+'use server'
+
+import Indicator from '@/models/indicator.model'
+import { IIndicatorManipulator } from '@/schema/indicator.schema'
+import connectToMongoDB from '../mongodb'
+import { sendError } from '../utils'
+
+export const getAllIndicators = async (
+  searchParams?: Record<string, string>,
+) => {
+  try {
+    await connectToMongoDB()
+
+    const params = searchParams || {}
+    const limit = +(params?.limit ?? '10')
+    const page = +(params?.page ?? '1')
+    const skip = (page - 1) * limit
+
+    const indicatorsData = await Indicator.find({})
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    return indicatorsData || []
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while fetching indicators.')
+  }
+}
+
+export const getIndicator = async (id: string) => {
+  try {
+    await connectToMongoDB()
+    const indicator = await Indicator.findById(id).lean()
+
+    if (!indicator) {
+      throw new Error('Indicator not found')
+    }
+
+    return indicator
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while fetching indicator')
+  }
+}
+
+export const createIndicator = async (data: IIndicatorManipulator) => {
+  try {
+    await connectToMongoDB()
+
+    const newIndicator = await Indicator.create(data)
+    return newIndicator.toObject()
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while creating indicator')
+  }
+}
+
+export const updateIndicator = async (
+  id: string,
+  data: IIndicatorManipulator,
+) => {
+  try {
+    await connectToMongoDB()
+    const updatedIndicator = await Indicator.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true },
+    ).lean()
+
+    if (!updatedIndicator) {
+      throw new Error('Indicator not found')
+    }
+
+    return updatedIndicator
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while updating indicator')
+  }
+}
+
+export const deleteIndicator = async (id: string) => {
+  try {
+    await connectToMongoDB()
+    const deletedIndicator = await Indicator.findByIdAndDelete(id)
+
+    if (!deletedIndicator) {
+      throw new Error('Indicator not found')
+    }
+
+    return { success: true }
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while deleting indicator')
+  }
+}

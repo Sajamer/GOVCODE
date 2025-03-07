@@ -104,6 +104,9 @@ importers:
       dompurify:
         specifier: ^3.2.0
         version: 3.2.0
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
@@ -128,12 +131,12 @@ importers:
       lucide-react:
         specifier: ^0.456.0
         version: 0.456.0(react@19.0.0-rc-66855b96-20241106)
-      mogodb:
-        specifier: 0.0.1-security
-        version: 0.0.1-security
       moment:
         specifier: ^2.30.1
         version: 2.30.1
+      mongodb:
+        specifier: ^6.14.2
+        version: 6.14.2
       mongoose:
         specifier: ^8.10.2
         version: 8.10.2
@@ -2370,6 +2373,10 @@ packages:
   dompurify@3.2.0:
     resolution: {integrity: sha512-AMdOzK44oFWqHEi0wpOqix/fUNY707OmoeFDnbi3Q5I8uOpy21ufUA5cDJPr0bosxrflOVD/H2DMSvuGKJGfmQ==}
 
+  dotenv@16.4.7:
+    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+
   duplexer2@0.1.4:
     resolution: {integrity: sha512-asLFVfWWtJ90ZyOUHMqk7/S2w2guQKxUI2itj3d92ADHhxUSbCMGi1f1cBcJ7xM1To+pE/Khbwo1yuNbMEPKeA==}
 
@@ -3199,9 +3206,6 @@ packages:
     resolution: {integrity: sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==}
     hasBin: true
 
-  mogodb@0.0.1-security:
-    resolution: {integrity: sha512-aRrvmRNhrmjOwPAhKI7pWiwHKna8U9BLpruj+dlwocwRrhJXoJ9CNThcVlphh7c4nQiPU0Wj6QsJYLUCS+7Glw==}
-
   moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
 
@@ -3213,6 +3217,33 @@ packages:
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.632.0
+      '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
+      gcp-metadata: ^5.2.0
+      kerberos: ^2.0.1
+      mongodb-client-encryption: '>=6.0.0 <7'
+      snappy: ^7.2.2
+      socks: ^2.7.1
+    peerDependenciesMeta:
+      '@aws-sdk/credential-providers':
+        optional: true
+      '@mongodb-js/zstd':
+        optional: true
+      gcp-metadata:
+        optional: true
+      kerberos:
+        optional: true
+      mongodb-client-encryption:
+        optional: true
+      snappy:
+        optional: true
+      socks:
+        optional: true
+
+  mongodb@6.14.2:
+    resolution: {integrity: sha512-kMEHNo0F3P6QKDq17zcDuPeaywK/YaJVCEQRzPF3TOM/Bl9MFg64YE5Tu7ifj37qZJMhwU1tl2Ioivws5gRG5Q==}
+    engines: {node: '>=16.20.1'}
+    peerDependencies:
+      '@aws-sdk/credential-providers': ^3.188.0
       '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
       gcp-metadata: ^5.2.0
       kerberos: ^2.0.1
@@ -6284,6 +6315,8 @@ snapshots:
 
   dompurify@3.2.0: {}
 
+  dotenv@16.4.7: {}
+
   duplexer2@0.1.4:
     dependencies:
       readable-stream: 2.3.8
@@ -7267,8 +7300,6 @@ snapshots:
     dependencies:
       minimist: 1.2.8
 
-  mogodb@0.0.1-security: {}
-
   moment@2.30.1: {}
 
   mongodb-connection-string-url@3.0.2:
@@ -7277,6 +7308,12 @@ snapshots:
       whatwg-url: 14.1.1
 
   mongodb@6.13.1:
+    dependencies:
+      '@mongodb-js/saslprep': 1.2.0
+      bson: 6.10.3
+      mongodb-connection-string-url: 3.0.2
+
+  mongodb@6.14.2:
     dependencies:
       '@mongodb-js/saslprep': 1.2.0
       bson: 6.10.3

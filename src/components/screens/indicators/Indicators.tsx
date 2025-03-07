@@ -25,7 +25,7 @@ const Indicators: FC = () => {
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
 
-  const { actions, sheetToOpen, isEdit } = useSheetStore((store) => store)
+  const { actions, isEdit } = useSheetStore((store) => store)
   const { openSheet, setSearchTerm } = actions
   const { hasPermission } = useGlobalStore((store) => store)
 
@@ -59,7 +59,7 @@ const Indicators: FC = () => {
               : `${t('define-new')} ${localizedTitle}`
           }
         >
-          {sheetToOpen === 'indicator' ? <IndicatorForm data={[]} /> : null}
+          <IndicatorForm data={[]} />
         </SheetComponent>
         {hasPermission && (
           <Button
