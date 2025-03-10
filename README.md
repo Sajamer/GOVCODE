@@ -16,7 +16,7 @@ Follow these steps to set up the Govcode project:
 
 ## 4. Clone the Govcode Repository
 
-- Navigate to the Govcode repository on GitHub.
+- Navigate to the Govcode repository on GitHub [Govcode repository](https://github.com/Sajamer/GOVCODE).
 
 - Click the **Code** dropdown and copy the repository link.
 
@@ -53,6 +53,8 @@ pnpm  i
 ## 6. Configure Environment Variables
 
 - Create a `.env` file in the project root.
+- Download **environments** from [Bdayai-environments](https://devitancy.sharepoint.com/:u:/s/BDAYAI/EV7RUZTUqX9GhPe_PU0vEV0BVDdrr0HzH8vD5i0GsN7xDQ?e=5DJfmn)
+
 - Update the file with attribute DATABASE_URL with your database credentials.
 
 ## 7. Set Up Prisma
