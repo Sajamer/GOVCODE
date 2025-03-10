@@ -205,11 +205,11 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
         <tbody>
           {data?.map((kpi, index) => {
             const currentYearTargets = mapFrequencyToMonths(
-              kpi.targets.filter((t) => t.year === currentYear),
+              kpi?.targets?.filter((t) => t.year === currentYear),
               true,
             )
             const currentYearActuals = mapFrequencyToMonths(
-              kpi.actuals.filter((a) => a.year === currentYear),
+              kpi?.actuals?.filter((a) => a.year === currentYear),
             )
 
             return (
