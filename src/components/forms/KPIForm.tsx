@@ -94,22 +94,12 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       value: option.name,
     }))
 
-  const localizedObjectivesOptions = objectivesOptions?.map((option) => ({
-    ...option,
-    label: t(`objective-options.${option.label}`),
-  }))
-
   const complianceOptions =
     multipleOptionsDatabaseValues?.data?.compliances?.map((option) => ({
       id: option.id,
       label: option.name,
       value: option.name,
     }))
-
-  const localizedComplianceOptions = complianceOptions?.map((option) => ({
-    ...option,
-    label: t(`compliance-options.${option.label}`),
-  }))
 
   const processOptions = multipleOptionsDatabaseValues?.data?.processes?.map(
     (option) => ({
@@ -118,11 +108,6 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
       value: option.name,
     }),
   )
-
-  const localizedProcessOptions = processOptions?.map((option) => ({
-    ...option,
-    label: t(`process-options.${option.label}`),
-  }))
 
   const {
     values,
@@ -420,11 +405,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           instanceId={'objectives'}
           label={t('objectives')}
           placeholder={t('objectives-placeholder')}
-          data={localizedObjectivesOptions ?? []}
+          data={objectivesOptions ?? []}
           hasArrow
           isMulti
           name="objectives"
-          defaultValue={localizedObjectivesOptions?.filter((option) =>
+          defaultValue={objectivesOptions?.filter((option) =>
             values.objectives.includes(option.id),
           )}
           error={
@@ -448,11 +433,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           instanceId={'compliances'}
           label={t('compliances')}
           placeholder={t('compliances-placeholder')}
-          data={localizedComplianceOptions ?? []}
+          data={complianceOptions ?? []}
           hasArrow
           isMulti
           name="compliances"
-          defaultValue={localizedComplianceOptions?.filter((option) =>
+          defaultValue={complianceOptions?.filter((option) =>
             values.compliances.includes(option.id),
           )}
           error={
@@ -476,11 +461,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           instanceId={'processes'}
           label={t('processes')}
           placeholder={t('processes-placeholder')}
-          data={localizedProcessOptions ?? []}
+          data={processOptions ?? []}
           hasArrow
           isMulti
           name="processes"
-          defaultValue={localizedProcessOptions?.filter((option) =>
+          defaultValue={processOptions?.filter((option) =>
             values.processes.includes(option.id),
           )}
           error={
