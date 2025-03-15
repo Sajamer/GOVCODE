@@ -21,6 +21,9 @@ model KPI {
   departmentId Int
   department   Department @relation(fields: [departmentId], references: [id])
 
+  statusId Int
+  status   Status? @relation(fields: [statusId], references: [id])
+
   KPIObjective  KPIObjective[]
   KPICompliance KPICompliance[]
   KPIProcess    KPIProcess[]
@@ -97,6 +100,28 @@ model Process {
   updatedAt DateTime @updatedAt
 
   KPIProcess KPIProcess[]
+}
+
+model Status {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Each Status can have many associated rules
+  rules Rule[]
+  kpis  KPI[]
+}
+
+model Rule {
+  id    Int    @id @default(autoincrement())
+  min   String
+  max   String
+  color String
+
+  statusId Int
+  status   Status @relation(fields: [statusId], references: [id], onDelete: Cascade)
 }
 
 model KPIObjective {

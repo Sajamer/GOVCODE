@@ -249,7 +249,7 @@ const ProfileCard: FC<IProfileCardProps> = ({ userId }) => {
                   dueDate={item.dueDate}
                   priority={item.priority}
                   status={item.status}
-                  taskName={item?.KPI?.name}
+                  taskName={item?.KPI?.name ?? ''}
                 />
               ))}
           </div>

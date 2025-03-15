@@ -229,6 +229,7 @@
     "Priority": "الأولوية",
     "restore-archive": "استعادة من الأرشيف",
     "indicators": "المؤشرات",
-    "indicator-description": "إدارة جميع المؤشرات المتاحة على المنصة."
+    "indicator-description": "إدارة جميع المؤشرات المتاحة على المنصة.",
+    "statusDescription": "إدارة جميع الحالات المتاحة على المنصة."
   }
 }

@@ -36,6 +36,10 @@ export const SidebarItems = () => {
       href: '/kpi-dimensions',
       submenu: [
         {
+          title: 'status description',
+          href: '/kpi-dimensions/status',
+        },
+        {
           title: 'processes',
           href: '/kpi-dimensions/processes',
         },

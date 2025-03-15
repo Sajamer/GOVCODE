@@ -240,6 +240,7 @@
     "Priority": "Priority",
     "restore-archive": "Restore Archive",
     "indicators": "Indicators",
-    "indicator-description": "Manage all the indicators available on the platform."
+    "indicator-description": "Manage all the indicators available on the platform.",
+    "statusDescription": "Manage all the status available on the platform."
   }
 }
