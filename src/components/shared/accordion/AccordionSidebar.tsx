@@ -39,8 +39,6 @@ const AccordionSidebar: FC<IAccordionSidebarProps> = ({
     setIsOpen((prev) => !prev)
   }
 
-  console.log('acc: ', data, pathname, tab, path)
-
   return (
     <Accordion
       type="single"

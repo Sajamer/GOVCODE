@@ -10,6 +10,7 @@ export type SheetNames =
   | 'tasks-management'
   | 'indicator'
   | 'kpi-status'
+  | 'kpi-dimensions'
 
 type SheetProps = {
   rowId?: string

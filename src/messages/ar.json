@@ -230,6 +230,9 @@
     "restore-archive": "استعادة من الأرشيف",
     "indicators": "المؤشرات",
     "indicator-description": "إدارة جميع المؤشرات المتاحة على المنصة.",
-    "statusDescription": "إدارة جميع الحالات المتاحة على المنصة."
+    "statusDescription": "إدارة جميع الحالات المتاحة على المنصة.",
+    "objectivesDescription": "إدارة جميع الأهداف المتاحة على المنصة.",
+    "compliancesDescription": "إدارة جميع التشريعات المتاحة على المنصة.",
+    "processesDescription": "إدارة جميع العمليات المتاحة على المنصة."
   }
 }

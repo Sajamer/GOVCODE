@@ -241,6 +241,9 @@
     "restore-archive": "Restore Archive",
     "indicators": "Indicators",
     "indicator-description": "Manage all the indicators available on the platform.",
-    "statusDescription": "Manage all the status available on the platform."
+    "statusDescription": "Manage all the status available on the platform.",
+    "objectivesDescription": "Manage all the objectives available on the platform.",
+    "compliancesDescription": "Manage all the compliances available on the platform.",
+    "processesDescription": "Manage all the processes available on the platform."
   }
 }
