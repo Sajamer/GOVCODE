@@ -95,6 +95,9 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
   const { mutate: editMutation, isPending: editLoading } = useMutation({
     mutationFn: async (id: number) => await updateStatusById(id, values),
     onSuccess: (updatedData, id) => {
+      queryClient.invalidateQueries({
+        queryKey: ['allKpiStatus'],
+      })
       queryClient.setQueryData(
         ['kpi-status'],
         (oldData: IStatusResponse[] | undefined) => {

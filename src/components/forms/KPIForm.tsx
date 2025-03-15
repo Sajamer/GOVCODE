@@ -8,6 +8,7 @@ import {
 } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
 import { getDepartmentsByOrganizationId } from '@/lib/actions/department.actions'
+import { getAllStatuses } from '@/lib/actions/kpi-dimensions/status.actions'
 import { createKPI, updateKPI } from '@/lib/actions/kpiActions'
 import { CustomUser } from '@/lib/auth'
 import { axiosGet } from '@/lib/axios'
@@ -57,6 +58,12 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     staleTime: 1000 * 60 * 5,
   })
 
+  const { data: statusData } = useQuery({
+    queryKey: ['allKpiStatus'],
+    queryFn: async () => await getAllStatuses(),
+    staleTime: 1000 * 60 * 5,
+  })
+
   const unitOptions = getUnitOptions(t)
   const frequencyOptions = getFrequencyOptions(t)
   const kpiTypeOptions = getKpiTypeOptions(t)
@@ -74,9 +81,10 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     value: option.name,
   }))
 
-  const localizedDepartmentOptions = departmentOptions?.map((option) => ({
-    ...option,
-    label: t(`department-options.${option.label}`),
+  const statusOptions = statusData?.map((option) => ({
+    id: String(option.id),
+    label: option.name,
+    value: option.name,
   }))
 
   const objectivesOptions =
@@ -130,6 +138,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     initialValues: {
       code: kpiData?.code ?? '',
       departmentId: kpiData?.departmentId ?? 0,
+      statusId: kpiData?.statusId ?? 0,
       owner: kpiData?.owner ?? '',
       name: kpiData?.name ?? '',
       description: kpiData?.description ?? '',
@@ -235,11 +244,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           error={touched.code && errors.code ? errors.code : ''}
         />
         <BasicDropdown
-          data={localizedDepartmentOptions ?? []}
+          data={departmentOptions ?? []}
           label={t('department')}
           triggerStyle="h-11"
           placeholder={t('department-placeholder')}
-          defaultValue={localizedDepartmentOptions?.find(
+          defaultValue={departmentOptions?.find(
             (option) => +option.id === values.departmentId,
           )}
           error={
@@ -394,6 +403,19 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           {...getFieldProps('calibration')}
           callback={(option) => setFieldValue('calibration', option.value)}
         />
+        <BasicDropdown
+          data={statusOptions ?? []}
+          label={'status'}
+          triggerStyle="h-11"
+          placeholder={'Select status'}
+          defaultValue={statusOptions?.find(
+            (option) => +option.id === values.statusId,
+          )}
+          error={errors.statusId && touched.statusId ? errors.statusId : ''}
+          {...getFieldProps('statusId')}
+          callback={(option) => setFieldValue('statusId', +option.id)}
+        />
+
         <MultiSelect
           instanceId={'objectives'}
           label={t('objectives')}
