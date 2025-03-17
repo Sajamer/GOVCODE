@@ -55,7 +55,8 @@ export interface IKpiFormDropdownData {
 export interface IKpiManipulator {
   code: string
   departmentId: number
-  statusId: number
+  statusId: number | null
+  statusType: string
   name: string
   description: string
   owner: string

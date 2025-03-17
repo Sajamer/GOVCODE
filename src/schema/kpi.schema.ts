@@ -20,7 +20,20 @@ export const BodySchema = object({
   type: string(),
   calibration: string(),
   departmentId: number(),
+  statusId: number().nullable(),
+  statusType: string().default('default'),
   objectives: array(number()).optional(),
   compliances: array(number()).optional(),
   processes: array(number()).optional(),
-})
+}).refine(
+  (data) => {
+    if (data.statusType !== 'default') {
+      return data.statusId !== null && data.statusId !== undefined
+    }
+    return true
+  },
+  {
+    message: "Status ID is required when status type is not 'default'",
+    path: ['statusId'],
+  },
+)

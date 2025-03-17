@@ -166,6 +166,7 @@ export const createKPI = async (data: IKpiManipulator) => {
         calibration: data.calibration,
         departmentId: data.departmentId,
         statusId: data.statusId,
+        statusType: data.statusType,
         KPICompliance: {
           create: data.compliances.map((id) => ({
             compliance: {
@@ -216,6 +217,7 @@ export const updateKPI = async (id: number, data: IKpiManipulator) => {
         calibration: data.calibration,
         departmentId: data.departmentId,
         statusId: data.statusId,
+        statusType: data.statusType,
         KPICompliance: {
           deleteMany: {},
           create: data.compliances.map((id) => ({

@@ -25,6 +25,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
@@ -123,7 +124,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     initialValues: {
       code: kpiData?.code ?? '',
       departmentId: kpiData?.departmentId ?? 0,
-      statusId: kpiData?.statusId ?? 0,
+      statusType: kpiData?.statusType ?? 'default',
+      statusId: kpiData?.statusId ?? null,
       owner: kpiData?.owner ?? '',
       name: kpiData?.name ?? '',
       description: kpiData?.description ?? '',
@@ -144,6 +146,14 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     },
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(BodySchema),
+    validate: (values) => {
+      const errors: { statusId?: string } = {}
+      if (values.statusType !== 'default' && !values.statusId) {
+        errors.statusId =
+          "Status ID is required when status type is not 'default'"
+      }
+      return errors
+    },
     onSubmit: () => {
       if (isEdit) {
         editMutation(kpiData.id)
@@ -215,6 +225,8 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
   })
 
   const isLoading = addLoading || editLoading
+
+  console.log('errors: ', errors)
 
   return (
     <form
@@ -388,19 +400,58 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
           {...getFieldProps('calibration')}
           callback={(option) => setFieldValue('calibration', option.value)}
         />
-        <BasicDropdown
-          data={statusOptions ?? []}
-          label={'status'}
-          triggerStyle="h-11"
-          placeholder={'Select status'}
-          defaultValue={statusOptions?.find(
-            (option) => +option.id === values.statusId,
-          )}
-          error={errors.statusId && touched.statusId ? errors.statusId : ''}
-          {...getFieldProps('statusId')}
-          callback={(option) => setFieldValue('statusId', +option.id)}
-        />
-
+        <div className="flex w-full flex-col items-start justify-start gap-3">
+          <h3 className="text-sm font-medium text-zinc-800">
+            Choose Status Type:
+          </h3>
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
+              Default
+            </span>
+            <Switch
+              id="status-mode"
+              dir={isArabic ? 'rtl' : 'ltr'}
+              checked={values.statusType !== 'default'}
+              onCheckedChange={(checked) => {
+                setValues((prev) => ({
+                  ...prev,
+                  statusType: checked ? 'custom' : 'default',
+                  statusId: null,
+                }))
+              }}
+            />
+            <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
+              Custom
+            </span>
+          </div>
+        </div>
+        {values.statusType !== 'default' && (
+          <>
+            {statusOptions?.length === 0 && (
+              <div className="flex w-full items-center justify-start gap-2 text-sm text-primary">
+                <span>You should add custom status first. </span>
+                <Link
+                  href={'/kpi-dimensions?tab=status-description'}
+                  className="underline"
+                >
+                  Click Here
+                </Link>
+              </div>
+            )}
+            <BasicDropdown
+              data={statusOptions ?? []}
+              label={'status'}
+              triggerStyle="h-11"
+              placeholder={'Select status'}
+              defaultValue={statusOptions?.find(
+                (option) => +option.id === values.statusId,
+              )}
+              error={errors.statusId && touched.statusId ? errors.statusId : ''}
+              {...getFieldProps('statusId')}
+              callback={(option) => setFieldValue('statusId', +option.id)}
+            />
+          </>
+        )}
         <MultiSelect
           instanceId={'objectives'}
           label={t('objectives')}
