@@ -29,9 +29,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         }
 
         // Fetch all required data
-        const [departments] = await Promise.all([
+        const [departments, status] = await Promise.all([
           prisma.department.findMany({
             where: { organizationId },
+            select: { id: true, name: true },
+          }),
+
+          prisma.status.findMany({
             select: { id: true, name: true },
           }),
         ])
@@ -58,6 +62,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           'Frequency',
           'Calibration',
           'Type',
+          'Status Type',
+          'Status',
         ]
         sheet.addRow(headers)
 
@@ -70,32 +76,41 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         ]
         const calibration = ['INCREASING', 'DECREASING']
         const types = ['CUMULATIVE', 'STAGING']
+        const statusType = ['default', 'custom']
 
         // Add dropdown values to the dropdown sheet
         const departmentNames = departments.map((d) => d.name)
+        const statusNames = status.map((s) => s.name)
 
         dropdownSheet.getColumn(1).values = ['Departments', ...departmentNames]
         dropdownSheet.getColumn(5).values = ['Units', ...units]
         dropdownSheet.getColumn(6).values = ['Frequencies', ...frequencies]
         dropdownSheet.getColumn(7).values = ['Calibration', ...calibration]
         dropdownSheet.getColumn(8).values = ['Types', ...types]
+        dropdownSheet.getColumn(9).values = ['Status Type', ...statusType]
+        dropdownSheet.getColumn(10).values = ['Status', ...statusNames]
 
         // Hide the dropdown sheet
         dropdownSheet.state = 'hidden'
 
         // Set headers and adjust column widths dynamically
-        sheet.columns = headers.map((header) => {
-          return {
-            header, // Assign the header directly to the column
-            key: header.replace(/\s+/g, '_').toLowerCase(), // Generate a unique key
-            width: Math.max(
-              header.length, // Calculate width based on header length
-              15, // Set a minimum width to ensure visibility
-            ),
+        sheet.columns = headers.map((header, index) => {
+          const column = {
+            header,
+            key: header.replace(/\s+/g, '_').toLowerCase(),
+            width: Math.max(header.length, 15),
           }
+
+          // Unlock all cells in the column (except header)
+          for (let row = 2; row <= 100; row++) {
+            const cell = sheet.getCell(row, index + 1)
+            cell.protection = { locked: false }
+          }
+
+          return column
         })
 
-        // Add dropdown validations to the main sheet
+        // Define validation function
         const addValidation = (col: string, formulaRange: string) => {
           for (let row = 2; row <= 100; row++) {
             sheet.getCell(`${col}${row}`).dataValidation = {
@@ -106,7 +121,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           }
         }
 
-        // Reference ranges in the hidden sheet
+        // Add dropdown validations for all fields that need them
         addValidation(
           'E',
           `'Dropdown Values'!$A$2:$A${departmentNames.length + 1}`,
@@ -115,6 +130,51 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         addValidation('I', `'Dropdown Values'!$F$2:$F${frequencies.length + 1}`) // Frequencies
         addValidation('J', `'Dropdown Values'!$G$2:$G${calibration.length + 1}`) // Calibration
         addValidation('K', `'Dropdown Values'!$H$2:$H${types.length + 1}`) // Types
+
+        // Handle Status Type and Status columns
+        for (let row = 2; row <= 100; row++) {
+          const statusTypeCell = sheet.getCell(`L${row}`)
+          const statusCell = sheet.getCell(`M${row}`)
+
+          // Remove the default value setting
+          statusTypeCell.protection = { locked: false }
+          statusTypeCell.dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: [`'Dropdown Values'!$I$2:$I${statusType.length + 1}`],
+          }
+
+          // Add validation and protection for Status based on Status Type
+          statusCell.protection = { locked: false }
+          statusCell.dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: [
+              `IF(L${row}="custom",'Dropdown Values'!$J$2:$J${statusNames.length + 1},"")`,
+            ],
+            showErrorMessage: true,
+            errorStyle: 'stop',
+            errorTitle: 'Invalid Input',
+            error: 'Status can only be selected when Status Type is "custom"',
+          }
+        }
+
+        // Enable worksheet protection LAST, after all validations and cell configurations
+        sheet.protect('', {
+          selectLockedCells: false,
+          selectUnlockedCells: true,
+          formatCells: true,
+          formatColumns: true,
+          formatRows: true,
+          insertColumns: false,
+          insertRows: false,
+          insertHyperlinks: false,
+          deleteColumns: false,
+          deleteRows: false,
+          sort: false,
+          autoFilter: false,
+          pivotTables: false,
+        })
 
         // Generate the Excel file
         const buffer = await workbook.xlsx.writeBuffer()
