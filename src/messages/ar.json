@@ -102,6 +102,7 @@
     "desired-direction": "الاتجاه المطلوب",
     "desired-direction-placeholder": "اختر الاتجاه المطلوب",
     "objectives": "الأهداف",
+    "Objectives": "الأهداف",
     "objectives-placeholder": "اختر الأهداف",
     "compliances": "التشريع",
     "compliances-placeholder": "اختر التشاريع",
@@ -187,6 +188,7 @@
     "current-target": "الهدف الحالي",
     "current-actual": "الفعلي الحالي",
     "status": "الحالة",
+    "Status": "الحالة",
     "kpi-charts": "رسم بياني للمؤشرات",
     "year-options": {
       "2021": "٢٠٢١",

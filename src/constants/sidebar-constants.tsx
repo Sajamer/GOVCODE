@@ -48,7 +48,7 @@ export const SidebarItems = () => {
           href: '/kpi-dimensions/compliances',
         },
         {
-          title: t('objectives'),
+          title: 'objectives',
           href: '/kpi-dimensions/objectives',
         },
       ],
