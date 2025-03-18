@@ -72,58 +72,101 @@ async function getDepartmentId(name: string) {
   }
 }
 
+async function getStatusId(name: string) {
+  try {
+    const status = await prisma.status.findFirstOrThrow({
+      where: { name },
+    })
+
+    return status ? status.id : null
+  } catch (error) {
+    console.error(`Error fetching status with name "${name}":`, error)
+    throw new Error(`Status "${name}" not found`)
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    // Read the file as a Uint8Array (compatible with Buffer)
     const arrayBuffer = await req.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer) as Buffer
-
-    // Parse the Excel file using ExcelJS
     const workbook = new ExcelJS.Workbook()
     await workbook.xlsx.load(buffer)
 
-    // Assuming the first sheet contains the data
     const worksheet = workbook.worksheets[0]
-
     if (!worksheet) {
-      return NextResponse.json({
-        data: null,
-        message: 'No sheet found in the Excel file',
-        status: STATUS_CODES.BAD_REQUEST,
-      })
+      return NextResponse.json(
+        {
+          data: null,
+          message: 'No sheet found in the Excel file',
+          status: STATUS_CODES.BAD_REQUEST,
+        },
+        { status: STATUS_CODES.BAD_REQUEST },
+      )
     }
 
-    // Extract rows from the worksheet
+    // Extract rows with better error handling
     const rows: ExcelJS.CellValue[][] = []
-    worksheet.eachRow({ includeEmpty: true }, (row) => {
-      // Ensure row.values is an array and push it into the rows array
-      if (Array.isArray(row.values)) {
-        rows.push(row.values)
-      } else {
-        throw new Error('Row values must be an array.')
-      }
-    })
+    try {
+      worksheet.eachRow({ includeEmpty: true }, (row) => {
+        if (Array.isArray(row.values)) {
+          rows.push(row.values)
+        } else {
+          throw new Error('Invalid row format detected')
+        }
+      })
+    } catch (error) {
+      return NextResponse.json(
+        {
+          data: null,
+          message: 'Error reading Excel rows: ' + (error as Error).message,
+          status: STATUS_CODES.BAD_REQUEST,
+        },
+        { status: STATUS_CODES.BAD_REQUEST },
+      )
+    }
 
     if (rows.length < 2) {
-      throw new Error('The Excel sheet does not have valid headers or data.')
+      return NextResponse.json(
+        {
+          data: null,
+          message:
+            'The Excel sheet must contain headers and at least one data row',
+          status: STATUS_CODES.BAD_REQUEST,
+        },
+        { status: STATUS_CODES.BAD_REQUEST },
+      )
     }
 
-    // Extract headers and data rows
-    const headers = rows[0].slice(1) // Remove the first element which is null (row.values is 1-indexed)
+    const headers = rows[0].slice(1)
     const dataRows = rows.slice(1).map((row) => row.slice(1))
 
     // Validate headers
-    if (!Array.isArray(headers) || headers.length === 0) {
-      throw new Error('The Excel sheet does not have valid headers.')
+    const requiredHeaders = [
+      'Kpi Code',
+      'KPI Name',
+      'Department',
+      'Status Type',
+      // Add other required headers
+    ]
+    const missingHeaders = requiredHeaders.filter(
+      (header) => !headers.includes(header),
+    )
+    if (missingHeaders.length > 0) {
+      return NextResponse.json(
+        {
+          data: null,
+          message: `Missing required headers: ${missingHeaders.join(', ')}`,
+          status: STATUS_CODES.BAD_REQUEST,
+        },
+        { status: STATUS_CODES.BAD_REQUEST },
+      )
     }
 
-    // Convert rows into objects using headers as keys
     const parsedRows = dataRows.map((row) => {
       return headers.reduce(
         (acc: Record<string, ExcelJS.CellValue | null>, header, index) => {
-          // Ensure the header is a string
           if (typeof header === 'string') {
-            acc[header] = row[index] || null // Map each column to the corresponding header
+            acc[header] = row[index] || null
           }
           return acc
         },
@@ -131,16 +174,126 @@ export async function POST(req: NextRequest) {
       )
     })
 
-    // Validate and prepare data for insertion
-    const kpiDataArray = await Promise.all(
-      parsedRows.map(async (row) => {
-        if (!row.Department || typeof row.Department !== 'string') {
-          throw new Error('Department is required and must be a string')
-        }
-        const departmentId = await getDepartmentId(row.Department)
+    // Filter out rows that are completely empty (i.e. without KPI Code and KPI Name)
+    const nonEmptyParsedRows = parsedRows.filter(
+      (row) => row['Kpi Code'] !== null || row['KPI Name'] !== null,
+    )
 
+    // Check for duplicates in the Excel file
+    const kpiCodes = new Set()
+    const kpiNames = new Set()
+    const duplicateErrors: string[] = []
+
+    nonEmptyParsedRows.forEach((row, index) => {
+      const rowNumber = index + 2
+      const code = row['Kpi Code']?.toString()
+      const name = row['KPI Name']?.toString()
+
+      if (kpiCodes.has(code)) {
+        duplicateErrors.push(`Row ${rowNumber}: Duplicate KPI Code "${code}"`)
+      }
+      if (kpiNames.has(name)) {
+        duplicateErrors.push(`Row ${rowNumber}: Duplicate KPI Name "${name}"`)
+      }
+
+      kpiCodes.add(code)
+      kpiNames.add(name)
+    })
+
+    // Check for existing KPIs in database
+    const existingKPIs = await prisma.kPI.findMany({
+      where: {
+        OR: [
+          { code: { in: Array.from(kpiCodes).map(String) } },
+          { name: { in: Array.from(kpiNames).map(String) } },
+        ],
+      },
+      select: { code: true, name: true },
+    })
+
+    if (existingKPIs.length > 0) {
+      const existingErrors = existingKPIs.map(
+        (kpi) =>
+          `KPI with code "${kpi.code}" or name "${kpi.name}" already exists in database`,
+      )
+      duplicateErrors.push(...existingErrors)
+    }
+
+    if (duplicateErrors.length > 0) {
+      return NextResponse.json(
+        {
+          data: null,
+          message: 'Validation failed:\n' + duplicateErrors.join('\n'),
+          status: STATUS_CODES.BAD_REQUEST,
+        },
+        { status: STATUS_CODES.BAD_REQUEST },
+      )
+    }
+
+    // Validate and prepare data for insertion with enhanced error handling
+    const kpiDataArray = await Promise.all(
+      nonEmptyParsedRows.map(async (row, index) => {
+        const rowNumber = index + 2 // Adding 2 to account for header row and 0-based index
+
+        // Validate required fields
+        if (!row['Kpi Code']) {
+          throw new Error(`Row ${rowNumber}: KPI Code is required`)
+        }
+        if (!row['KPI Name']) {
+          throw new Error(`Row ${rowNumber}: KPI Name is required`)
+        }
+        if (!row.Department || typeof row.Department !== 'string') {
+          throw new Error(
+            `Row ${rowNumber}: Department is required and must be a string`,
+          )
+        }
+
+        // Validate Status Type and Status
+        const statusType = row['Status Type']?.toString()
+        if (!statusType || !['default', 'custom'].includes(statusType)) {
+          throw new Error(
+            `Row ${rowNumber}: Status Type must be either 'default' or 'custom'`,
+          )
+        }
+
+        let statusId = null
+        if (statusType === 'custom') {
+          if (!row.Status) {
+            throw new Error(
+              `Row ${rowNumber}: Status is required when Status Type is 'custom'`,
+            )
+          }
+          statusId = await getStatusId(row.Status.toString())
+          if (!statusId) {
+            throw new Error(`Row ${rowNumber}: Invalid Status value`)
+          }
+        }
+
+        const departmentId = await getDepartmentId(row.Department)
         if (!departmentId) {
-          throw new Error(`Invalid department: ${row.Department}`)
+          throw new Error(
+            `Row ${rowNumber}: Invalid department: ${row.Department}`,
+          )
+        }
+
+        // Validate enums
+        if (row.Unit && !Object.values(Units).includes(row.Unit as Units)) {
+          throw new Error(`Row ${rowNumber}: Invalid Unit value`)
+        }
+        if (
+          row.Frequency &&
+          !Object.values(Frequency).includes(row.Frequency as Frequency)
+        ) {
+          throw new Error(`Row ${rowNumber}: Invalid Frequency value`)
+        }
+        if (row.Type && !Object.values(KPIType).includes(row.Type as KPIType)) {
+          throw new Error(`Row ${rowNumber}: Invalid Type value`)
+        }
+        if (
+          row.Calibration &&
+          !Object.values(Calibration).includes(row.Calibration as Calibration)
+        ) {
+          throw new Error(`Row ${rowNumber}: Invalid Calibration value`)
         }
 
         return {
@@ -150,11 +303,13 @@ export async function POST(req: NextRequest) {
           description: row.Description,
           measurementNumber: row['Measurement Number'],
           resources: row.Resources,
-          unit: row.Unit,
-          frequency: row.Frequency,
-          type: row.Type,
-          calibration: row.Calibration,
+          unit: row.Unit as Units,
+          frequency: row.Frequency as Frequency,
+          type: row.Type as KPIType,
+          calibration: row.Calibration as Calibration,
           departmentId,
+          statusId,
+          statusType,
         }
       }),
     )
@@ -170,11 +325,13 @@ export async function POST(req: NextRequest) {
             owner: data.owner?.toString() ?? '',
             measurementNumber: data.measurementNumber?.toString() ?? '',
             resources: data.resources?.toString() ?? '',
-            unit: data.unit as Units,
-            frequency: data.frequency as Frequency,
-            type: data.type as KPIType,
-            calibration: data.calibration as Calibration,
+            unit: data.unit,
+            frequency: data.frequency,
+            type: data.type,
+            calibration: data.calibration,
             departmentId: data.departmentId,
+            statusId: data.statusId,
+            statusType: data.statusType,
           },
         })
       }),
@@ -187,10 +344,13 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('Error importing KPIs:', error)
-    return NextResponse.json({
-      data: null,
-      message: 'Error importing KPIs',
-      status: STATUS_CODES.SERVER_ERROR,
-    })
+    return NextResponse.json(
+      {
+        data: null,
+        message: (error as Error).message || 'Error importing KPIs',
+        status: STATUS_CODES.BAD_REQUEST,
+      },
+      { status: STATUS_CODES.BAD_REQUEST },
+    )
   }
 }

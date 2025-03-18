@@ -226,8 +226,6 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
 
   const isLoading = addLoading || editLoading
 
-  console.log('errors: ', errors)
-
   return (
     <form
       onSubmit={handleSubmit}

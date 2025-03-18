@@ -156,7 +156,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   }
 
   const { mutate: uploadMutation, isPending: uploadLoading } = useMutation({
-    mutationFn: async () => await importKpis(uploadedFile as File),
+    mutationFn: (file: File) => importKpis(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [sheetName as string] })
       toast({
@@ -170,9 +170,10 @@ const GenericComponent = <T extends Record<string, unknown>>({
     onError: (error: AxiosErrorType) => {
       toast({
         variant: 'destructive',
-        title: 'Operation Failed',
-        description: error?.message,
+        title: 'Import Failed',
+        description: error.message || 'Failed to import KPIs',
       })
+      // Don't reset file here so user can fix and retry
     },
   })
 
@@ -337,7 +338,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
               onClick={(e) => {
                 e.preventDefault()
                 if (uploadedFile) {
-                  uploadMutation()
+                  uploadMutation(uploadedFile)
                 }
               }}
             >
