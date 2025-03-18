@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface IRules {
-  min: string
-  max: string
+  min: number
+  max: number
+  label: string
   color: string
 }
 

@@ -33,7 +33,7 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
   const initialRules =
     statusData?.rules && statusData.rules.length > 0
       ? statusData.rules
-      : [{ min: '', max: '', color: '#000000' }]
+      : [{ label: '', min: 0, max: 0, color: '#000000' }]
 
   // Format dates for initial values
   const initialValues = {
@@ -137,7 +137,7 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
   const handleAddRule = () => {
     setFieldValue('rules', [
       ...values.rules,
-      { min: '', max: '', color: '#000000' },
+      { label: '', min: 0, max: 0, color: '#000000' },
     ])
   }
 
@@ -150,11 +150,19 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
   // Handler for individual rule change
   const handleRuleChange = (
     index: number,
-    field: 'min' | 'max' | 'color',
+    field: 'label' | 'min' | 'max' | 'color',
     value: string,
   ) => {
     const updatedRules = [...values.rules]
-    updatedRules[index] = { ...updatedRules[index], [field]: value }
+    // Convert to number for min and max fields
+    if (field === 'min' || field === 'max') {
+      updatedRules[index] = {
+        ...updatedRules[index],
+        [field]: value === '' ? 0 : Number(value),
+      }
+    } else {
+      updatedRules[index] = { ...updatedRules[index], [field]: value }
+    }
     setFieldValue('rules', updatedRules)
   }
 
@@ -175,12 +183,15 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
           <h2 className="text-base font-medium text-zinc-800">Rules</h2>
           <div className="flex w-full flex-col items-center text-sm">
             <div className="flex w-full items-center gap-4 text-sm">
+              <span className="w-full">Label</span>
               <span className="w-full">Min</span>
               <span className="w-full">Max</span>
               <span className="w-40">Color</span>
               <span className="w-20"></span>
             </div>
             {values.rules.map((rule, index) => {
+              const labelError = getIn(errors, `rules[${index}].label`)
+              const labelTouched = getIn(touched, `rules[${index}].label`)
               const minError = getIn(errors, `rules[${index}].min`)
               const minTouched = getIn(touched, `rules[${index}].min`)
               const maxError = getIn(errors, `rules[${index}].max`)
@@ -196,6 +207,23 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
                   <div className="relative flex w-full flex-col">
                     <Input
                       type="text"
+                      name={`rules[${index}].label`}
+                      value={rule.label}
+                      onChange={(e) =>
+                        handleRuleChange(index, 'label', e.target.value)
+                      }
+                      onBlur={handleBlur}
+                      placeholder="Label"
+                      className="rounded border p-2"
+                    />
+                    {labelTouched && labelError && (
+                      <ErrorText error={labelError} />
+                    )}
+                  </div>
+                  <div className="relative flex w-full flex-col">
+                    <Input
+                      type="number"
+                      min={0}
                       name={`rules[${index}].min`}
                       value={rule.min}
                       onChange={(e) =>
@@ -209,7 +237,8 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
                   </div>
                   <div className="relative flex w-full flex-col">
                     <Input
-                      type="text"
+                      type="number"
+                      min={0 || rule.min} // Set minimum value based on current min
                       name={`rules[${index}].max`}
                       value={rule.max}
                       onChange={(e) =>
