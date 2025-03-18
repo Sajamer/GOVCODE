@@ -4,9 +4,9 @@ model KPI {
   code                   String
   description            String
   owner                  String
-  measurementNumerator   String?
-  measurementDenominator String?
-  measurementNumber      String?
+  measurementNumerator   String? @db.VarChar(512)
+  measurementDenominator String? @db.VarChar(512)
+  measurementNumber      String? @db.VarChar(512)
   resources              String?
   isArchived             Boolean @default(false)
   statusType             String  @default("default")
