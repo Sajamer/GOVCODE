@@ -78,6 +78,9 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     useMutation({
       mutationFn: async () => await createProcess(values),
       onSuccess: (newData) => {
+        queryClient.invalidateQueries({
+          queryKey: ['multipleOptionsDatabaseValues'],
+        })
         queryClient.setQueryData(
           ['kpi-dimensions', tab],
           (oldData: IKpiDimensionResponse[] | undefined) => {
@@ -104,6 +107,9 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     useMutation({
       mutationFn: async (id: number) => await updateProcessById(id, values),
       onSuccess: (updatedData, id) => {
+        queryClient.invalidateQueries({
+          queryKey: ['multipleOptionsDatabaseValues'],
+        })
         queryClient.setQueryData(
           ['kpi-dimensions', tab],
           (oldData: IKpiDimensionResponse[] | undefined) => {
@@ -141,6 +147,9 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     useMutation({
       mutationFn: async () => await createObjective(values),
       onSuccess: (newData) => {
+        queryClient.invalidateQueries({
+          queryKey: ['multipleOptionsDatabaseValues'],
+        })
         queryClient.setQueryData(
           ['kpi-dimensions', tab],
           (oldData: IKpiDimensionResponse[] | undefined) => {
@@ -167,6 +176,9 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     useMutation({
       mutationFn: async (id: number) => await updateObjectiveById(id, values),
       onSuccess: (updatedData, id) => {
+        queryClient.invalidateQueries({
+          queryKey: ['multipleOptionsDatabaseValues'],
+        })
         queryClient.setQueryData(
           ['kpi-dimensions', tab],
           (oldData: IKpiDimensionResponse[] | undefined) => {
@@ -204,6 +216,9 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     useMutation({
       mutationFn: async () => await createCompliance(values),
       onSuccess: (newData) => {
+        queryClient.invalidateQueries({
+          queryKey: ['multipleOptionsDatabaseValues'],
+        })
         queryClient.setQueryData(
           ['kpi-dimensions', tab],
           (oldData: IKpiDimensionResponse[] | undefined) => {
@@ -230,6 +245,9 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     useMutation({
       mutationFn: async (id: number) => await updateComplianceById(id, values),
       onSuccess: (updatedData, id) => {
+        queryClient.invalidateQueries({
+          queryKey: ['multipleOptionsDatabaseValues'],
+        })
         queryClient.setQueryData(
           ['kpi-dimensions', tab],
           (oldData: IKpiDimensionResponse[] | undefined) => {

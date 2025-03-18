@@ -4,14 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
-import { axiosDelete } from '@/lib/axios'
+import { getDepartmentsByOrganizationId } from '@/lib/actions/department.actions'
+import { axiosDelete, axiosGet } from '@/lib/axios'
 import { cn, generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { importKpis } from '@/queries/kpiQueries'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
-import { IKpiResponse } from '@/types/kpi'
+import { IKpiFormDropdownData, IKpiResponse } from '@/types/kpi'
 import { ITasksManagementResponse } from '@/types/tasks'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ChartSpline,
   Download,
@@ -25,6 +26,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChangeEvent, useEffect, useMemo, useState } from 'react'
+import BasicDropdown from '../dropdowns/BasicDropdown'
 import PageHeader from '../headers/PageHeader'
 import AssignTaskDialog from '../modals/AssignTaskDialog'
 import ConfirmationDialog from '../modals/ConfirmationDialog'
@@ -73,22 +75,124 @@ const GenericComponent = <T extends Record<string, unknown>>({
 
   const { hasPermission, organizationId } = useGlobalStore((store) => store)
 
+  const { data: departmentData } = useQuery({
+    queryKey: ['departments', organizationId],
+    queryFn: async () => await getDepartmentsByOrganizationId(organizationId),
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const { data: multipleOptionsDatabaseValues } = useQuery({
+    queryKey: ['multipleOptionsDatabaseValues'],
+    queryFn: () => axiosGet<IKpiFormDropdownData>('kpis'),
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const departmentOptions = departmentData?.map((option) => ({
+    id: String(option.id),
+    label: option.name,
+    value: option.name,
+  }))
+
+  const objectivesOptions =
+    multipleOptionsDatabaseValues?.data?.objectives?.map((option) => ({
+      id: String(option.id),
+      label: option.name,
+      value: option.name,
+    }))
+
+  const complianceOptions =
+    multipleOptionsDatabaseValues?.data?.compliances?.map((option) => ({
+      id: String(option.id),
+      label: option.name,
+      value: option.name,
+    }))
+
+  const processOptions = multipleOptionsDatabaseValues?.data?.processes?.map(
+    (option) => ({
+      id: String(option.id),
+      label: option.name,
+      value: option.name,
+    }),
+  )
+
   const [openConfirmation, setOpenConfirmation] = useState(false)
   const [openAssignTask, setOpenAssignTask] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isImportOpen, setIsImportOpen] = useState<boolean>(false)
   const [uploadedFile, setUploadedFile] = useState<File | undefined>(undefined)
 
+  // Add filter state
+  const [filters, setFilters] = useState<{
+    departmentId?: string | number
+    objectiveId?: string | number
+    complianceId?: string | number
+    processId?: string | number
+  }>({})
+
   const entityData = useMemo(() => data ?? [], [data])
 
-  const filteredData = useMemo(
-    () =>
-      entityData.filter(
-        (entity) =>
-          !searchTerm || searchObjectValueRecursive(entity, searchTerm),
-      ),
-    [entityData, searchTerm],
-  )
+  const filteredData = useMemo(() => {
+    // First filter by search term
+    const searchFiltered = entityData.filter(
+      (entity) => !searchTerm || searchObjectValueRecursive(entity, searchTerm),
+    )
+
+    // Then apply dropdown filters - using IDs for comparison
+    return searchFiltered.filter((entity) => {
+      // Check each filter criteria
+
+      // Department filter
+      if (
+        filters.departmentId &&
+        entity.departmentId !== filters.departmentId
+      ) {
+        return false
+      }
+
+      // Objective filter - check if the entity has an objective with matching ID
+      if (filters.objectiveId && Array.isArray(entity.objectives)) {
+        const hasMatchingObjective = entity.objectives.some(
+          (obj) => obj.id === filters.objectiveId,
+        )
+        if (!hasMatchingObjective) return false
+      }
+
+      // Compliance filter - check if the entity has a compliance with matching ID
+      if (filters.complianceId && Array.isArray(entity.compliances)) {
+        const hasMatchingCompliance = entity.compliances.some(
+          (comp) => comp.id === filters.complianceId,
+        )
+        if (!hasMatchingCompliance) return false
+      }
+
+      // Process filter - check if the entity has a process with matching ID
+      if (filters.processId && Array.isArray(entity.processes)) {
+        const hasMatchingProcess = entity.processes.some(
+          (proc) => proc.id === filters.processId,
+        )
+        if (!hasMatchingProcess) return false
+      }
+
+      return true
+    })
+  }, [entityData, searchTerm, filters])
+
+  // Handler to update filters
+  const handleFilterChange = (
+    filterType: keyof typeof filters,
+    value: string | number | undefined,
+  ) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterType]: value,
+    }))
+  }
+
+  // Reset filters when leaving the page
+  useEffect(() => {
+    setSearchTerm('')
+    setFilters({})
+  }, [setSearchTerm])
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => axiosDelete(`${sheetName}/${selectedId}`),
@@ -184,7 +288,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   const localizedTitle = t(title)
 
   return (
-    <>
+    <div>
       <div
         dir={isArabic ? 'rtl' : 'ltr'}
         className="flex w-full flex-col items-start gap-[1.875rem]"
@@ -352,16 +456,96 @@ const GenericComponent = <T extends Record<string, unknown>>({
               <Loader2 className="size-16 animate-spin" />
             </div>
           ) : entityData.length > 0 ? (
-            <TableComponent
-              data={values}
-              headers={headers}
-              hasFooter={hasPermission && true}
-              addProps={{
-                label: `${t('add') + ' ' + localizedTitle}`,
-                sheetToOpen: sheetName as SheetNames,
-              }}
-              tableActions={tableActions}
-            />
+            <div className="flex flex-col items-start justify-start gap-5 w-full">
+              <div className="flex items-center justify-start gap-4">
+                <span className="text-lg font-semibold whitespace-nowrap">
+                  Filter By:
+                </span>
+                {departmentOptions && departmentOptions?.length > 0 && (
+                  <BasicDropdown
+                    data={departmentOptions ?? []}
+                    triggerStyle="h-11"
+                    placeholder="department"
+                    defaultValue={departmentOptions?.find(
+                      (option) => +option.id === +filters.departmentId!,
+                    )}
+                    callback={(option) => {
+                      handleFilterChange(
+                        'departmentId',
+                        option?.id ? +option.id : undefined,
+                      )
+                    }}
+                  />
+                )}
+                {objectivesOptions && objectivesOptions?.length > 0 && (
+                  <BasicDropdown
+                    data={objectivesOptions ?? []}
+                    triggerStyle="h-11"
+                    placeholder="objective"
+                    defaultValue={objectivesOptions?.find(
+                      (option) => +option.id === +filters.objectiveId!,
+                    )}
+                    callback={(option) =>
+                      handleFilterChange(
+                        'objectiveId',
+                        option?.id ? +option.id : undefined,
+                      )
+                    }
+                  />
+                )}
+                {complianceOptions && complianceOptions?.length > 0 && (
+                  <BasicDropdown
+                    data={complianceOptions ?? []}
+                    triggerStyle="h-11"
+                    placeholder="compliance"
+                    defaultValue={complianceOptions?.find(
+                      (option) => +option.id === +filters.complianceId!,
+                    )}
+                    callback={(option) =>
+                      handleFilterChange(
+                        'complianceId',
+                        option?.id ? +option.id : undefined,
+                      )
+                    }
+                  />
+                )}
+                {processOptions && processOptions?.length > 0 && (
+                  <BasicDropdown
+                    data={processOptions ?? []}
+                    triggerStyle="h-11"
+                    placeholder="process"
+                    defaultValue={processOptions?.find(
+                      (option) => +option.id === +filters.processId!,
+                    )}
+                    callback={(option) =>
+                      handleFilterChange(
+                        'processId',
+                        option?.id ? +option.id : undefined,
+                      )
+                    }
+                  />
+                )}
+                {Object.keys(filters).length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters({})}
+                    className="h-11"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+              <TableComponent
+                data={values}
+                headers={headers}
+                hasFooter={hasPermission && true}
+                addProps={{
+                  label: `${t('add') + ' ' + localizedTitle}`,
+                  sheetToOpen: sheetName as SheetNames,
+                }}
+                tableActions={tableActions}
+              />
+            </div>
           ) : (
             <NoResultFound label={`No ${title} yet.`} />
           )}
@@ -381,7 +565,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
         kpiId={Number(selectedId)}
         onClose={() => setOpenAssignTask(false)}
       />
-    </>
+    </div>
   )
 }
 
