@@ -1,6 +1,14 @@
 import KPIForm from '@/components/forms/KPIForm'
 import TaskManagementForm from '@/components/forms/TaskManagementForm'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
@@ -19,6 +27,7 @@ import {
   Import,
   Loader2,
   Plus,
+  SlidersHorizontal,
   Trash,
   X,
 } from 'lucide-react'
@@ -44,12 +53,14 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
   sheetName: SheetNames
   showImportExcel?: boolean
   data: T[]
+  total: number
   isLoading?: boolean
   columns: Array<{
     key: keyof T | 'actions'
     isSortable: boolean
     type: CellType
   }>
+  defaultVisibleColumns?: Array<keyof T | 'actions'>
 }
 
 const GenericComponent = <T extends Record<string, unknown>>({
@@ -58,10 +69,14 @@ const GenericComponent = <T extends Record<string, unknown>>({
   icon,
   entityKey,
   sheetName,
+  total,
   showImportExcel = false,
   columns,
   isLoading,
   data,
+  defaultVisibleColumns = ['code', 'name', 'calibration'] as Array<
+    keyof T | 'actions'
+  >,
 }: IGenericTableProps<T>): JSX.Element => {
   const queryClient = useQueryClient()
   const t = useTranslations('general')
@@ -131,14 +146,19 @@ const GenericComponent = <T extends Record<string, unknown>>({
 
   const entityData = useMemo(() => data ?? [], [data])
 
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [filteredTotal, setFilteredTotal] = useState(total)
+
   const filteredData = useMemo(() => {
-    // First filter by search term
-    const searchFiltered = entityData.filter(
+    if (!Array.isArray(entityData)) return []
+
+    const searchFiltered = entityData?.filter(
       (entity) => !searchTerm || searchObjectValueRecursive(entity, searchTerm),
     )
 
-    // Then apply dropdown filters - using IDs for comparison
-    return searchFiltered.filter((entity) => {
+    const fullFiltered = searchFiltered.filter((entity) => {
       // Check each filter criteria
 
       // Department filter
@@ -175,7 +195,31 @@ const GenericComponent = <T extends Record<string, unknown>>({
 
       return true
     })
-  }, [entityData, searchTerm, filters])
+
+    // Update filtered total
+    setFilteredTotal(fullFiltered.length)
+
+    // Return paginated results with dynamic itemsPerPage
+    const startIndex = (currentPage - 1) * itemsPerPage
+    return fullFiltered.slice(startIndex, startIndex + itemsPerPage)
+  }, [entityData, searchTerm, filters, currentPage, itemsPerPage])
+
+  // Calculate total pages based on filtered total and items per page
+  const totalPages = Math.ceil(filteredTotal / itemsPerPage)
+
+  // Reset pagination when filters change or items per page changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters, searchTerm, itemsPerPage])
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage)
+  }
 
   // Handler to update filters
   const handleFilterChange = (
@@ -287,14 +331,88 @@ const GenericComponent = <T extends Record<string, unknown>>({
 
   const localizedTitle = t(title)
 
+  // Add state for visible columns
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
+    new Set(defaultVisibleColumns.map((col) => String(col))),
+  )
+
+  // Add column visibility toggle handler
+  const toggleColumnVisibility = (columnKey: string) => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev)
+      if (next.has(columnKey)) {
+        next.delete(columnKey)
+      } else {
+        next.add(columnKey)
+      }
+      return next
+    })
+  }
+
+  // Filter headers based on visibility
+  const visibleHeaders = headers.filter((header) =>
+    visibleColumns.has(String(header.key)),
+  )
+
+  // Filter values to only show visible columns
+  const visibleValues = values.map((row) => ({
+    ...row,
+    cells: row.cells.filter((_, index) =>
+      visibleColumns.has(String(headers[index].key)),
+    ),
+  }))
+
+  // Add ColumnSelector component near line 560
+  const ColumnSelector = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="h-11">
+          <SlidersHorizontal className="mr-2 size-4" />
+          Columns
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="max-h-[400px] w-[250px] overflow-y-auto overflow-x-hidden"
+      >
+        <DropdownMenuLabel className="flex items-center justify-between rounded-md">
+          Toggle Columns
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setVisibleColumns(
+                new Set(defaultVisibleColumns.map((col) => String(col))),
+              )
+            }
+            className="h-8 px-2 text-xs hover:underline"
+          >
+            Reset
+          </Button>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {columns.map((column) => (
+          <DropdownMenuCheckboxItem
+            key={String(column.key)}
+            checked={visibleColumns.has(String(column.key))}
+            onCheckedChange={() => toggleColumnVisibility(String(column.key))}
+          >
+            {String(column.key)}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+
   return (
-    <div>
+    <>
       <div
         dir={isArabic ? 'rtl' : 'ltr'}
         className="flex w-full flex-col items-start gap-[1.875rem]"
       >
         <PageHeader
           title={title}
+          total={total}
           description={description}
           iconWrapper="bg-primary"
           icon={icon ?? <ChartSpline className="text-primary-foreground" />}
@@ -456,94 +574,122 @@ const GenericComponent = <T extends Record<string, unknown>>({
               <Loader2 className="size-16 animate-spin" />
             </div>
           ) : entityData.length > 0 ? (
-            <div className="flex flex-col items-start justify-start gap-5 w-full">
-              <div className="flex items-center justify-start gap-4">
-                <span className="text-lg font-semibold whitespace-nowrap">
-                  Filter By:
-                </span>
-                {departmentOptions && departmentOptions?.length > 0 && (
-                  <BasicDropdown
-                    data={departmentOptions ?? []}
-                    triggerStyle="h-11"
-                    placeholder="department"
-                    defaultValue={departmentOptions?.find(
-                      (option) => +option.id === +filters.departmentId!,
-                    )}
-                    callback={(option) => {
-                      handleFilterChange(
-                        'departmentId',
-                        option?.id ? +option.id : undefined,
-                      )
-                    }}
-                  />
-                )}
-                {objectivesOptions && objectivesOptions?.length > 0 && (
-                  <BasicDropdown
-                    data={objectivesOptions ?? []}
-                    triggerStyle="h-11"
-                    placeholder="objective"
-                    defaultValue={objectivesOptions?.find(
-                      (option) => +option.id === +filters.objectiveId!,
-                    )}
-                    callback={(option) =>
-                      handleFilterChange(
-                        'objectiveId',
-                        option?.id ? +option.id : undefined,
-                      )
-                    }
-                  />
-                )}
-                {complianceOptions && complianceOptions?.length > 0 && (
-                  <BasicDropdown
-                    data={complianceOptions ?? []}
-                    triggerStyle="h-11"
-                    placeholder="compliance"
-                    defaultValue={complianceOptions?.find(
-                      (option) => +option.id === +filters.complianceId!,
-                    )}
-                    callback={(option) =>
-                      handleFilterChange(
-                        'complianceId',
-                        option?.id ? +option.id : undefined,
-                      )
-                    }
-                  />
-                )}
-                {processOptions && processOptions?.length > 0 && (
-                  <BasicDropdown
-                    data={processOptions ?? []}
-                    triggerStyle="h-11"
-                    placeholder="process"
-                    defaultValue={processOptions?.find(
-                      (option) => +option.id === +filters.processId!,
-                    )}
-                    callback={(option) =>
-                      handleFilterChange(
-                        'processId',
-                        option?.id ? +option.id : undefined,
-                      )
-                    }
-                  />
-                )}
-                {Object.keys(filters).length > 0 && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setFilters({})}
-                    className="h-11"
-                  >
-                    Clear Filters
-                  </Button>
-                )}
+            <div className="flex w-full flex-col items-start justify-start gap-5">
+              <div className="flex w-full items-center justify-between gap-4">
+                <div className="flex items-center justify-start gap-4">
+                  <span className="whitespace-nowrap text-lg font-semibold">
+                    Filter By:
+                  </span>
+                  {departmentOptions && departmentOptions?.length > 0 && (
+                    <BasicDropdown
+                      data={departmentOptions ?? []}
+                      triggerStyle="h-11"
+                      placeholder="department"
+                      defaultValue={departmentOptions?.find(
+                        (option) => +option.id === +filters.departmentId!,
+                      )}
+                      callback={(option) => {
+                        handleFilterChange(
+                          'departmentId',
+                          option?.id ? +option.id : undefined,
+                        )
+                      }}
+                    />
+                  )}
+                  {objectivesOptions && objectivesOptions?.length > 0 && (
+                    <BasicDropdown
+                      data={objectivesOptions ?? []}
+                      triggerStyle="h-11"
+                      placeholder="objective"
+                      defaultValue={objectivesOptions?.find(
+                        (option) => +option.id === +filters.objectiveId!,
+                      )}
+                      callback={(option) =>
+                        handleFilterChange(
+                          'objectiveId',
+                          option?.id ? +option.id : undefined,
+                        )
+                      }
+                    />
+                  )}
+                  {complianceOptions && complianceOptions?.length > 0 && (
+                    <BasicDropdown
+                      data={complianceOptions ?? []}
+                      triggerStyle="h-11"
+                      placeholder="compliance"
+                      defaultValue={complianceOptions?.find(
+                        (option) => +option.id === +filters.complianceId!,
+                      )}
+                      callback={(option) =>
+                        handleFilterChange(
+                          'complianceId',
+                          option?.id ? +option.id : undefined,
+                        )
+                      }
+                    />
+                  )}
+                  {processOptions && processOptions?.length > 0 && (
+                    <BasicDropdown
+                      data={processOptions ?? []}
+                      triggerStyle="h-11"
+                      placeholder="process"
+                      defaultValue={processOptions?.find(
+                        (option) => +option.id === +filters.processId!,
+                      )}
+                      callback={(option) =>
+                        handleFilterChange(
+                          'processId',
+                          option?.id ? +option.id : undefined,
+                        )
+                      }
+                    />
+                  )}
+                  {Object.keys(filters).length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setFilters({})}
+                      className="h-11"
+                    >
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+                <ColumnSelector />
               </div>
               <TableComponent
-                data={values}
-                headers={headers}
+                data={visibleValues}
+                headers={visibleHeaders}
                 hasFooter={hasPermission && true}
                 addProps={{
                   label: `${t('add') + ' ' + localizedTitle}`,
                   sheetToOpen: sheetName as SheetNames,
                 }}
                 tableActions={tableActions}
+                tableFooterStyle="pb-0"
+                pagination={{
+                  currentPage,
+                  totalPages,
+                  totalItems: filteredTotal, // Use filtered total instead of total
+                  itemsPerPage,
+                  onPageChange: handlePageChange,
+                  onItemsPerPageChange: handleItemsPerPageChange,
+                }}
+                showExportExcel
+                exportFileName="kpis"
+                exportExcelHeaders={{
+                  code: 'KPI Code',
+                  name: 'KPI',
+                  description: 'Description',
+                  owner: 'Owner',
+                  measurementNumerator: 'Numerator',
+                  measurementDenominator: 'Denominator',
+                  measurementNumber: 'Measurement Number',
+                  resources: 'Resources',
+                  unit: 'Unit',
+                  frequency: 'Frequency',
+                  type: 'Type',
+                  calibration: 'Calibration',
+                }}
               />
             </div>
           ) : (
@@ -565,7 +711,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
         kpiId={Number(selectedId)}
         onClose={() => setOpenAssignTask(false)}
       />
-    </div>
+    </>
   )
 }
 

@@ -15,6 +15,7 @@ interface IPageHeaderProps extends HTMLAttributes<HTMLDivElement> {
   icon: ReactNode
   iconWrapper?: string
   title: string
+  total?: number
   description: string
   descriptionStyles?: string
 }
@@ -24,6 +25,7 @@ const PageHeader: FC<IPageHeaderProps> = ({
   description,
   icon,
   title,
+  total,
   iconWrapper,
   descriptionStyles,
   children,
@@ -46,6 +48,7 @@ const PageHeader: FC<IPageHeaderProps> = ({
         icon={icon}
         iconWrapper={iconWrapper}
         title={title}
+        total={total}
         description={description}
         descriptionStyles={descriptionStyles}
       />

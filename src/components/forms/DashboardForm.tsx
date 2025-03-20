@@ -59,7 +59,7 @@ const DashboardForm: FC = () => {
     staleTime: 1000 * 60 * 5,
   })
 
-  const kpiOptions = kpisData?.map((option) => ({
+  const kpiOptions = kpisData?.kpis?.map((option) => ({
     id: option.id,
     label: option.name,
     value: option.name,

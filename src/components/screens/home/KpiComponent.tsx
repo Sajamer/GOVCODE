@@ -1,6 +1,5 @@
 'use client'
 
-import ExportButton from '@/components/shared/buttons/ExportButton'
 import GenericComponent from '@/components/shared/tables/GenericTable'
 import { getAllKPI } from '@/lib/actions/kpiActions'
 import { CustomUser } from '@/lib/auth'
@@ -30,7 +29,7 @@ const KpiComponent: FC = () => {
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
 
-  const kpiData = data || []
+  const kpiData = data?.kpis || []
 
   return (
     <>
@@ -40,8 +39,10 @@ const KpiComponent: FC = () => {
         entityKey="id"
         sheetName={'kpis'}
         data={kpiData}
+        total={data?.totalCount || 0}
         isLoading={isLoading}
         showImportExcel
+        defaultVisibleColumns={['code', 'name', 'calibration', 'frequency']}
         columns={[
           { key: 'code', isSortable: true, type: 'string' },
           { key: 'name', isSortable: false, type: 'string' },
@@ -49,31 +50,21 @@ const KpiComponent: FC = () => {
           { key: 'description', isSortable: false, type: 'string' },
           { key: 'frequency', isSortable: false, type: 'string' },
           { key: 'assignTo', isSortable: false, type: 'string' },
+          { key: 'owner', isSortable: false, type: 'string' },
+          { key: 'department', isSortable: false, type: 'string' },
+          { key: 'compliance', isSortable: false, type: 'string' },
+          { key: 'process', isSortable: false, type: 'string' },
+          { key: 'objective', isSortable: false, type: 'string' },
+          { key: 'measurementNumerator', isSortable: false, type: 'string' },
+          { key: 'measurementDenominator', isSortable: false, type: 'string' },
+          { key: 'measurementNumber', isSortable: false, type: 'string' },
+          { key: 'resources', isSortable: false, type: 'string' },
+          { key: 'unit', isSortable: false, type: 'string' },
+          { key: 'type', isSortable: false, type: 'string' },
+          { key: 'statusType', isSortable: false, type: 'string' },
+          { key: 'statusName', isSortable: false, type: 'string' },
         ]}
       />
-
-      {kpiData && kpiData?.length > 0 && (
-        <div className="mt-10 flex w-full justify-end gap-4">
-          <ExportButton
-            data={kpiData}
-            name={'kpis'}
-            headers={{
-              code: 'KPI Code',
-              name: 'KPI',
-              description: 'Description',
-              owner: 'Owner',
-              measurementNumerator: 'Numerator',
-              measurementDenominator: 'Denominator',
-              measurementNumber: 'Measurement Number',
-              resources: 'Resources',
-              unit: 'Unit',
-              frequency: 'Frequency',
-              type: 'Type',
-              calibration: 'Calibration',
-            }}
-          />
-        </div>
-      )}
     </>
   )
 }

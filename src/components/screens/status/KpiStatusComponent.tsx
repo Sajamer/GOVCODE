@@ -1,6 +1,7 @@
 'use client'
 
 import Tooltips from '@/components/shared/tooltips/Tooltips'
+import { Switch } from '@/components/ui/switch'
 import { quarters } from '@/constants/global-constants'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
 import { getAllKPI } from '@/lib/actions/kpiActions'
@@ -10,6 +11,7 @@ import {
   calculateStatus,
   capitalizeFirstLetter,
   cn,
+  findMatchingRule,
   switchUnit,
 } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
@@ -17,13 +19,15 @@ import { IKpiResponse, MonthlyData } from '@/types/kpi'
 import { KPIActual, KPITarget, userRole } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
-import { FC, Fragment } from 'react'
+import { FC, Fragment, useState } from 'react'
 
 interface IKpiStatusProps {
   data?: IKpiResponse[]
 }
 
 const KpiStatusComponent: FC<IKpiStatusProps> = () => {
+  const [showCustomStatus, setShowCustomStatus] = useState(false)
+
   const months = periodsByFrequency.monthly
   const currentYear = new Date().getFullYear()
 
@@ -45,9 +49,12 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
 
+  const kpiData = data?.kpis
+
   // Function to map KPI data to monthly data
   const mapFrequencyToMonths = (
     items: (KPIActual | KPITarget)[],
+
     isTarget: boolean = false,
   ): MonthlyData => {
     const monthlyData = {} as MonthlyData
@@ -93,7 +100,17 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
 
   return (
     <div className="max-w-full overflow-x-auto">
-      <table className="min-w-full border-collapse">
+      <table className="relative min-w-full border-collapse">
+        <div className="absolute left-5 top-5 flex items-center gap-2 px-4">
+          <span className="text-xl font-semibold underline">
+            Show Custom Status
+          </span>
+          <Switch
+            id="status-switch"
+            checked={showCustomStatus}
+            onCheckedChange={setShowCustomStatus}
+          />
+        </div>
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-300">
             <th />
@@ -203,7 +220,7 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
           </tr>
         </thead>
         <tbody>
-          {data?.map((kpi, index) => {
+          {kpiData?.map((kpi, index) => {
             const currentYearTargets = mapFrequencyToMonths(
               kpi?.targets?.filter((t) => t.year === currentYear),
               true,
@@ -267,6 +284,31 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                               {target !== undefined && actual === undefined
                                 ? ''
                                 : (actual ?? '')}
+                            </div>
+                            <div className="absolute bottom-1 left-1">
+                              {target !== undefined &&
+                              actual !== undefined &&
+                              showCustomStatus &&
+                              kpi.statusType === 'custom' &&
+                              kpi.status?.rules
+                                ? (() => {
+                                    const matchingRule = findMatchingRule(
+                                      actual,
+                                      target,
+                                      kpi.status.rules,
+                                    )
+                                    return matchingRule ? (
+                                      <span
+                                        className="rounded px-1 py-0.5 text-[8px] text-white"
+                                        style={{
+                                          backgroundColor: matchingRule.color,
+                                        }}
+                                      >
+                                        {matchingRule.label}
+                                      </span>
+                                    ) : null
+                                  })()
+                                : null}
                             </div>
                             <div className="absolute bottom-1 right-1 text-xs font-medium">
                               {target !== undefined && actual !== undefined

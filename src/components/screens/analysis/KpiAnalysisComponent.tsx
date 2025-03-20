@@ -45,6 +45,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
 
+  const kpiData = data?.kpis
   // Function to map KPI data to monthly data
   const mapFrequencyToMonths = (
     actuals: KPIActual[],
@@ -208,7 +209,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
           </tr>
         </thead>
         <tbody>
-          {data?.map((kpi, index) => {
+          {kpiData?.map((kpi, index) => {
             const { current: currentYearData, previous: previousYearData } =
               mapFrequencyToMonths(kpi.actuals, currentYear)
 

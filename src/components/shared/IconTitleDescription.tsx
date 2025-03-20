@@ -8,6 +8,7 @@ interface IIconTitleDescriptionProps {
   icon: ReactNode
   iconWrapper?: string
   title: string
+  total?: number
   description: string
   descriptionStyles?: string
 }
@@ -17,6 +18,7 @@ const IconTitleDescription: FC<IIconTitleDescriptionProps> = ({
   icon,
   iconWrapper,
   title,
+  total,
   descriptionStyles,
 }) => {
   const t = useTranslations('general')
@@ -33,7 +35,12 @@ const IconTitleDescription: FC<IIconTitleDescriptionProps> = ({
       </div>
       <div className="flex flex-col items-start">
         <h4 className="text-base font-semibold text-zinc-800 md:text-xl">
-          {t(`${title?.toLowerCase()}`)}
+          {t(`${title?.toLowerCase()}`)}{' '}
+          {total && (
+            <span className="text-xs rounded-full px-2 py-1 bg-primary text-white">
+              {total}
+            </span>
+          )}
         </h4>
         <div className={cn('w-full', descriptionStyles)}>
           <p className="text-sm leading-normal text-zinc-600">

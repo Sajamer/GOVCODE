@@ -9,6 +9,8 @@ export const getAllKPI = async (
   role: userRole,
   organizationId?: number,
   departmentId?: number,
+  // page: number = 1,
+  // limit: number = 10,
 ) => {
   try {
     let whereCondition = {}
@@ -53,6 +55,11 @@ export const getAllKPI = async (
       default:
         throw new Error('Invalid role')
     }
+
+    // Get total count with the same conditions
+    const totalCount = await prisma.kPI.count({
+      where: whereCondition,
+    })
 
     const rawKpis = await prisma.kPI.findMany({
       where: whereCondition,
@@ -107,12 +114,25 @@ export const getAllKPI = async (
             },
           },
         },
-        status: true,
+        status: {
+          select: {
+            id: true,
+            name: true,
+            rules: true,
+          },
+        },
+        department: {
+          select: {
+            name: true,
+          },
+        },
       },
+      // skip: (page - 1) * limit,
+      // take: limit,
     })
 
     if (!rawKpis || rawKpis.length === 0) {
-      return []
+      return { kpis: [], totalCount: 0 }
     }
 
     // Transform the data
@@ -124,6 +144,7 @@ export const getAllKPI = async (
         KPIActual,
         KPITarget,
         tasks,
+        department,
         ...rest
       }) => ({
         ...rest,
@@ -138,10 +159,19 @@ export const getAllKPI = async (
             task.assignees.map((assignee) => assignee.fullName),
           )
           .join(', '),
+        compliance: KPICompliance.map(({ compliance }) => compliance.name).join(
+          ', ',
+        ),
+        objective: KPIObjective.map(({ objective }) => objective.name).join(
+          ', ',
+        ),
+        process: KPIProcess.map(({ process }) => process.name).join(', '),
+        department: department.name,
+        statusName: rest.status?.name,
       }),
     )
 
-    return kpis
+    return { kpis, totalCount }
   } catch (error) {
     console.error('Error fetching KPIs:', error)
     throw error
@@ -428,5 +458,65 @@ export const getKPIByIdAndYearFilter = async (id: number, year?: string) => {
     console.error('Error fetching KPI by ID:', error)
     sendError(error)
     throw new Error('Error fetching KPI by ID')
+  }
+}
+
+export const getTotalKPICount = async (
+  role: userRole,
+  organizationId?: number,
+  departmentId?: number,
+) => {
+  try {
+    let whereCondition = {}
+
+    switch (role) {
+      case 'superAdmin':
+        if (organizationId) {
+          whereCondition = {
+            department: {
+              organizationId,
+            },
+          }
+        }
+        break
+
+      case 'moderator':
+      case 'userOrganization':
+        if (!organizationId) {
+          throw new Error(
+            'Organization ID required for moderator or userOrganization',
+          )
+        }
+        whereCondition = {
+          department: {
+            organizationId,
+          },
+        }
+        break
+
+      case 'contributor':
+      case 'userDepartment':
+        if (!departmentId) {
+          throw new Error(
+            'Department ID required for contributor or userDepartment',
+          )
+        }
+        whereCondition = {
+          departmentId,
+        }
+        break
+
+      default:
+        throw new Error('Invalid role')
+    }
+
+    const count = await prisma.kPI.count({
+      where: whereCondition,
+    })
+
+    return count
+  } catch (error) {
+    console.error('Error counting KPIs:', error)
+    throw error
   }
 }

@@ -402,3 +402,13 @@ export const comparePasswords = async (
 export const generateHash = (data: Record<string, unknown>): string => {
   return createHash('sha256').update(JSON.stringify(data)).digest('hex')
 }
+
+export const findMatchingRule = (
+  actual: number,
+  target: number,
+  rules?: IRules[],
+): IRules | undefined => {
+  if (!rules?.length) return undefined
+
+  return rules.find((rule) => actual >= rule.min && actual <= rule.max)
+}

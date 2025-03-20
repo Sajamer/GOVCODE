@@ -9,12 +9,24 @@ import { useSheetStore, type SheetNames } from '@/stores/sheet-store'
 import { Priority } from '@prisma/client'
 import { ArrowUp } from 'iconsax-react'
 import _ from 'lodash'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter } from 'next/navigation'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import PriorityBadge from '../badges/PriorityBadge'
 import StatusBadge from '../badges/StatusBadge'
+import ExportButton from '../buttons/ExportButton'
+import BasicDropdown from '../dropdowns/BasicDropdown'
 import Date from './tableColumnComponents/Date'
+
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+  onPageChange: (page: number) => void
+  onItemsPerPageChange: (items: number) => void
+}
 
 interface ITableComponentProps<T extends object> {
   hasHeader?: boolean
@@ -34,6 +46,10 @@ interface ITableComponentProps<T extends object> {
   data: Array<ITableRow<T>> // Array of ITableRow objects constrained by T
   headers: Array<ITableHeader<T>>
   tableFooterStyle?: string
+  pagination?: PaginationProps
+  showExportExcel?: boolean
+  exportExcelHeaders?: Record<string, string>
+  exportFileName?: string
 }
 
 const TableComponent = <T extends object>({
@@ -46,10 +62,14 @@ const TableComponent = <T extends object>({
   actionButton,
   addProps,
   hasFooter,
-  tableActions, // Accept a function for actions
+  tableActions,
   data,
   headers,
   tableFooterStyle,
+  pagination,
+  exportExcelHeaders,
+  exportFileName,
+  showExportExcel,
 }: ITableComponentProps<T>): JSX.Element => {
   const [isPushed, setIsPushed] = useState(false)
   const tableRef = useRef<HTMLTableElement>(null)
@@ -194,6 +214,138 @@ const TableComponent = <T extends object>({
     </tr>
   )
 
+  const PaginationControls = () => {
+    if (!pagination) return null
+
+    const {
+      currentPage,
+      totalPages,
+      totalItems,
+      itemsPerPage,
+      onPageChange,
+      onItemsPerPageChange,
+    } = pagination
+
+    const itemsPerPageOptions = [
+      { id: '10', label: '10', value: '10' },
+      { id: '20', label: '20', value: '20' },
+      { id: '50', label: '50', value: '50' },
+      { id: '100', label: '100', value: '100' },
+    ]
+
+    return (
+      <div className="flex items-center justify-between py-5 gap-4">
+        <div className="flex items-center gap-4 whitespace-nowrap">
+          <p className="text-sm text-zinc-700">items per page:</p>
+          <BasicDropdown
+            data={itemsPerPageOptions}
+            triggerStyle="h-11"
+            wrapperStyle="w-16"
+            containerStyle="max-w-48 w-full"
+            placeholder="items per page"
+            defaultValue={itemsPerPageOptions.find(
+              (option) => Number(option.value) === itemsPerPage,
+            )}
+            callback={(option) => onItemsPerPageChange(Number(option.value))}
+          />
+        </div>
+        <div className="flex flex-1 justify-between sm:hidden gap-5">
+          <Button
+            variant="outline"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            previous
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            next
+          </Button>
+        </div>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4 whitespace-nowrap">
+            <p className="text-sm text-zinc-700">
+              showing{' '}
+              <span className="font-medium">
+                {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
+              </span>{' '}
+              to{' '}
+              <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, totalItems)}
+              </span>{' '}
+              of <span className="font-medium">{totalItems}</span> results
+            </p>
+          </div>
+
+          <nav
+            className="inline-flex gap-1 rounded-md shadow-sm"
+            aria-label="Pagination"
+          >
+            <Button
+              variant="outline"
+              className="relative inline-flex items-center rounded-l-md px-2 py-2"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <span className="sr-only">previous</span>
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </Button>
+
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum
+              if (totalPages <= 5) {
+                // Show all pages if total pages <= 5
+                pageNum = i + 1
+              } else if (currentPage <= 3) {
+                // At start, show first 5 pages
+                pageNum = i + 1
+              } else if (currentPage >= totalPages - 2) {
+                // At end, show last 5 pages
+                pageNum = totalPages - 4 + i
+              } else {
+                // In middle, show currentPage-2 to currentPage+2
+                pageNum = currentPage - 2 + i
+              }
+
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? 'default' : 'outline'}
+                  className="relative inline-flex items-center px-4 py-2 text-sm"
+                  onClick={() => onPageChange(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              )
+            })}
+
+            <Button
+              variant="outline"
+              className="relative inline-flex items-center rounded-r-md px-2 py-2"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <span className="sr-only">next</span>
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </Button>
+          </nav>
+
+          {showExportExcel && data && data?.length > 0 && (
+            <ExportButton
+              data={data}
+              name={exportFileName || 'gov-code'}
+              headers={exportExcelHeaders}
+            />
+          )}
+        </div>
+      </div>
+    )
+  }
+
   useEffect(() => {
     checkHorizontalScroll()
     window.addEventListener('resize', checkHorizontalScroll)
@@ -318,40 +470,43 @@ const TableComponent = <T extends object>({
                 </tbody>
               </table>
             </div>
-            {hasFooter && (
-              <div
-                className={cn(
-                  'flex w-full items-center justify-center pb-2.5',
-                  tableFooterStyle,
-                )}
-              >
-                <Button
-                  variant={'ghost'}
-                  onClick={() => {
-                    openSheet({
-                      sheetToOpen: addProps?.sheetToOpen,
-                      isEdit: false,
-                    })
-                  }}
+            <div className="flex items-center justify-between w-full gap-4">
+              {hasFooter && (
+                <div
                   className={cn(
-                    'flex h-[4rem] items-center justify-center gap-[0.38rem] px-3 text-sm font-medium',
-                    hasFooter &&
-                      'font-normal group text-zinc-500 w-full flex !gap-[0.38rem] !justify-start rounded-t-none rounded-b-2xl hover:bg-zinc-50 hover:text-zinc-800',
+                    'flex items-center justify-center pb-2.5',
+                    tableFooterStyle,
                   )}
                 >
-                  <Icons.Add
+                  <Button
+                    variant={'ghost'}
+                    onClick={() => {
+                      openSheet({
+                        sheetToOpen: addProps?.sheetToOpen,
+                        isEdit: false,
+                      })
+                    }}
                     className={cn(
-                      'size-4 min-h-4 min-w-4 text-zinc-0',
+                      'flex h-[4rem] items-center justify-center gap-[0.38rem] px-3 text-sm font-medium',
                       hasFooter &&
-                        'text-zinc-500 transition-colors group-hover:text-zinc-800',
+                        'font-normal group text-zinc-500 w-full flex !gap-[0.38rem] !justify-start rounded-t-none rounded-b-2xl hover:bg-zinc-50 hover:text-zinc-800',
                     )}
-                  />
-                  <span className={cn(!hasFooter && 'hidden md:block')}>
-                    {addProps?.label}
-                  </span>
-                </Button>
-              </div>
-            )}
+                  >
+                    <Icons.Add
+                      className={cn(
+                        'size-4 min-h-4 min-w-4 text-zinc-0',
+                        hasFooter &&
+                          'text-zinc-500 transition-colors group-hover:text-zinc-800',
+                      )}
+                    />
+                    <span className={cn(!hasFooter && 'hidden md:block')}>
+                      {addProps?.label}
+                    </span>
+                  </Button>
+                </div>
+              )}
+              {pagination && <PaginationControls />}
+            </div>
           </div>
         </CardContent>
       </Card>

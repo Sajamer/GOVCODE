@@ -184,8 +184,8 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
           <div className="flex w-full flex-col items-center text-sm">
             <div className="flex w-full items-center gap-4 text-sm">
               <span className="w-full">Label</span>
-              <span className="w-full">Min</span>
-              <span className="w-full">Max</span>
+              <span className="w-full">Min &gt;=</span>
+              <span className="w-full">Max &lt;=</span>
               <span className="w-40">Color</span>
               <span className="w-20"></span>
             </div>

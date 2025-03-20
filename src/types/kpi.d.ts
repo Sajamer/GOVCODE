@@ -84,6 +84,10 @@ export interface IKpiResponse extends KPI {
   actuals: IKpiActualTarget[]
   tasks: ITaskManagementResponse[]
   assignTo: string
+  compliance: string
+  process: string
+  objective: string
+  department: string
   [key: string]: unknown
 }
 

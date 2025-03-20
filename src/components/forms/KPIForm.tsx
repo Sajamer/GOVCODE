@@ -168,8 +168,12 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     onSuccess: (newKPI) => {
       queryClient.setQueryData(
         ['kpis', userData?.role, organizationId, departmentId],
-        (oldData: IKpiManipulator[] | undefined) => {
-          return oldData ? [...oldData, newKPI] : [newKPI]
+        (oldData: { kpis: IKpiResponse[]; totalCount: number } | undefined) => {
+          if (!oldData) return { kpis: [newKPI], totalCount: 1 }
+          return {
+            kpis: [...oldData.kpis, newKPI],
+            totalCount: oldData.totalCount + 1,
+          }
         },
       )
       toast({
@@ -193,21 +197,23 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
     onSuccess: (updatedKPI, id) => {
       queryClient.setQueryData(
         ['kpis', userData?.role, organizationId, departmentId],
-        (oldData: IKpiResponse[] | undefined) => {
-          if (!oldData) return []
+        (oldData: { kpis: IKpiResponse[]; totalCount: number } | undefined) => {
+          if (!oldData) return { kpis: [], totalCount: 0 }
 
-          return oldData.map((kpi) => {
-            if (kpi.id === id) {
-              return {
-                ...kpi,
-                ...updatedKPI,
+          return {
+            ...oldData,
+            kpis: oldData.kpis.map((kpi) => {
+              if (kpi.id === id) {
+                return {
+                  ...kpi,
+                  ...updatedKPI,
+                }
               }
-            }
-            return kpi
-          })
+              return kpi
+            }),
+          }
         },
       )
-
       toast({
         variant: 'success',
         title: 'Success',
