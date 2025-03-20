@@ -37,7 +37,7 @@ const IconTitleDescription: FC<IIconTitleDescriptionProps> = ({
         <h4 className="text-base font-semibold text-zinc-800 md:text-xl">
           {t(`${title?.toLowerCase()}`)}{' '}
           {total && (
-            <span className="text-xs rounded-full px-2 py-1 bg-primary text-white">
+            <span className="rounded-full bg-primary px-2 py-1 text-xs text-white">
               {total}
             </span>
           )}

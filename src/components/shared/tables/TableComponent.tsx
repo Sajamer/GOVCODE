@@ -234,7 +234,7 @@ const TableComponent = <T extends object>({
     ]
 
     return (
-      <div className="flex items-center justify-between py-5 gap-4">
+      <div className="flex items-center justify-between gap-4 py-5">
         <div className="flex items-center gap-4 whitespace-nowrap">
           <p className="text-sm text-zinc-700">items per page:</p>
           <BasicDropdown
@@ -249,7 +249,7 @@ const TableComponent = <T extends object>({
             callback={(option) => onItemsPerPageChange(Number(option.value))}
           />
         </div>
-        <div className="flex flex-1 justify-between sm:hidden gap-5">
+        <div className="flex flex-1 justify-between gap-5 sm:hidden">
           <Button
             variant="outline"
             onClick={() => onPageChange(currentPage - 1)}
@@ -265,7 +265,7 @@ const TableComponent = <T extends object>({
             next
           </Button>
         </div>
-        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between gap-4">
+        <div className="hidden gap-4 sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div className="flex items-center gap-4 whitespace-nowrap">
             <p className="text-sm text-zinc-700">
               showing{' '}
@@ -286,12 +286,12 @@ const TableComponent = <T extends object>({
           >
             <Button
               variant="outline"
-              className="relative inline-flex items-center rounded-l-md px-2 py-2"
+              className="relative inline-flex items-center rounded-l-md p-2"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
               <span className="sr-only">previous</span>
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              <ChevronLeft className="size-5" aria-hidden="true" />
             </Button>
 
             {/* Page numbers */}
@@ -325,12 +325,12 @@ const TableComponent = <T extends object>({
 
             <Button
               variant="outline"
-              className="relative inline-flex items-center rounded-r-md px-2 py-2"
+              className="relative inline-flex items-center rounded-r-md p-2"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
               <span className="sr-only">next</span>
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              <ChevronRight className="size-5" aria-hidden="true" />
             </Button>
           </nav>
 
@@ -470,7 +470,7 @@ const TableComponent = <T extends object>({
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between w-full gap-4">
+            <div className="flex w-full items-center justify-between gap-4">
               {hasFooter && (
                 <div
                   className={cn(

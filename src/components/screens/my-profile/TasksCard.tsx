@@ -31,7 +31,7 @@ const TasksCard: FC<ITasksCardProps> = ({
         </span>
         <div className="flex w-full flex-col items-start justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <StatusBadge status={status} />
+            <StatusBadge status={status.name} />
             <StatusBadge status={priority} />
           </div>
           {dueDate && (

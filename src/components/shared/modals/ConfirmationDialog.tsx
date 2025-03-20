@@ -46,7 +46,7 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
         )
       case 'success':
         return (
-          <div className="flex size-12 items-center justify-center rounded-full bg-success/20">
+          <div className="bg-success/20 flex size-12 items-center justify-center rounded-full">
             <CircleCheck className="text-success" />
           </div>
         )

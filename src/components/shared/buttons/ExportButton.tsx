@@ -68,7 +68,7 @@ const ExportButton: FC<IExportButtonProps> = ({ data, name, headers }) => {
   return (
     <Button
       variant="secondary"
-      className="flex size-[2.375rem] items-center justify-center !gap-1 px-3 !py-0 lg:h-9 lg:w-fit"
+      className="flex size-[2.375rem] items-center justify-center !gap-1 !py-0 px-3 lg:h-9 lg:w-fit"
       onClick={handleDownload}
     >
       <Download size="16" className="text-primary-foreground" />
