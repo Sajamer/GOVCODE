@@ -101,19 +101,20 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
   return (
     <div className="max-w-full overflow-x-auto">
       <table className="relative min-w-full border-collapse">
-        <div className="absolute left-5 top-5 flex items-center gap-2 px-4">
-          <span className="text-xl font-semibold underline">
-            Show Custom Status
-          </span>
-          <Switch
-            id="status-switch"
-            checked={showCustomStatus}
-            onCheckedChange={setShowCustomStatus}
-          />
-        </div>
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-300">
-            <th />
+            <th>
+              <div className="absolute left-5 top-5 flex items-center gap-2 px-4">
+                <span className="text-xl font-semibold underline">
+                  Show Custom Status
+                </span>
+                <Switch
+                  id="status-switch"
+                  checked={showCustomStatus}
+                  onCheckedChange={setShowCustomStatus}
+                />
+              </div>
+            </th>
             <th />
             <th />
             <th />
