@@ -117,8 +117,8 @@ model Status {
 
 model Rule {
   id    Int    @id @default(autoincrement())
-  min   Int
-  max   Int
+  min   Float
+  max   Float
   label String
   color String
 

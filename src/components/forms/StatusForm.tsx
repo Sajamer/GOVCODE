@@ -225,6 +225,7 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
                       type="number"
                       min={0}
                       name={`rules[${index}].min`}
+                      step="any"
                       value={rule.min}
                       onChange={(e) =>
                         handleRuleChange(index, 'min', e.target.value)
@@ -240,6 +241,7 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
                       type="number"
                       min={0 || rule.min} // Set minimum value based on current min
                       name={`rules[${index}].max`}
+                      step="any"
                       value={rule.max}
                       onChange={(e) =>
                         handleRuleChange(index, 'max', e.target.value)

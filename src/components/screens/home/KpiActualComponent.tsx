@@ -163,6 +163,7 @@ const KpiActualComponent: FC<IKpiActualComponentProps> = ({ data }) => {
                       id={`${year}-${period}`}
                       type="number"
                       min={0}
+                      step="any"
                       placeholder="Target"
                       className="max-w-28"
                       disabled={isPending || !hasPermission}
