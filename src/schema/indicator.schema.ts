@@ -3,6 +3,7 @@ import { z } from 'zod'
 const FieldSchema = z.object({
   attributeName: z.string(),
   value: z.string().optional(),
+  type: z.string(), // MongoDB ObjectId as string
 })
 
 const LevelSchema = z.object({

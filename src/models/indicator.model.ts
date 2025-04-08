@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 const FieldSchema = new mongoose.Schema({
   attributeName: { type: String, required: true },
   value: { type: String },
+  type: { type: mongoose.Schema.Types.ObjectId, ref: 'AttributeType', required: true },
 })
 
 const LevelSchema = new mongoose.Schema({

@@ -1,9 +1,31 @@
 'use server'
 
 import Indicator from '@/models/indicator.model'
+import AttributeType from '@/models/attributeType.model'
 import { IIndicatorManipulator } from '@/schema/indicator.schema'
 import connectToMongoDB from '../mongodb'
 import { sendError } from '../utils'
+
+interface IAttributeType {
+  _id: string
+  name: string
+  description?: string
+}
+
+export const getAttributeTypes = async (): Promise<IAttributeType[]> => {
+  try {
+    await connectToMongoDB()
+    const types = await AttributeType.find({}).lean()
+    return types.map(type => ({
+      _id: String(type._id),
+      name: type.name,
+      description: type.description
+    }))
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while fetching attribute types')
+  }
+}
 
 export const getAllIndicators = async (
   searchParams?: Record<string, string>,

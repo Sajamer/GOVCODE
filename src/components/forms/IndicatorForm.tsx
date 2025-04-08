@@ -2,22 +2,23 @@
 'use client'
 
 import { toast } from '@/hooks/use-toast'
-import { createIndicator } from '@/lib/actions/indicator.actions'
+import { createIndicator, getAttributeTypes } from '@/lib/actions/indicator.actions'
 import { transformIndicatorFormData } from '@/lib/transformers'
 import {
   IIndicatorManipulator,
   indicatorSchema,
 } from '@/schema/indicator.schema'
 import { useSheetStore } from '@/stores/sheet-store'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useFormik } from 'formik'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { FC, useEffect } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import LabeledInput from '../shared/inputs/LabeledInput'
 import LabeledTextArea from '../shared/textArea/LabeledTextArea'
 import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 
 interface IIndicatorFormProps {
   data?: unknown
@@ -27,8 +28,11 @@ interface IDynamicFieldProps {
   levelIndex: number
   fieldIndex: number
   getFieldProps: ReturnType<typeof useFormik>['getFieldProps']
+  setFieldValue: (field: string, value: any) => void
   touched: Record<string, any>
   errors: Record<string, any>
+  onDelete: () => void
+  totalFields: number
 }
 
 interface ILevelComponentProps {
@@ -40,15 +44,29 @@ interface ILevelComponentProps {
   setFieldValue: (field: string, value: any) => void
 }
 
+interface IAttributeType {
+  _id: string
+  name: string
+  description?: string
+}
+
 const DynamicField: FC<IDynamicFieldProps> = ({
   levelIndex,
   fieldIndex,
   getFieldProps,
+  setFieldValue,
   touched,
   errors,
+  onDelete,
+  totalFields
 }) => {
+  const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
+    queryKey: ['attributeTypes'],
+    queryFn: getAttributeTypes
+  })
+
   return (
-    <div className="mb-4 flex gap-4">
+    <div className="mb-4 flex items-center gap-4">
       <LabeledInput
         label={`Field ${fieldIndex + 1} Name`}
         placeholder="Enter attribute name"
@@ -62,6 +80,27 @@ const DynamicField: FC<IDynamicFieldProps> = ({
             : ''
         }
       />
+      <div className="flex flex-col gap-1">
+        <label className="text-neutral-800 font-medium text-sm">Type</label>
+        <Select
+          value={getFieldProps(`levels.${levelIndex}.fields.${fieldIndex}.type`).value}
+          onValueChange={(value) => 
+            setFieldValue(`levels.${levelIndex}.fields.${fieldIndex}.type`, value)
+          }
+        >
+          <SelectTrigger className="w-52 h-11">
+            <SelectValue placeholder="Select type"/>
+          </SelectTrigger>
+          <SelectContent>
+            {attributeTypes.map((type) => (
+              <SelectItem key={type._id} value={type._id}>
+                {type.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
       <LabeledInput
         label="Value (optional)"
         placeholder="Enter value"
@@ -73,6 +112,17 @@ const DynamicField: FC<IDynamicFieldProps> = ({
             : ''
         }
       />
+      {totalFields > 1 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="mt-6 hover:bg-destructive/10 hover:text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      )}
     </div>
   )
 }
@@ -93,6 +143,14 @@ const LevelComponent: FC<ILevelComponentProps> = ({
       { attributeName: '', value: '' },
     ])
   }
+
+  const deleteField = (fieldIndex: number) => {
+    const currentFields = values.levels?.[levelIndex]?.fields ?? []
+    const updatedFields = currentFields.filter((_, index) => index !== fieldIndex)
+    setFieldValue(`levels.${levelIndex}.fields`, updatedFields)
+  }
+
+  const currentFields = values.levels?.[levelIndex]?.fields ?? []
 
   return (
     <div className="mb-6 rounded-lg border-2 p-4">
@@ -121,14 +179,17 @@ const LevelComponent: FC<ILevelComponentProps> = ({
           </Button>
         </div>
         {/* Add null check and default to empty array */}
-        {(values.levels?.[levelIndex]?.fields ?? []).map((_, fieldIndex) => (
+        {currentFields.map((_, fieldIndex) => (
           <DynamicField
             key={fieldIndex}
             levelIndex={levelIndex}
             fieldIndex={fieldIndex}
             getFieldProps={getFieldProps}
+            setFieldValue={setFieldValue}
             touched={touched}
             errors={errors}
+            onDelete={() => deleteField(fieldIndex)}
+            totalFields={currentFields.length}
           />
         ))}
       </div>
@@ -173,7 +234,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
       .map(() => ({
         levelName: '',
         fields: [
-          { attributeName: '', value: '' }, // Start with just one field
+          { attributeName: '', value: '', type: '' }, // Added type field
         ],
       }))
     setFieldValue('levels', levels)

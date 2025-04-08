@@ -10,6 +10,7 @@ export const transformIndicatorFormData = (formData: IIndicatorManipulator) => {
       fields: level.fields.map((field) => ({
         attributeName: field.attributeName,
         value: field.value,
+        type: field.type
       })),
     })),
   }

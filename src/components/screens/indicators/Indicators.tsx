@@ -58,7 +58,8 @@ const Indicators: FC = () => {
               ? `${t('edit')} ${localizedTitle} ${t('here')}`
               : `${t('define-new')} ${localizedTitle}`
           }
-        >
+          className='w-full !max-w-[70vw]'        
+          >
           <IndicatorForm data={[]} />
         </SheetComponent>
         {hasPermission && (
