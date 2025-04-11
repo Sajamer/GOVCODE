@@ -19,9 +19,10 @@ import LabeledInput from '../shared/inputs/LabeledInput'
 import LabeledTextArea from '../shared/textArea/LabeledTextArea'
 import { Button } from '../ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { IMongoIndicator } from '@/types/indicator'
 
 interface IIndicatorFormProps {
-  data?: unknown
+  data?: IMongoIndicator
 }
 
 interface IDynamicFieldProps {
@@ -228,6 +229,15 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
     setFieldValue,
   } = formik
 
+  const handleNumberOfLevelsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value)
+    if (isNaN(value)) {
+      setFieldValue('numberOfLevels', 0)
+    } else {
+      setFieldValue('numberOfLevels', Math.min(Math.max(value, 0), 5))
+    }
+  }
+
   useEffect(() => {
     const levels = Array(Number(values.numberOfLevels))
       .fill(null)
@@ -292,6 +302,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
           max={5}
           placeholder={'Enter number of levels'}
           {...getFieldProps('numberOfLevels')}
+          onChange={handleNumberOfLevelsChange}
           error={
             touched.numberOfLevels && errors.numberOfLevels
               ? errors.numberOfLevels

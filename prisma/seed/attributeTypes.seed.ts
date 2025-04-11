@@ -6,10 +6,9 @@ const attributeTypes = [
   { name: 'number', description: 'Numeric value' },
   { name: 'text', description: 'Text value' },
   { name: 'Yes/No', description: 'Boolean value' },
-  { name: 'Object', description: 'Object value' },
   { name: 'Attachment', description: 'File attachment' },
+  { name: 'Object', description: 'Object value' },
   { name: 'Array', description: 'Array of values' },
-  { name: 'List', description: 'Comma-separated list of values' },
 ]
 
 export async function seedAttributeTypes() {

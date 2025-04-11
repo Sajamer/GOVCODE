@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Indicators from '@/components/screens/indicators/Indicators'
+import { getAllIndicators } from '@/lib/actions/indicator.actions'
+import {  dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
 import { getMessages } from 'next-intl/server'
 
 export async function generateMetadata({
@@ -16,6 +18,18 @@ export async function generateMetadata({
   }
 }
 
+const queryClient = new QueryClient()
+
 export default async function IndicatorsPage() {
-  return <Indicators />
+
+    await queryClient.prefetchQuery({
+      queryKey: ['indicators'],
+      queryFn: async () => await getAllIndicators(),
+    })
+
+  return  (
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <Indicators />
+        </HydrationBoundary>
+  )
 }
