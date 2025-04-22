@@ -88,14 +88,6 @@ const LevelComponent: FC<ILevelComponentProps> = ({
   // Calculate if we can add more sublevels based on current depth and total allowed levels
   const canAddSubLevel = depth < (totalAllowedLevels ?? 1) - 1
 
-  const addField = (): void => {
-    const currentFields = currentLevel?.fields ?? []
-    setFieldValue(`${currentPath}.fields`, [
-      ...currentFields,
-      { attributeName: '', value: '', type: '' },
-    ])
-  }
-
   const addSubLevel = (): void => {
     const currentSubLevels = currentLevel?.subLevels ?? []
     const newSubLevel = {
@@ -106,12 +98,6 @@ const LevelComponent: FC<ILevelComponentProps> = ({
     }
     
     setFieldValue(`${currentPath}.subLevels`, [...currentSubLevels, newSubLevel])
-  }
-
-  const deleteField = (fieldIndex: number): void => {
-    const currentFields = currentLevel?.fields ?? []
-    const updatedFields = currentFields.filter((_: IField, index: number) => index !== fieldIndex)
-    setFieldValue(`${currentPath}.fields`, updatedFields)
   }
 
   return (
@@ -519,8 +505,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
           
           return (
             <div key={currentPath} className="mb-6 rounded-lg border-2 p-4" style={{ marginLeft: `${(levelPaths.length - 1) * 32}px` }}>
-              <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>
-              {level.fields.map((field: IField, fieldIndex: number) => (
+              <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>              {level.fields.map((field: IField, fieldIndex: number) => (
                 <DynamicField
                   key={fieldIndex}
                   levelIndex={levelPaths}
@@ -538,7 +523,24 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
                   currentPath={currentPath}
                 />
               ))}
-              {level.subLevels?.map((subLevel: ILevel, subIndex: number) => 
+              <div className="flex justify-end mb-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const currentFields = [...level.fields];
+                    setFieldValue(`${currentPath}.fields`, [
+                      ...currentFields,
+                      { attributeName: '', value: '', type: '' }
+                    ]);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="size-4" /> Add Field
+                </Button>
+              </div>
+              {level.subLevels?.map((subLevel: ILevel, subIndex: number) =>
                 renderLevel(subLevel, [...levelPaths, subIndex])
               )}
             </div>
