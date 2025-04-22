@@ -73,20 +73,20 @@ const LevelComponent: FC<ILevelComponentProps> = ({
   totalAllowedLevels = 1
 }) => {
   const [isExpanded, setIsExpanded] = useState(true)
-  const currentPath = `${parentPath}.${levelIndex.join('.subLevels.')}`
-  const currentLevel = levelIndex.reduce((acc: any, idx: number) => {
-    if (!acc) return undefined
-    if (acc.levels) {
-      return acc.levels[idx]
-    }
-    if (acc.subLevels && acc.subLevels[idx]) {
-      return acc.subLevels[idx]
-    }
-    return acc[idx]
-  }, values)
+  
+  // Build the path based on the level index
+  const currentPath = levelIndex.length === 1 
+    ? `levels.${levelIndex[0]}` 
+    : `levels.${levelIndex[0]}.subLevels.${levelIndex.slice(1).join('.subLevels.')}`
+
+  // Get current level data
+  let currentLevel = values.levels[levelIndex[0]]
+  for (let i = 1; i < levelIndex.length; i++) {
+    currentLevel = currentLevel?.subLevels?.[levelIndex[i]]
+  }
 
   // Calculate if we can add more sublevels based on current depth and total allowed levels
-  const canAddSubLevel = depth < totalAllowedLevels - 1 && depth < 4
+  const canAddSubLevel = depth < (totalAllowedLevels ?? 1) - 1
 
   const addField = (): void => {
     const currentFields = currentLevel?.fields ?? []
@@ -114,10 +114,6 @@ const LevelComponent: FC<ILevelComponentProps> = ({
     setFieldValue(`${currentPath}.fields`, updatedFields)
   }
 
-  const getFieldValue = (path: string): any => {
-    return getFieldProps(path).value
-  }
-
   return (
     <div className="mb-6 rounded-lg border-2 p-4" style={{ marginLeft: `${depth * 20}px` }}>
       <div className="flex items-center gap-2 mb-4">
@@ -131,7 +127,7 @@ const LevelComponent: FC<ILevelComponentProps> = ({
           {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         </Button>
         <LabeledInput
-          label={`Level ${levelNumber} Name`}
+          label={`Level ${depth === 0 ? '1.' + (levelIndex[0] + 1) : (depth + 1) + '.' + (levelIndex[levelIndex.length - 1] + 1)} Name`}
           placeholder="Enter level name"
           {...getFieldProps(`${currentPath}.levelName`)}
           error={getNestedError(errors as NestedErrors, `${currentPath}.levelName`)}
@@ -141,75 +137,32 @@ const LevelComponent: FC<ILevelComponentProps> = ({
       {isExpanded && (
         <>
           <div className="my-4 w-full flex justify-end">
-          {canAddSubLevel && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addSubLevel}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="size-4" /> Add Sub-Level
-                  </Button>
-                )}
-            <div className="mb-2 flex items-center justify-between">
-              {/* <h4 className="mb-2 font-semibold underline">Fields:</h4> */}
-              {/* <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addField}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="size-4" /> Add Field
-                </Button> */}
-                {/* {canAddSubLevel && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addSubLevel}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="size-4" /> Add Sub-Level
-                  </Button>
-                )} */}
-              {/* </div> */}
-            </div>
-            {/* {(currentLevel?.fields ?? []).map((_: IField, fieldIndex: number) => (
-              <DynamicField
-                key={fieldIndex}
-                levelIndex={levelIndex}
-                fieldIndex={fieldIndex}
-                getFieldProps={getFieldProps}
-                setFieldValue={setFieldValue}
-                touched={touched}
-                errors={errors}
-                onDelete={() => deleteField(fieldIndex)}
-                totalFields={currentLevel?.fields?.length ?? 0}
-                currentPath={currentPath}
-              />
-            ))} */}
+            {canAddSubLevel && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addSubLevel}
+                className="flex items-center gap-2"
+              >
+                <Plus className="size-4" /> Add Sub-Level
+              </Button>
+            )}
           </div>
 
           {(currentLevel?.subLevels ?? []).map((_: ILevel, subIndex: number) => {
-            const subLevelNumber = depth === 0 
-              ? `${levelNumber}.${subIndex + 1}` // For same level sub-levels (1.1, 1.2, etc.)
-              : `${depth + 1}` // For nested levels (2, 3, etc.)
-            
             return (
               <LevelComponent
                 key={subIndex}
                 levelIndex={[...levelIndex, subIndex]}
-                levelNumber={subLevelNumber}
+                levelNumber={(depth + 2).toString()}
                 getFieldProps={getFieldProps}
                 touched={touched}
                 errors={errors}
                 values={values}
                 setFieldValue={setFieldValue}
                 depth={depth + 1}
-                parentPath={parentPath}
+                parentPath={currentPath}
                 totalAllowedLevels={totalAllowedLevels}
               />
             )
@@ -309,6 +262,18 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
       addMutation(values)
     },
   })
+
+  const {
+    errors,
+    getFieldProps,
+    handleSubmit,
+    touched,
+    values,
+    setFieldValue,
+    validateField,
+  } = formik
+
+  // Effect to create initial level if none exists
   useEffect(() => {
     if (formik.values.levels.length === 0) {
       formik.setFieldValue('levels', [
@@ -321,16 +286,31 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
       ])
     }
   }, [formik.values.levels.length, formik.setFieldValue])
-  
-  const {
-    errors,
-    getFieldProps,
-    handleSubmit,
-    touched,
-    values,
-    setFieldValue,
-    validateField,
-  } = formik
+
+  // Effect to handle numberOfLevels changes
+  useEffect(() => {
+    const prevNumberOfLevels = values.levels.reduce((maxDepth, level) => {
+      const getMaxDepth = (l: ILevel): number => {
+        if (!l.subLevels?.length) return l.depth ?? 0
+        return Math.max(...l.subLevels.map(sl => getMaxDepth(sl)))
+      }
+      return Math.max(maxDepth, getMaxDepth(level))
+    }, 0) + 1
+
+    if (prevNumberOfLevels !== values.numberOfLevels) {
+      const trimNestedLevels = (levels: ILevel[], currentDepth: number, maxDepth: number): ILevel[] => {
+        return levels.map(level => ({
+          ...level,
+          subLevels: currentDepth < maxDepth - 1 && level.subLevels?.length 
+            ? trimNestedLevels(level.subLevels, currentDepth + 1, maxDepth)
+            : []
+        }))
+      }
+
+      const trimmedLevels = trimNestedLevels(values.levels, 0, values.numberOfLevels)
+      setFieldValue('levels', trimmedLevels, false)
+    }
+  }, [values.numberOfLevels])
 
   const addTopLevel = (): void => {
     const currentLevels = values.levels ?? []
@@ -528,7 +508,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
             <h2 className="mb-4 text-xl font-bold">Field Configuration</h2>
             {values.levels.map((level: ILevel, levelIndex: number) => (
               <div key={`level-${levelIndex}`} className="mb-6 rounded-lg border-2 p-4">
-                <h3 className="mb-4 text-lg font-semibold">Level {levelIndex + 1}: {level.levelName}</h3>
+                <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>
                 {level.fields.map((field: IField, fieldIndex: number) => (
                   <DynamicField
                     key={fieldIndex}
@@ -549,7 +529,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
                 ))}
                 {level.subLevels?.map((subLevel: ILevel, subIndex: number) => (
                   <div key={`sublevel-${subIndex}`} className="ml-8 mb-6 rounded-lg border-2 p-4">
-                    <h3 className="mb-4 text-lg font-semibold">Level {levelIndex + 1}.{subIndex + 1}: {subLevel.levelName}</h3>
+                    <h3 className="mb-4 text-lg font-semibold">{subLevel.levelName}</h3>
                     {subLevel.fields.map((field: IField, fieldIndex: number) => (
                       <DynamicField
                         key={fieldIndex}
