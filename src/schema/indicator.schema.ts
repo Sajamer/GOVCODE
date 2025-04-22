@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 const FieldSchema = z.object({
   attributeName: z.string().min(1, 'Field name is required'),
-  value: z.string().optional(),
   type: z.string().min(1, 'Field type is required'),
+  value: z.string().optional(),
 })
 
 // Using recursive type for nested levels

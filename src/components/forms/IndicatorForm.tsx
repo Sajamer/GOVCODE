@@ -24,6 +24,7 @@ import { INDICATOR_FORM_STEPS } from '@/constants/stepper-constants'
 import { IMongoIndicator } from '@/types/indicator'
 import { IField, ILevel } from '@/types/indicator'
 import { getNestedError } from '@/lib/utils'
+import ErrorText from '../shared/ErrorText'
 
 interface IIndicatorFormProps {
   data?: IMongoIndicator
@@ -157,7 +158,8 @@ const LevelComponent: FC<ILevelComponentProps> = ({
             return (
               <LevelComponent
                 key={subIndex}
-                levelIndex={[...levelIndex, subIndex]}                levelNumber={(depth + 2).toString()}
+                levelIndex={[...levelIndex, subIndex]}                
+                levelNumber={(depth + 2).toString()}
                 getFieldProps={getFieldProps}
                 touched={touched}
                 errors={errors}
@@ -191,24 +193,30 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   onDelete,
   totalFields,
   currentPath
-}) => {
-  const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
+}) => {  const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
     queryKey: ['attributeTypes'],
     queryFn: getAttributeTypes
   })
 
   const fieldPath = `${currentPath}.fields.${fieldIndex}`
 
+  // Transform attribute types to match Select component format
+  const transformedAttributeTypes = attributeTypes.map((type) => ({
+    _id: type._id,
+    name: type.name,
+    description: type.description
+  }))
+
   return (
     <div className="mb-4 flex items-center gap-4">
       <LabeledInput
-        label={`Field ${fieldIndex + 1} Name`}
+        label={`Field ${fieldIndex + 1} Name*`}
         placeholder="Enter attribute name"
         {...getFieldProps(`${fieldPath}.attributeName`)}
         error={getNestedError(errors as NestedErrors, `${fieldPath}.attributeName`)}
       />
-      <div className="flex flex-col gap-1">
-        <label className="text-neutral-800 font-medium text-sm">Type</label>
+      <div className="relative flex flex-col gap-1">
+        <label className="text-neutral-800 font-medium text-sm">Type*</label>
         <Select
           value={getFieldProps(`${fieldPath}.type`).value}
           onValueChange={(value) => 
@@ -219,13 +227,14 @@ const DynamicField: FC<IDynamicFieldProps> = ({
             <SelectValue placeholder="Select type"/>
           </SelectTrigger>
           <SelectContent>
-            {attributeTypes.map((type) => (
+            {transformedAttributeTypes.map((type) => (
               <SelectItem key={type._id} value={type._id}>
                 {type.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        {getNestedError(errors as NestedErrors, `${fieldPath}.type`) && <ErrorText error={getNestedError(errors as NestedErrors, `${fieldPath}.type`)} />}
       </div>
       
       <LabeledInput
