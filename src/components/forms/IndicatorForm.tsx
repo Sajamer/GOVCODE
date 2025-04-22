@@ -52,6 +52,8 @@ interface ILevelComponentProps {
   depth?: number
   parentPath?: string
   totalAllowedLevels?: number
+  onDelete?: () => void
+  showDelete?: boolean
 }
 
 interface IAttributeType {
@@ -70,7 +72,9 @@ const LevelComponent: FC<ILevelComponentProps> = ({
   setFieldValue,
   depth = 0,
   parentPath = 'levels',
-  totalAllowedLevels = 1
+  totalAllowedLevels = 1,
+  onDelete,
+  showDelete = true
 }) => {
   const [isExpanded, setIsExpanded] = useState(true)
   
@@ -112,12 +116,25 @@ const LevelComponent: FC<ILevelComponentProps> = ({
         >
           {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         </Button>
-        <LabeledInput
-          label={`Level ${depth === 0 ? '1.' + (levelIndex[0] + 1) : (depth + 1) + '.' + (levelIndex[levelIndex.length - 1] + 1)} Name`}
-          placeholder="Enter level name"
-          {...getFieldProps(`${currentPath}.levelName`)}
-          error={getNestedError(errors as NestedErrors, `${currentPath}.levelName`)}
-        />
+        <div className="flex-1">
+          <LabeledInput
+            label={`Level ${depth === 0 ? '1.' + (levelIndex[0] + 1) : (depth + 1) + '.' + (levelIndex[levelIndex.length - 1] + 1)} Name`}
+            placeholder="Enter level name"
+            {...getFieldProps(`${currentPath}.levelName`)}
+            error={getNestedError(errors as NestedErrors, `${currentPath}.levelName`)}
+          />
+        </div>
+        {showDelete && onDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="mt-6 hover:bg-destructive/10 hover:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        )}
       </div>
 
       {isExpanded && (
@@ -140,8 +157,7 @@ const LevelComponent: FC<ILevelComponentProps> = ({
             return (
               <LevelComponent
                 key={subIndex}
-                levelIndex={[...levelIndex, subIndex]}
-                levelNumber={(depth + 2).toString()}
+                levelIndex={[...levelIndex, subIndex]}                levelNumber={(depth + 2).toString()}
                 getFieldProps={getFieldProps}
                 touched={touched}
                 errors={errors}
@@ -150,6 +166,12 @@ const LevelComponent: FC<ILevelComponentProps> = ({
                 depth={depth + 1}
                 parentPath={currentPath}
                 totalAllowedLevels={totalAllowedLevels}
+                showDelete={depth > 0 ? true : currentLevel?.subLevels?.length > 1}
+                onDelete={() => {
+                  const newSubLevels = [...(currentLevel?.subLevels ?? [])]
+                  newSubLevels.splice(subIndex, 1)
+                  setFieldValue(`${currentPath}.subLevels`, newSubLevels)
+                }}
               />
             )
           })}
@@ -492,7 +514,13 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
                 errors={errors}
                 values={values}
                 setFieldValue={setFieldValue}
-                totalAllowedLevels={values.numberOfLevels} // Use the user-specified number of levels
+                totalAllowedLevels={values.numberOfLevels}
+                showDelete={values.levels.length > 1}
+                onDelete={() => {
+                  const newLevels = [...values.levels];
+                  newLevels.splice(index, 1);
+                  setFieldValue('levels', newLevels);
+                }}
               />
             ))}
           </div>
