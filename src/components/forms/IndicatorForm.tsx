@@ -510,61 +510,52 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
               />
             ))}
           </div>
-        )
-      case 2:
+        )     
+        case 2: {
+        const renderLevel = (level: ILevel, levelPaths: number[]) => {
+          const currentPath = levelPaths.length === 1 
+            ? `levels.${levelPaths[0]}` 
+            : `levels.${levelPaths[0]}.subLevels.${levelPaths.slice(1).join('.subLevels.')}`;
+          
+          return (
+            <div key={currentPath} className="mb-6 rounded-lg border-2 p-4" style={{ marginLeft: `${(levelPaths.length - 1) * 32}px` }}>
+              <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>
+              {level.fields.map((field: IField, fieldIndex: number) => (
+                <DynamicField
+                  key={fieldIndex}
+                  levelIndex={levelPaths}
+                  fieldIndex={fieldIndex}
+                  getFieldProps={getFieldProps}
+                  setFieldValue={setFieldValue}
+                  touched={touched}
+                  errors={errors}
+                  onDelete={() => {
+                    const currentFields = [...level.fields];
+                    currentFields.splice(fieldIndex, 1);
+                    setFieldValue(`${currentPath}.fields`, currentFields);
+                  }}
+                  totalFields={level.fields.length}
+                  currentPath={currentPath}
+                />
+              ))}
+              {level.subLevels?.map((subLevel: ILevel, subIndex: number) => 
+                renderLevel(subLevel, [...levelPaths, subIndex])
+              )}
+            </div>
+          );
+        };
+
         return (
           <div className="w-full">
             <h2 className="mb-4 text-xl font-bold">Field Configuration</h2>
-            {values.levels.map((level: ILevel, levelIndex: number) => (
-              <div key={`level-${levelIndex}`} className="mb-6 rounded-lg border-2 p-4">
-                <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>
-                {level.fields.map((field: IField, fieldIndex: number) => (
-                  <DynamicField
-                    key={fieldIndex}
-                    levelIndex={[levelIndex]}
-                    fieldIndex={fieldIndex}
-                    getFieldProps={getFieldProps}
-                    setFieldValue={setFieldValue}
-                    touched={touched}
-                    errors={errors}
-                    onDelete={() => {
-                      const currentFields = [...level.fields]
-                      currentFields.splice(fieldIndex, 1)
-                      setFieldValue(`levels.${levelIndex}.fields`, currentFields)
-                    }}
-                    totalFields={level.fields.length}
-                    currentPath={`levels.${levelIndex}`}
-                  />
-                ))}
-                {level.subLevels?.map((subLevel: ILevel, subIndex: number) => (
-                  <div key={`sublevel-${subIndex}`} className="ml-8 mb-6 rounded-lg border-2 p-4">
-                    <h3 className="mb-4 text-lg font-semibold">{subLevel.levelName}</h3>
-                    {subLevel.fields.map((field: IField, fieldIndex: number) => (
-                      <DynamicField
-                        key={fieldIndex}
-                        levelIndex={[levelIndex, subIndex]}
-                        fieldIndex={fieldIndex}
-                        getFieldProps={getFieldProps}
-                        setFieldValue={setFieldValue}
-                        touched={touched}
-                        errors={errors}
-                        onDelete={() => {
-                          const currentFields = [...subLevel.fields]
-                          currentFields.splice(fieldIndex, 1)
-                          setFieldValue(`levels.${levelIndex}.subLevels.${subIndex}.fields`, currentFields)
-                        }}
-                        totalFields={subLevel.fields.length}
-                        currentPath={`levels.${levelIndex}.subLevels.${subIndex}`}
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ))}
+            {values.levels.map((level: ILevel, index: number) => 
+              renderLevel(level, [index])
+            )}
           </div>
-        )
+        );
+      }
       default:
-        return null
+        return null;
     }
   }
 
