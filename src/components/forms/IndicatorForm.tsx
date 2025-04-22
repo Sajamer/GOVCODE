@@ -461,14 +461,23 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
               error={
                 touched.description && errors.description ? errors.description : ''
               }
-            />
-            <LabeledInput
+            />            <LabeledInput
               label={'How many depth levels this indicator can have?'}
               type="number"
               min={1}
               max={5}
               placeholder={'Enter number of depth levels'}
               {...getFieldProps('numberOfLevels')}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (value > 5) {
+                  setFieldValue('numberOfLevels', 5);
+                } else if (value < 1) {
+                  setFieldValue('numberOfLevels', 1);
+                } else {
+                  setFieldValue('numberOfLevels', value);
+                }
+              }}
               error={touched.numberOfLevels && errors.numberOfLevels ? errors.numberOfLevels : ''}
             />
           </div>
