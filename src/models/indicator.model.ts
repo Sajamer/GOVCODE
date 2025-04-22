@@ -9,6 +9,9 @@ const FieldSchema = new mongoose.Schema({
 const LevelSchema = new mongoose.Schema({
   levelName: { type: String, required: true },
   fields: [FieldSchema],
+  subLevels: [{ type: mongoose.Schema.ObjectId, ref: 'Level' }], // Reference to nested levels
+  parentLevel: { type: mongoose.Schema.ObjectId, ref: 'Level', default: null }, // Reference to parent level
+  depth: { type: Number, default: 0 }, // Track the nesting depth
 })
 
 const IndicatorSchema = new mongoose.Schema(
@@ -23,7 +26,8 @@ const IndicatorSchema = new mongoose.Schema(
   },
 )
 
-const Indicator =
-  mongoose.models.Indicator || mongoose.model('Indicator', IndicatorSchema)
+const Level = mongoose.models.Level || mongoose.model('Level', LevelSchema)
+const Indicator = mongoose.models.Indicator || mongoose.model('Indicator', IndicatorSchema)
 
+export { Level }
 export default Indicator

@@ -1,3 +1,5 @@
+import { Types } from 'mongoose'
+
 export interface IField {
   attributeName: string
   value?: string
@@ -7,6 +9,9 @@ export interface IField {
 export interface ILevel {
   levelName: string
   fields: IField[]
+  subLevels: ILevel[]
+  parentLevel?: string // MongoDB ObjectId as string
+  depth: number
 }
 
 export interface IIndicatorResponse {
@@ -28,6 +33,9 @@ export interface IMongoLevel {
   _id: Types.ObjectId
   levelName: string
   fields: IMongoField[]
+  subLevels: Types.ObjectId[] | IMongoLevel[]
+  parentLevel?: Types.ObjectId
+  depth: number
 }
 
 export interface IMongoIndicator {

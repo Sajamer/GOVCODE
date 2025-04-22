@@ -78,3 +78,7 @@ interface IEmailOptions {
   cc?: string // Optional CC field
   bcc?: string // Optional BCC field
 }
+
+interface NestedErrors {
+  [key: string]: string | NestedErrors | NestedErrors[]
+}
