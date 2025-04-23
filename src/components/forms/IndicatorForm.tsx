@@ -1,41 +1,50 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
+import { INDICATOR_FORM_STEPS } from '@/constants/stepper-constants'
 import { toast } from '@/hooks/use-toast'
-import { createIndicator, getAttributeTypes } from '@/lib/actions/indicator.actions'
+import {
+  createIndicator,
+  getAttributeTypes,
+} from '@/lib/actions/indicator.actions'
 import { transformIndicatorFormData } from '@/lib/transformers'
+import { getNestedError } from '@/lib/utils'
 import {
   IIndicatorManipulator,
   indicatorSchema,
 } from '@/schema/indicator.schema'
 import { useSheetStore } from '@/stores/sheet-store'
-import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { IField, ILevel, IMongoIndicator } from '@/types/indicator'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { FC, useEffect, useState } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
+import ErrorText from '../shared/ErrorText'
 import LabeledInput from '../shared/inputs/LabeledInput'
+import StepperIndicator from '../shared/stepper/StepperIndicator'
 import LabeledTextArea from '../shared/textArea/LabeledTextArea'
 import { Button } from '../ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import StepperIndicator from '../shared/stepper/StepperIndicator'
-import { INDICATOR_FORM_STEPS } from '@/constants/stepper-constants'
-import { IMongoIndicator } from '@/types/indicator'
-import { IField, ILevel } from '@/types/indicator'
-import { getNestedError } from '@/lib/utils'
-import ErrorText from '../shared/ErrorText'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select'
 
 interface IIndicatorFormProps {
   data?: IMongoIndicator
 }
 
 interface IDynamicFieldProps {
-  levelIndex: number[]
+  // levelIndex: number[]
   fieldIndex: number
   getFieldProps: ReturnType<typeof useFormik>['getFieldProps']
   setFieldValue: (field: string, value: any) => void
-  touched: Record<string, any>
+  // touched: Record<string, any>
   errors: Record<string, any>
   onDelete: () => void
   totalFields: number
@@ -44,7 +53,6 @@ interface IDynamicFieldProps {
 
 interface ILevelComponentProps {
   levelIndex: number[]
-  levelNumber: string
   getFieldProps: ReturnType<typeof useFormik>['getFieldProps']
   touched: Record<string, any>
   errors: Record<string, any>
@@ -65,24 +73,23 @@ interface IAttributeType {
 
 const LevelComponent: FC<ILevelComponentProps> = ({
   levelIndex,
-  levelNumber,
   getFieldProps,
   touched,
   errors,
   values,
   setFieldValue,
   depth = 0,
-  parentPath = 'levels',
   totalAllowedLevels = 1,
   onDelete,
-  showDelete = true
+  showDelete = true,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true)
-  
+
   // Build the path based on the level index
-  const currentPath = levelIndex.length === 1 
-    ? `levels.${levelIndex[0]}` 
-    : `levels.${levelIndex[0]}.subLevels.${levelIndex.slice(1).join('.subLevels.')}`
+  const currentPath =
+    levelIndex.length === 1
+      ? `levels.${levelIndex[0]}`
+      : `levels.${levelIndex[0]}.subLevels.${levelIndex.slice(1).join('.subLevels.')}`
 
   // Get current level data
   let currentLevel = values.levels[levelIndex[0]]
@@ -99,15 +106,21 @@ const LevelComponent: FC<ILevelComponentProps> = ({
       levelName: '',
       fields: [{ attributeName: '', value: '', type: '' }],
       subLevels: [],
-      depth: depth + 1
+      depth: depth + 1,
     }
-    
-    setFieldValue(`${currentPath}.subLevels`, [...currentSubLevels, newSubLevel])
+
+    setFieldValue(`${currentPath}.subLevels`, [
+      ...currentSubLevels,
+      newSubLevel,
+    ])
   }
 
   return (
-    <div className="mb-6 rounded-lg border-2 p-4" style={{ marginLeft: `${depth * 20}px` }}>
-      <div className="flex items-center gap-2 mb-4">
+    <div
+      className="mb-6 rounded-lg border-2 p-4"
+      style={{ marginLeft: `${depth * 20}px` }}
+    >
+      <div className="mb-4 flex items-center gap-2">
         <Button
           type="button"
           variant="ghost"
@@ -115,14 +128,21 @@ const LevelComponent: FC<ILevelComponentProps> = ({
           onClick={() => setIsExpanded(!isExpanded)}
           className="p-1"
         >
-          {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+          {isExpanded ? (
+            <ChevronDown className="size-4" />
+          ) : (
+            <ChevronRight className="size-4" />
+          )}
         </Button>
         <div className="flex-1">
           <LabeledInput
-            label={`Level ${depth === 0 ? '1.' + (levelIndex[0] + 1) : (depth + 1) + '.' + (levelIndex[levelIndex.length - 1] + 1)} Name`}
+            label={`Level ${depth === 0 ? '1.' + (levelIndex[0] + 1) : depth + 1 + '.' + (levelIndex[levelIndex.length - 1] + 1)} Name`}
             placeholder="Enter level name"
             {...getFieldProps(`${currentPath}.levelName`)}
-            error={getNestedError(errors as NestedErrors, `${currentPath}.levelName`)}
+            error={getNestedError(
+              errors as NestedErrors,
+              `${currentPath}.levelName`,
+            )}
           />
         </div>
         {showDelete && onDelete && (
@@ -130,7 +150,7 @@ const LevelComponent: FC<ILevelComponentProps> = ({
             type="button"
             variant="ghost"
             size="icon"
-            className="mt-6 hover:bg-destructive/10 hover:text-destructive"
+            className="hover:bg-destructive/10 mt-6 hover:text-destructive"
             onClick={onDelete}
           >
             <Trash2 className="size-4" />
@@ -140,7 +160,7 @@ const LevelComponent: FC<ILevelComponentProps> = ({
 
       {isExpanded && (
         <>
-          <div className="my-4 w-full flex justify-end">
+          <div className="my-4 flex w-full justify-end">
             {canAddSubLevel && (
               <Button
                 type="button"
@@ -154,29 +174,33 @@ const LevelComponent: FC<ILevelComponentProps> = ({
             )}
           </div>
 
-          {(currentLevel?.subLevels ?? []).map((_: ILevel, subIndex: number) => {
-            return (
-              <LevelComponent
-                key={subIndex}
-                levelIndex={[...levelIndex, subIndex]}                
-                levelNumber={(depth + 2).toString()}
-                getFieldProps={getFieldProps}
-                touched={touched}
-                errors={errors}
-                values={values}
-                setFieldValue={setFieldValue}
-                depth={depth + 1}
-                parentPath={currentPath}
-                totalAllowedLevels={totalAllowedLevels}
-                showDelete={depth > 0 ? true : currentLevel?.subLevels?.length > 1}
-                onDelete={() => {
-                  const newSubLevels = [...(currentLevel?.subLevels ?? [])]
-                  newSubLevels.splice(subIndex, 1)
-                  setFieldValue(`${currentPath}.subLevels`, newSubLevels)
-                }}
-              />
-            )
-          })}
+          {(currentLevel?.subLevels ?? []).map(
+            (_: ILevel, subIndex: number) => {
+              return (
+                <LevelComponent
+                  key={subIndex}
+                  levelIndex={[...levelIndex, subIndex]}
+                  // levelNumber={(depth + 2).toString()}
+                  getFieldProps={getFieldProps}
+                  touched={touched}
+                  errors={errors}
+                  values={values}
+                  setFieldValue={setFieldValue}
+                  depth={depth + 1}
+                  parentPath={currentPath}
+                  totalAllowedLevels={totalAllowedLevels}
+                  showDelete={
+                    depth > 0 ? true : currentLevel?.subLevels?.length > 1
+                  }
+                  onDelete={() => {
+                    const newSubLevels = [...(currentLevel?.subLevels ?? [])]
+                    newSubLevels.splice(subIndex, 1)
+                    setFieldValue(`${currentPath}.subLevels`, newSubLevels)
+                  }}
+                />
+              )
+            },
+          )}
         </>
       )}
     </div>
@@ -184,18 +208,19 @@ const LevelComponent: FC<ILevelComponentProps> = ({
 }
 
 const DynamicField: FC<IDynamicFieldProps> = ({
-  levelIndex,
+  // levelIndex,
   fieldIndex,
   getFieldProps,
   setFieldValue,
-  touched,
+  // touched,
   errors,
   onDelete,
   totalFields,
-  currentPath
-}) => {  const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
+  currentPath,
+}) => {
+  const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
     queryKey: ['attributeTypes'],
-    queryFn: getAttributeTypes
+    queryFn: getAttributeTypes,
   })
 
   const fieldPath = `${currentPath}.fields.${fieldIndex}`
@@ -204,7 +229,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   const transformedAttributeTypes = attributeTypes.map((type) => ({
     _id: type._id,
     name: type.name,
-    description: type.description
+    description: type.description,
   }))
 
   return (
@@ -213,18 +238,19 @@ const DynamicField: FC<IDynamicFieldProps> = ({
         label={`Field ${fieldIndex + 1} Name*`}
         placeholder="Enter attribute name"
         {...getFieldProps(`${fieldPath}.attributeName`)}
-        error={getNestedError(errors as NestedErrors, `${fieldPath}.attributeName`)}
+        error={getNestedError(
+          errors as NestedErrors,
+          `${fieldPath}.attributeName`,
+        )}
       />
       <div className="relative flex flex-col gap-1">
-        <label className="text-neutral-800 font-medium text-sm">Type*</label>
+        <label className="text-sm font-medium text-neutral-800">Type*</label>
         <Select
           value={getFieldProps(`${fieldPath}.type`).value}
-          onValueChange={(value) => 
-            setFieldValue(`${fieldPath}.type`, value)
-          }
+          onValueChange={(value) => setFieldValue(`${fieldPath}.type`, value)}
         >
-          <SelectTrigger className="w-52 h-11">
-            <SelectValue placeholder="Select type"/>
+          <SelectTrigger className="h-11 w-52">
+            <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
             {transformedAttributeTypes.map((type) => (
@@ -234,9 +260,13 @@ const DynamicField: FC<IDynamicFieldProps> = ({
             ))}
           </SelectContent>
         </Select>
-        {getNestedError(errors as NestedErrors, `${fieldPath}.type`) && <ErrorText error={getNestedError(errors as NestedErrors, `${fieldPath}.type`)} />}
+        {getNestedError(errors as NestedErrors, `${fieldPath}.type`) && (
+          <ErrorText
+            error={getNestedError(errors as NestedErrors, `${fieldPath}.type`)}
+          />
+        )}
       </div>
-      
+
       <LabeledInput
         label="Value (optional)"
         placeholder="Enter value"
@@ -248,7 +278,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
           type="button"
           variant="ghost"
           size="icon"
-          className="mt-6 hover:bg-destructive/10 hover:text-destructive"
+          className="hover:bg-destructive/10 mt-6 hover:text-destructive"
           onClick={onDelete}
         >
           <Trash2 className="size-4" />
@@ -299,33 +329,43 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
           levelName: '',
           fields: [{ attributeName: '', value: '', type: '' }],
           subLevels: [],
-          depth: 0
-        }
+          depth: 0,
+        },
       ])
     }
   }, [formik.values.levels.length, formik.setFieldValue])
 
   // Effect to handle numberOfLevels changes
   useEffect(() => {
-    const prevNumberOfLevels = values.levels.reduce((maxDepth, level) => {
-      const getMaxDepth = (l: ILevel): number => {
-        if (!l.subLevels?.length) return l.depth ?? 0
-        return Math.max(...l.subLevels.map(sl => getMaxDepth(sl)))
-      }
-      return Math.max(maxDepth, getMaxDepth(level))
-    }, 0) + 1
+    const prevNumberOfLevels =
+      values.levels.reduce((maxDepth, level) => {
+        const getMaxDepth = (l: ILevel): number => {
+          if (!l.subLevels?.length) return l.depth ?? 0
+          return Math.max(...l.subLevels.map((sl) => getMaxDepth(sl)))
+        }
+        return Math.max(maxDepth, getMaxDepth(level))
+      }, 0) + 1
 
     if (prevNumberOfLevels !== values.numberOfLevels) {
-      const trimNestedLevels = (levels: ILevel[], currentDepth: number, maxDepth: number): ILevel[] => {
-        return levels.map(level => ({
+      const trimNestedLevels = (
+        levels: ILevel[],
+        currentDepth: number,
+        maxDepth: number,
+      ): ILevel[] => {
+        return levels.map((level) => ({
           ...level,
-          subLevels: currentDepth < maxDepth - 1 && level.subLevels?.length 
-            ? trimNestedLevels(level.subLevels, currentDepth + 1, maxDepth)
-            : []
+          subLevels:
+            currentDepth < maxDepth - 1 && level.subLevels?.length
+              ? trimNestedLevels(level.subLevels, currentDepth + 1, maxDepth)
+              : [],
         }))
       }
 
-      const trimmedLevels = trimNestedLevels(values.levels, 0, values.numberOfLevels)
+      const trimmedLevels = trimNestedLevels(
+        values.levels,
+        0,
+        values.numberOfLevels,
+      )
       setFieldValue('levels', trimmedLevels, false)
     }
   }, [values.numberOfLevels])
@@ -338,46 +378,53 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
         levelName: '',
         fields: [{ attributeName: '', value: '', type: '' }],
         subLevels: [],
-        depth: 0
-      }
+        depth: 0,
+      },
     ])
   }
 
-  const validateNestedLevels = async (levels: ILevel[], basePath: string): Promise<boolean> => {
-    let isValid = true;
+  const validateNestedLevels = async (
+    levels: ILevel[],
+    basePath: string,
+  ): Promise<boolean> => {
+    let isValid = true
     for (let i = 0; i < levels.length; i++) {
-      const currentPath = `${basePath}.${i}`;
-      await validateField(`${currentPath}.levelName`);
-      
+      const currentPath = `${basePath}.${i}`
+      await validateField(`${currentPath}.levelName`)
+
       // Validate current level's name
-      const levelErrors = errors.levels?.[i] as { levelName?: string };
+      const levelErrors = errors.levels?.[i] as { levelName?: string }
       if (levelErrors?.levelName) {
-        isValid = false;
+        isValid = false
       }
 
       // Validate sub-levels recursively
       if (levels[i].subLevels?.length > 0) {
-        const subLevelsValid = await validateNestedLevels(levels[i].subLevels, `${currentPath}.subLevels`);
-        isValid = isValid && subLevelsValid;
+        const subLevelsValid = await validateNestedLevels(
+          levels[i].subLevels,
+          `${currentPath}.subLevels`,
+        )
+        isValid = isValid && subLevelsValid
       }
     }
-    return isValid;
-  };
+    return isValid
+  }
 
   const validateStep = async () => {
     switch (currentStep) {
-      case 0:
+      case 0: {
         await validateField('name')
         await validateField('numberOfLevels')
         const isNameValid = !errors.name
         const isDepthValid = !errors.numberOfLevels && values.numberOfLevels > 0
-        
+
         if (!isNameValid || !isDepthValid) {
           setFieldValue('name', values.name, true)
           setFieldValue('numberOfLevels', values.numberOfLevels, true)
           return false
         }
         return true
+      }
       case 1:
         return await validateNestedLevels(values.levels, 'levels')
       case 2:
@@ -392,13 +439,13 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
       if (currentStep === INDICATOR_FORM_STEPS.length - 1) {
         handleSubmit()
       } else {
-        setCurrentStep(prev => prev + 1)
+        setCurrentStep((prev) => prev + 1)
       }
     }
   }
 
   const handleBack = (): void => {
-    setCurrentStep(prev => prev - 1)
+    setCurrentStep((prev) => prev - 1)
   }
 
   const handleStepClick = (step: number): void => {
@@ -414,8 +461,8 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-          queryKey: ['indicators'],
-        })
+        queryKey: ['indicators'],
+      })
       toast({
         variant: 'success',
         title: 'Success',
@@ -433,35 +480,6 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
   })
 
   const isLoading = addLoading
-  
-  const renderLevelValues = (level: ILevel, path: string, levelNumber: string, indent: number = 0) => (
-    <div key={path} className="mb-6 rounded-lg border-2 p-4" style={{ marginLeft: `${indent * 20}px` }}>
-      <h3 className="mb-4 text-lg font-semibold">Level {levelNumber}: {level.levelName}</h3>
-      {level.fields.map((field: IField, fieldIndex: number) => (
-        <div key={`${path}.fields.${fieldIndex}`} className="mb-4">
-          <LabeledInput
-            label={field.attributeName}
-            placeholder={`Enter value for ${field.attributeName}`}
-            type={field.type === 'number' ? 'number' : 'text'}
-            {...getFieldProps(`${path}.fields.${fieldIndex}.value`)}
-            error={getNestedError(errors as NestedErrors, `${path}.fields.${fieldIndex}.value`)}
-          />
-        </div>
-      ))}
-      {level.subLevels?.map((subLevel: ILevel, subIndex: number) => {
-        const subLevelNumber = indent === 0 
-          ? `${levelNumber}.${subIndex + 1}`  // For same level sub-levels (1.1, 1.2, etc.)
-          : `${indent + 1}`  // For nested levels (2, 3, etc.)
-        
-        return renderLevelValues(
-          subLevel, 
-          `${path}.subLevels.${subIndex}`, 
-          subLevelNumber,
-          indent + 1
-        )
-      })}
-    </div>
-  )
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -480,9 +498,12 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
               className="resize-none"
               {...getFieldProps('description')}
               error={
-                touched.description && errors.description ? errors.description : ''
+                touched.description && errors.description
+                  ? errors.description
+                  : ''
               }
-            />            <LabeledInput
+            />
+            <LabeledInput
               label={'How many depth levels this indicator can have?'}
               type="number"
               min={1}
@@ -490,23 +511,27 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
               placeholder={'Enter number of depth levels'}
               {...getFieldProps('numberOfLevels')}
               onChange={(e) => {
-                const value = parseInt(e.target.value);
+                const value = parseInt(e.target.value)
                 if (value > 5) {
-                  setFieldValue('numberOfLevels', 5);
+                  setFieldValue('numberOfLevels', 5)
                 } else if (value < 1) {
-                  setFieldValue('numberOfLevels', 1);
+                  setFieldValue('numberOfLevels', 1)
                 } else {
-                  setFieldValue('numberOfLevels', value);
+                  setFieldValue('numberOfLevels', value)
                 }
               }}
-              error={touched.numberOfLevels && errors.numberOfLevels ? errors.numberOfLevels : ''}
+              error={
+                touched.numberOfLevels && errors.numberOfLevels
+                  ? errors.numberOfLevels
+                  : ''
+              }
             />
           </div>
         )
       case 1:
         return (
           <div className="w-full">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-bold">Level Configuration</h2>
               <Button
                 type="button"
@@ -521,7 +546,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
               <LevelComponent
                 key={index}
                 levelIndex={[index]}
-                levelNumber={(index + 1).toString()}
+                // levelNumber={(index + 1).toString()}
                 getFieldProps={getFieldProps}
                 touched={touched}
                 errors={errors}
@@ -530,51 +555,57 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
                 totalAllowedLevels={values.numberOfLevels}
                 showDelete={values.levels.length > 1}
                 onDelete={() => {
-                  const newLevels = [...values.levels];
-                  newLevels.splice(index, 1);
-                  setFieldValue('levels', newLevels);
+                  const newLevels = [...values.levels]
+                  newLevels.splice(index, 1)
+                  setFieldValue('levels', newLevels)
                 }}
               />
             ))}
           </div>
-        )     
-        case 2: {
+        )
+      case 2: {
         const renderLevel = (level: ILevel, levelPaths: number[]) => {
-          const currentPath = levelPaths.length === 1 
-            ? `levels.${levelPaths[0]}` 
-            : `levels.${levelPaths[0]}.subLevels.${levelPaths.slice(1).join('.subLevels.')}`;
-          
+          const currentPath =
+            levelPaths.length === 1
+              ? `levels.${levelPaths[0]}`
+              : `levels.${levelPaths[0]}.subLevels.${levelPaths.slice(1).join('.subLevels.')}`
+
           return (
-            <div key={currentPath} className="mb-6 rounded-lg border-2 p-4" style={{ marginLeft: `${(levelPaths.length - 1) * 32}px` }}>
-              <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>              {level.fields.map((field: IField, fieldIndex: number) => (
+            <div
+              key={currentPath}
+              className="mb-6 rounded-lg border-2 p-4"
+              style={{ marginLeft: `${(levelPaths.length - 1) * 32}px` }}
+            >
+              <h3 className="mb-4 text-lg font-semibold">{level.levelName}</h3>{' '}
+              {level.fields.map((field: IField, fieldIndex: number) => (
                 <DynamicField
                   key={fieldIndex}
-                  levelIndex={levelPaths}
+                  // levelIndex={levelPaths}
                   fieldIndex={fieldIndex}
                   getFieldProps={getFieldProps}
                   setFieldValue={setFieldValue}
-                  touched={touched}
+                  // touched={touched}
                   errors={errors}
                   onDelete={() => {
-                    const currentFields = [...level.fields];
-                    currentFields.splice(fieldIndex, 1);
-                    setFieldValue(`${currentPath}.fields`, currentFields);
+                    const currentFields = [...level.fields]
+                    currentFields.splice(fieldIndex, 1)
+                    setFieldValue(`${currentPath}.fields`, currentFields)
                   }}
                   totalFields={level.fields.length}
                   currentPath={currentPath}
                 />
               ))}
-              <div className="flex justify-end mb-4">
+              <div className="mb-4 flex justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const currentFields = [...level.fields];
+                    const currentFields = [...level.fields]
                     setFieldValue(`${currentPath}.fields`, [
                       ...currentFields,
-                      { attributeName: '', value: '', type: '' }
-                    ]);
+                      { attributeName: '', value: '', type: '' },
+                    ])
                   }}
                   className="flex items-center gap-2"
                 >
@@ -582,23 +613,23 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
                 </Button>
               </div>
               {level.subLevels?.map((subLevel: ILevel, subIndex: number) =>
-                renderLevel(subLevel, [...levelPaths, subIndex])
+                renderLevel(subLevel, [...levelPaths, subIndex]),
               )}
             </div>
-          );
-        };
+          )
+        }
 
         return (
           <div className="w-full">
             <h2 className="mb-4 text-xl font-bold">Field Configuration</h2>
-            {values.levels.map((level: ILevel, index: number) => 
-              renderLevel(level, [index])
+            {values.levels.map((level: ILevel, index: number) =>
+              renderLevel(level, [index]),
             )}
           </div>
-        );
+        )
       }
       default:
-        return null;
+        return null
     }
   }
 
