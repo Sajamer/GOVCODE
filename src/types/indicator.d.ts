@@ -33,7 +33,7 @@ export interface IMongoLevel {
   _id: Types.ObjectId
   levelName: string
   fields: IMongoField[]
-  subLevels: Types.ObjectId[] | IMongoLevel[]
+  subLevels: IMongoLevel[]
   parentLevel?: Types.ObjectId
   depth: number
 }

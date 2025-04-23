@@ -9,7 +9,7 @@ import {
   indicatorSchema,
 } from '@/schema/indicator.schema'
 import { useSheetStore } from '@/stores/sheet-store'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -263,6 +263,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
   const t = useTranslations('general')
+  const queryClient = useQueryClient()
 
   const initialValues = {
     name: '',
@@ -412,6 +413,9 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
       return await createIndicator(transformedData)
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({
+          queryKey: ['indicators'],
+        })
       toast({
         variant: 'success',
         title: 'Success',

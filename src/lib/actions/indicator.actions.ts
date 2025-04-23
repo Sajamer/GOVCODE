@@ -1,12 +1,13 @@
 'use server'
 
-import { Types } from 'mongoose'
-import Indicator from '@/models/indicator.model'
+import mongoose from 'mongoose'
 import AttributeType from '@/models/attributeType.model'
+import Indicator from '@/models/indicator.model'
 import { IIndicatorManipulator } from '@/schema/indicator.schema'
+import { ILevel, IMongoField, IMongoIndicator, IMongoLevel } from '@/types/indicator'
+import { ISerializedField, ISerializedIndicator, ISerializedLevel } from '@/types/serialized'
 import connectToMongoDB from '../mongodb'
 import { sendError } from '../utils'
-import { IMongoField, IMongoIndicator, IMongoLevel } from '@/types/indicator'
 
 interface IAttributeType {
   _id: string
@@ -14,31 +15,49 @@ interface IAttributeType {
   description?: string
 }
 
+const serializeField = (field: IMongoField): ISerializedField => {
+  const { _id, type, attributeName, value } = field
+  return {
+    _id: _id?.toString() || '',
+    type: type?.toString() || '',
+    attributeName,
+    value
+  }
+}
 
-const serializeIndicator = (indicator: IMongoIndicator) => ({
-  ...indicator,
-  _id: indicator._id.toString(),
-  createdAt: indicator.createdAt?.toISOString(),
-  updatedAt: indicator.updatedAt?.toISOString(),
-  levels: indicator.levels?.map((level: IMongoLevel) => ({
-    ...level,
-    _id: level._id.toString(),
-    fields: level.fields?.map((field: IMongoField) => ({
-      ...field,
-      _id: field._id.toString(),
-      type: field.type?.toString()
-    }))
-  }))
-})
+const serializeLevel = (level: IMongoLevel): ISerializedLevel => {
+  const { _id, levelName, depth, fields, subLevels } = level
+  return {
+    _id: _id?.toString() || '',
+    levelName,
+    depth,
+    fields: fields?.map(serializeField) || [],
+    subLevels: subLevels?.map(sublevel => serializeLevel(sublevel as IMongoLevel)) || []
+  }
+}
+
+const serializeIndicator = (indicator: IMongoIndicator): ISerializedIndicator => {
+  const { _id, name, description, numberOfLevels, levels, createdAt, updatedAt, __v } = indicator
+  return {
+    _id: _id.toString(),
+    name,
+    description,
+    numberOfLevels,
+    levels: levels?.map(serializeLevel) || [],
+    createdAt: createdAt?.toISOString(),
+    updatedAt: updatedAt?.toISOString(),
+    __v: __v || 0
+  }
+}
 
 export const getAttributeTypes = async (): Promise<IAttributeType[]> => {
   try {
     await connectToMongoDB()
     const types = await AttributeType.find({}).lean()
-    return types.map(type => ({
+    return types.map((type) => ({
       _id: String(type._id),
       name: type.name,
-      description: type.description
+      description: type.description,
     }))
   } catch (error) {
     sendError(error)
@@ -48,7 +67,7 @@ export const getAttributeTypes = async (): Promise<IAttributeType[]> => {
 
 export const getAllIndicators = async (
   searchParams?: Record<string, string>,
-) => {
+): Promise<ISerializedIndicator[]> => {
   try {
     await connectToMongoDB()
 
@@ -57,10 +76,10 @@ export const getAllIndicators = async (
     const page = +(params?.page ?? '1')
     const skip = (page - 1) * limit
 
-    const indicatorsData = await Indicator.find({})
+    const indicatorsData = (await Indicator.find({})
       .skip(skip)
       .limit(limit)
-      .lean() as IMongoIndicator[]
+      .lean()) as IMongoIndicator[]
 
     return indicatorsData.map(serializeIndicator)
   } catch (error) {
@@ -69,10 +88,10 @@ export const getAllIndicators = async (
   }
 }
 
-export const getIndicator = async (id: string) => {
+export const getIndicator = async (id: string): Promise<ISerializedIndicator> => {
   try {
     await connectToMongoDB()
-    const indicator = await Indicator.findById(id).lean() as IMongoIndicator
+    const indicator = (await Indicator.findById(id).lean()) as IMongoIndicator
 
     if (!indicator) {
       throw new Error('Indicator not found')
@@ -85,11 +104,44 @@ export const getIndicator = async (id: string) => {
   }
 }
 
-export const createIndicator = async (data: IIndicatorManipulator) => {
+// Helper function to prepare level data with proper ObjectIds
+const prepareLevelData = (level: ILevel, depth: number = 0): IMongoLevel => {
+  // Prepare fields first
+  const preparedFields = level.fields.map(field => ({
+    _id: new mongoose.Types.ObjectId(),
+    attributeName: field.attributeName,
+    type: new mongoose.Types.ObjectId(field.type),
+    value: field.value
+  }))
+
+  // Prepare sublevels recursively if they exist
+  const preparedSubLevels = level.subLevels?.map(sublevel => 
+    prepareLevelData(sublevel, depth + 1)
+  ) || []
+
+  // Create the level document with all nested data
+  const levelDocument = {
+    _id: new mongoose.Types.ObjectId(),
+    levelName: level.levelName,
+    fields: preparedFields,
+    depth,
+    subLevels: preparedSubLevels
+  }
+
+  return levelDocument
+}
+
+export const createIndicator = async (data: IIndicatorManipulator): Promise<ISerializedIndicator> => {
   try {
     await connectToMongoDB()
-
-    const newIndicator = await Indicator.create(data)
+    
+    // Prepare the data with proper ObjectIds for all nested levels
+    const indicatorData = {
+      ...data,
+      levels: data.levels.map(prepareLevelData)
+    }
+    
+    const newIndicator = await Indicator.create(indicatorData)
     const indicatorObject = newIndicator.toObject() as IMongoIndicator
 
     return serializeIndicator(indicatorObject)
@@ -102,14 +154,21 @@ export const createIndicator = async (data: IIndicatorManipulator) => {
 export const updateIndicator = async (
   id: string,
   data: IIndicatorManipulator,
-) => {
+): Promise<ISerializedIndicator> => {
   try {
     await connectToMongoDB()
-    const updatedIndicator = await Indicator.findByIdAndUpdate(
+    
+    // Prepare the data with proper ObjectIds for all nested levels
+    const indicatorData = {
+      ...data,
+      levels: data.levels.map(prepareLevelData)
+    }
+    
+    const updatedIndicator = (await Indicator.findByIdAndUpdate(
       id,
-      { $set: data },
+      { $set: indicatorData },
       { new: true },
-    ).lean() as IMongoIndicator
+    ).lean()) as IMongoIndicator
 
     if (!updatedIndicator) {
       throw new Error('Indicator not found')
@@ -122,7 +181,7 @@ export const updateIndicator = async (
   }
 }
 
-export const deleteIndicator = async (id: string) => {
+export const deleteIndicator = async (id: string): Promise<{ success: boolean }> => {
   try {
     await connectToMongoDB()
     const deletedIndicator = await Indicator.findByIdAndDelete(id)

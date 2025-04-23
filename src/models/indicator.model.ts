@@ -2,16 +2,28 @@ import mongoose from 'mongoose'
 
 const FieldSchema = new mongoose.Schema({
   attributeName: { type: String, required: true },
-  value: { type: String },
   type: { type: mongoose.Schema.Types.ObjectId, ref: 'AttributeType', required: true },
-})
+  value: { type: String },
+}, { _id: true })
 
-const LevelSchema = new mongoose.Schema({
+const LevelSchemaFields = {
   levelName: { type: String, required: true },
   fields: [FieldSchema],
-  subLevels: [{ type: mongoose.Schema.ObjectId, ref: 'Level' }], // Reference to nested levels
-  parentLevel: { type: mongoose.Schema.ObjectId, ref: 'Level', default: null }, // Reference to parent level
-  depth: { type: Number, default: 0 }, // Track the nesting depth
+  depth: { type: Number, default: 0 },
+  subLevels: {
+    type: [{
+      levelName: { type: String, required: true },
+      fields: [FieldSchema],
+      depth: { type: Number },
+      subLevels: { type: Array, default: [] }
+    }],
+    default: []
+  }
+}
+
+const LevelSchema = new mongoose.Schema(LevelSchemaFields, { 
+  _id: true,
+  strict: false 
 })
 
 const IndicatorSchema = new mongoose.Schema(
