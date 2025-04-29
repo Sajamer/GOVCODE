@@ -288,10 +288,12 @@ const DynamicField: FC<IDynamicFieldProps> = ({
     arrayValuesRef.current = updatedValues
     setLocalArrayValues(updatedValues)
 
-    // Update form value
-    const jsonString = JSON.stringify(updatedValues)
-    formValueRef.current = jsonString
-    setFieldValue(`${fieldPath}.value`, jsonString)
+    // Update form value - select the newly added value as the current selection
+    const selectedValue = newArrayValue.trim()
+    setFieldValue(`${fieldPath}.value`, selectedValue)
+
+    // Also store the complete array of values for later use
+    setFieldValue(`${fieldPath}.arrayValues`, updatedValues)
 
     // Clear input and error
     setNewArrayValue('')
@@ -310,7 +312,10 @@ const DynamicField: FC<IDynamicFieldProps> = ({
     // Update form value
     const jsonString = JSON.stringify(updatedValues)
     formValueRef.current = jsonString
-    setFieldValue(`${fieldPath}.value`, jsonString)
+    setFieldValue(`${fieldPath}.value`, '') // Clear selected value if array changes
+
+    // Also update the full array values for the field
+    setFieldValue(`${fieldPath}.arrayValues`, updatedValues)
   }
 
   // Sync array values with form when dialog opens

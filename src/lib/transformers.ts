@@ -6,10 +6,11 @@ const transformLevel = (level: ILevel): ILevel => ({
   fields: level.fields.map((field: IField) => ({
     attributeName: field.attributeName,
     value: field.value,
-    type: field.type
+    type: field.type,
+    arrayValues: field.arrayValues, // Include arrayValues in the transformed data
   })),
   subLevels: level.subLevels?.map(transformLevel) || [],
-  depth: level.depth || 0
+  depth: level.depth || 0,
 })
 
 export const transformIndicatorFormData = (formData: IIndicatorManipulator) => {
