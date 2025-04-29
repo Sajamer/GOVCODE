@@ -10,14 +10,19 @@ interface StepperIndicatorProps {
   onStepClick?: (index: number) => void
 }
 
-const StepperIndicator = ({ steps, currentStep, onStepClick }: StepperIndicatorProps) => {
+const StepperIndicator = ({
+  steps,
+  currentStep,
+  onStepClick,
+}: StepperIndicatorProps) => {
   return (
     <div className="w-full">
       <div className="relative flex justify-between">
         {steps.map((step, index) => {
           const isActive = currentStep === index
           const isCompleted = currentStep > index
-          const isClickable = onStepClick && (isCompleted || index === currentStep - 1)
+          const isClickable =
+            onStepClick && (isCompleted || index === currentStep - 1)
 
           return (
             <div
@@ -26,19 +31,19 @@ const StepperIndicator = ({ steps, currentStep, onStepClick }: StepperIndicatorP
               onClick={() => isClickable && onStepClick(index)}
             >
               <div
-                className={`z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 
+                className={`z-10 flex size-8 items-center justify-center rounded-full border-2 
                 ${
                   isActive
                     ? 'border-primary bg-primary text-white'
                     : isCompleted
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-gray-300 bg-white'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-gray-300 bg-white'
                 }
                 ${isClickable ? 'cursor-pointer' : ''}`}
               >
                 {isCompleted ? (
                   <svg
-                    className="h-4 w-4 text-white"
+                    className="size-4 text-white"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -49,7 +54,9 @@ const StepperIndicator = ({ steps, currentStep, onStepClick }: StepperIndicatorP
                     <path d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
-                  <span className={isActive ? 'text-white' : 'text-gray-500'}>{index + 1}</span>
+                  <span className={isActive ? 'text-white' : 'text-gray-500'}>
+                    {index + 1}
+                  </span>
                 )}
               </div>
               <div className="mt-2 text-center">
@@ -65,8 +72,8 @@ const StepperIndicator = ({ steps, currentStep, onStepClick }: StepperIndicatorP
             </div>
           )
         })}
-        <div className="absolute top-4 h-[2px] w-full -z-10">
-          <div className="h-full w-full bg-gray-200">
+        <div className="absolute top-4 -z-10 h-[2px] w-full">
+          <div className="size-full bg-gray-200">
             <div
               className="h-full bg-primary transition-all duration-500"
               style={{
