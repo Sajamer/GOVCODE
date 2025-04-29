@@ -103,5 +103,5 @@
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed/seed.ts"
   },
-  "packageManager": "pnpm@10.7.0"
+  "packageManager": "pnpm@10.10.0"
 }
