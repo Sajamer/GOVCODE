@@ -20,7 +20,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import ErrorText from '../shared/ErrorText'
 import LabeledInput from '../shared/inputs/LabeledInput'
@@ -28,23 +28,30 @@ import StepperIndicator from '../shared/stepper/StepperIndicator'
 import LabeledTextArea from '../shared/textArea/LabeledTextArea'
 import { Button } from '../ui/button'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../ui/dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '../ui/select'
+import { Switch } from '../ui/switch'
 
 interface IIndicatorFormProps {
   data?: IMongoIndicator
 }
 
 interface IDynamicFieldProps {
-  // levelIndex: number[]
   fieldIndex: number
   getFieldProps: ReturnType<typeof useFormik>['getFieldProps']
   setFieldValue: (field: string, value: any) => void
-  // touched: Record<string, any>
   errors: Record<string, any>
   onDelete: () => void
   totalFields: number
@@ -208,32 +215,334 @@ const LevelComponent: FC<ILevelComponentProps> = ({
 }
 
 const DynamicField: FC<IDynamicFieldProps> = ({
-  // levelIndex,
   fieldIndex,
   getFieldProps,
   setFieldValue,
-  // touched,
   errors,
   onDelete,
   totalFields,
   currentPath,
 }) => {
+  // Use refs to maintain state across renders and Dialog open/close cycles
+  const [isArrayValueDialogOpen, setIsArrayValueDialogOpen] = useState(false)
+  const arrayValuesRef = useRef<string[]>([])
+  const [localArrayValues, setLocalArrayValues] = useState<string[]>([])
+  const [newArrayValue, setNewArrayValue] = useState('')
+  const [duplicateError, setDuplicateError] = useState<string | null>(null)
+  const formValueRef = useRef<string>('')
+  const [urlError, setUrlError] = useState<string>('')
+
   const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
     queryKey: ['attributeTypes'],
     queryFn: getAttributeTypes,
   })
 
   const fieldPath = `${currentPath}.fields.${fieldIndex}`
+  const currentType = getFieldProps(`${fieldPath}.type`).value
+  const currentAttributeType = attributeTypes.find(
+    (type) => type._id === currentType,
+  )
 
-  // Transform attribute types to match Select component format
-  const transformedAttributeTypes = attributeTypes.map((type) => ({
-    _id: type._id,
-    name: type.name,
-    description: type.description,
-  }))
+  // This effect runs once when the component mounts or when the type changes
+  useEffect(() => {
+    if (currentAttributeType?.name.toLowerCase() === 'array') {
+      try {
+        const currentValue = getFieldProps(`${fieldPath}.value`).value
+        if (currentValue && currentValue.trim() !== '') {
+          const parsedValues = JSON.parse(currentValue)
+          arrayValuesRef.current = parsedValues
+          setLocalArrayValues(parsedValues)
+          formValueRef.current = currentValue
+        } else {
+          arrayValuesRef.current = []
+          setLocalArrayValues([])
+          formValueRef.current = ''
+        }
+      } catch (e) {
+        console.error('Error parsing array values:', e)
+        arrayValuesRef.current = []
+        setLocalArrayValues([])
+        formValueRef.current = ''
+      }
+    }
+  }, [currentType, currentAttributeType?.name])
+
+  // Handle adding a new array value
+  const handleAddArrayValue = () => {
+    if (!newArrayValue.trim()) return
+
+    // Check for duplicates (case insensitive)
+    if (
+      arrayValuesRef.current.some(
+        (value) => value.toLowerCase() === newArrayValue.trim().toLowerCase(),
+      )
+    ) {
+      setDuplicateError('This value already exists in the array')
+      return
+    }
+
+    // Create new array with the added value
+    const updatedValues = [...arrayValuesRef.current, newArrayValue.trim()]
+
+    // Update refs and state
+    arrayValuesRef.current = updatedValues
+    setLocalArrayValues(updatedValues)
+
+    // Update form value
+    const jsonString = JSON.stringify(updatedValues)
+    formValueRef.current = jsonString
+    setFieldValue(`${fieldPath}.value`, jsonString)
+
+    // Clear input and error
+    setNewArrayValue('')
+    setDuplicateError(null)
+  }
+
+  // Handle deleting an array value
+  const handleDeleteArrayValue = (index: number) => {
+    // Create new array without the deleted item
+    const updatedValues = arrayValuesRef.current.filter((_, i) => i !== index)
+
+    // Update refs and state
+    arrayValuesRef.current = updatedValues
+    setLocalArrayValues(updatedValues)
+
+    // Update form value
+    const jsonString = JSON.stringify(updatedValues)
+    formValueRef.current = jsonString
+    setFieldValue(`${fieldPath}.value`, jsonString)
+  }
+
+  // Sync array values with form when dialog opens
+  const handleDialogOpenChange = (open: boolean) => {
+    if (open) {
+      // When opening the dialog, refresh array values from current form state
+      try {
+        const currentValue = getFieldProps(`${fieldPath}.value`).value
+        if (currentValue && currentValue.trim() !== '') {
+          const parsedValues = JSON.parse(currentValue)
+          arrayValuesRef.current = parsedValues
+          setLocalArrayValues(parsedValues)
+          formValueRef.current = currentValue
+        }
+      } catch {
+        // Use existing values if parsing fails
+      }
+    }
+    setIsArrayValueDialogOpen(open)
+  }
+
+  const renderValueInput = () => {
+    if (!currentAttributeType) return null
+
+    switch (currentAttributeType.name.toLowerCase()) {
+      case 'array':
+        return (
+          <div className="flex w-full items-end gap-2">
+            <div className="relative flex w-full flex-col gap-1">
+              <label className="text-sm font-medium text-neutral-800">
+                Manage Values first, then select one
+              </label>
+              <Select
+                value={getFieldProps(`${fieldPath}.value`).value}
+                onValueChange={(selectedValue) => {
+                  // Allow the Select component to display the selected value
+                  // without modifying the underlying array
+                  setFieldValue(`${fieldPath}.value`, selectedValue)
+                }}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select a value" />
+                </SelectTrigger>
+                <SelectContent>
+                  {localArrayValues.map((value, index) => (
+                    <SelectItem key={index} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Dialog
+              open={isArrayValueDialogOpen}
+              onOpenChange={handleDialogOpenChange}
+            >
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="size-4" /> Manage Values
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Manage Array Values</DialogTitle>
+                  <DialogDescription>
+                    Add or remove values for this array field.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex flex-col gap-4">
+                  {/* Display existing values with delete buttons */}
+                  {localArrayValues.length > 0 ? (
+                    <ul className="list-disc space-y-2 pl-6">
+                      {localArrayValues.map((value, index) => (
+                        <li
+                          key={index}
+                          className="flex items-center justify-between gap-2"
+                        >
+                          <span>{value}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteArrayValue(index)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No values added yet.
+                    </p>
+                  )}
+
+                  {/* Add new value input field */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-end gap-2">
+                      <LabeledInput
+                        label=""
+                        type="text"
+                        placeholder="Enter new value"
+                        value={newArrayValue}
+                        onChange={(e) => {
+                          setNewArrayValue(e.target.value)
+                          if (duplicateError) setDuplicateError(null)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleAddArrayValue()
+                          }
+                        }}
+                        error={duplicateError ?? ''}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddArrayValue}
+                        className="mt-6"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )
+      case 'object':
+        return (
+          <LabeledTextArea
+            label="Value (JSON format)"
+            placeholder="Enter JSON object"
+            {...getFieldProps(`${fieldPath}.value`)}
+            error={getNestedError(errors as NestedErrors, `${fieldPath}.value`)}
+            onChange={(e) => {
+              try {
+                // Validate JSON format
+                JSON.parse(e.target.value)
+                setFieldValue(`${fieldPath}.value`, e.target.value)
+              } catch {
+                // If invalid JSON, still update the field but it will show validation error
+                setFieldValue(`${fieldPath}.value`, e.target.value)
+              }
+            }}
+          />
+        )
+      case 'yes/no':
+        return (
+          <div className="flex h-14 w-full items-end justify-start gap-3">
+            <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
+              No
+            </span>
+            <Switch
+              id="yes-no-mode"
+              checked={getFieldProps(`${fieldPath}.value`).value === true}
+              onCheckedChange={(checked) => {
+                setFieldValue(`${fieldPath}.value`, checked)
+              }}
+            />
+            <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
+              Yes
+            </span>
+          </div>
+        )
+      case 'attachment':
+        return (
+          <LabeledInput
+            label="Value (URL)"
+            type="url"
+            placeholder="Enter URL"
+            {...getFieldProps(`${fieldPath}.value`)}
+            error={
+              urlError ||
+              getNestedError(errors as NestedErrors, `${fieldPath}.value`)
+            }
+            onChange={(e) => {
+              // Validate URL format
+              const urlPattern =
+                /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+              const isValidUrl = urlPattern.test(e.target.value)
+
+              // Set the field value
+              setFieldValue(`${fieldPath}.value`, e.target.value)
+
+              // Set URL validation error if invalid
+              if (!isValidUrl && e.target.value.trim() !== '') {
+                setUrlError('Please enter a valid URL')
+              } else {
+                setUrlError('')
+              }
+            }}
+          />
+        )
+      case 'number':
+        return (
+          <LabeledInput
+            label="Value (optional)"
+            type="number"
+            placeholder="Enter number value"
+            {...getFieldProps(`${fieldPath}.value`)}
+            onChange={(e) => {
+              // Convert the number input to a string before setting it in the form
+              setFieldValue(`${fieldPath}.value`, e.target.value.toString())
+            }}
+            error={getNestedError(errors as NestedErrors, `${fieldPath}.value`)}
+          />
+        )
+      default:
+        return (
+          <LabeledInput
+            label="Value (optional)"
+            type={currentAttributeType.name.toLowerCase() ?? 'text'}
+            placeholder="Enter value"
+            {...getFieldProps(`${fieldPath}.value`)}
+            error={getNestedError(errors as NestedErrors, `${fieldPath}.value`)}
+          />
+        )
+    }
+  }
 
   return (
-    <div className="mb-4 flex items-center gap-4">
+    <div className="mb-4 flex items-start gap-4">
       <LabeledInput
         label={`Field ${fieldIndex + 1} Name*`}
         placeholder="Enter attribute name"
@@ -247,13 +556,16 @@ const DynamicField: FC<IDynamicFieldProps> = ({
         <label className="text-sm font-medium text-neutral-800">Type*</label>
         <Select
           value={getFieldProps(`${fieldPath}.type`).value}
-          onValueChange={(value) => setFieldValue(`${fieldPath}.type`, value)}
+          onValueChange={(value) => {
+            setFieldValue(`${fieldPath}.type`, value)
+            setFieldValue(`${fieldPath}.value`, '') // Reset value when type changes
+          }}
         >
           <SelectTrigger className="h-11 w-52">
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            {transformedAttributeTypes.map((type) => (
+            {attributeTypes.map((type) => (
               <SelectItem key={type._id} value={type._id}>
                 {type.name}
               </SelectItem>
@@ -266,13 +578,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
           />
         )}
       </div>
-
-      <LabeledInput
-        label="Value (optional)"
-        placeholder="Enter value"
-        {...getFieldProps(`${fieldPath}.value`)}
-        error={getNestedError(errors as NestedErrors, `${fieldPath}.value`)}
-      />
+      {renderValueInput()}
       {totalFields > 1 && (
         <Button
           type="button"
