@@ -168,19 +168,10 @@ const processFieldWithArrayValues = async (field: IField) => {
   const fieldId = new mongoose.Types.ObjectId()
   let fieldValueId
 
-  // Add debug logging
-  console.log('Processing field:', field.attributeName)
-  console.log('Field has arrayValues:', !!field.arrayValues)
-  if (field.arrayValues) {
-    console.log('Array values count:', field.arrayValues.length)
-    console.log('Array values:', field.arrayValues)
-  }
-
-  // Check if this is an array type field and has array values
+  // Check if this is an array typefield and has array values
   if (field.arrayValues && Array.isArray(field.arrayValues)) {
     // Save array values in FieldValue collection
     fieldValueId = await saveFieldValues(fieldId.toString(), field.arrayValues)
-    console.log('Saved fieldValueId:', fieldValueId)
   }
 
   return {
@@ -298,5 +289,16 @@ export const deleteIndicator = async (
   } catch (error) {
     sendError(error)
     throw new Error('Error while deleting indicator')
+  }
+}
+
+export const getFieldAttributeValues = async (fieldValueId: string) => {
+  try {
+    await connectToMongoDB()
+    const fieldValue = await FieldValue.findOne({ _id: fieldValueId }).lean()
+    return fieldValue ? fieldValue.values : []
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while fetching field attribute values')
   }
 }

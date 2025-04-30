@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast'
 import {
   createIndicator,
   getAttributeTypes,
+  getFieldAttributeValues,
 } from '@/lib/actions/indicator.actions'
 import { transformIndicatorFormData } from '@/lib/transformers'
 import { getNestedError } from '@/lib/utils'
@@ -231,6 +232,8 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   const [duplicateError, setDuplicateError] = useState<string | null>(null)
   const formValueRef = useRef<string>('')
   const [urlError, setUrlError] = useState<string>('')
+  const previousValuesRef = useRef<string[]>([])
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
     queryKey: ['attributeTypes'],
@@ -242,30 +245,92 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   const currentAttributeType = attributeTypes.find(
     (type) => type._id === currentType,
   )
+  const fieldValueId = getFieldProps(`${fieldPath}.fieldValueId`).value
 
-  // This effect runs once when the component mounts or when the type changes
+  // Add query to fetch field values if fieldValueId exists
+  const { data: savedArrayValues = [] } = useQuery({
+    queryKey: ['fieldValues', fieldValueId],
+    queryFn: () => getFieldAttributeValues(fieldValueId),
+    enabled:
+      !!fieldValueId && currentAttributeType?.name.toLowerCase() === 'array',
+  })
+
+  // This effect runs when savedArrayValues change
   useEffect(() => {
-    if (currentAttributeType?.name.toLowerCase() === 'array') {
+    if (
+      currentAttributeType?.name.toLowerCase() === 'array' &&
+      savedArrayValues.length > 0
+    ) {
+      const currentSavedValues = JSON.stringify(savedArrayValues)
+      const previousValues = JSON.stringify(previousValuesRef.current)
+
+      // Only update if the values have actually changed
+      if (currentSavedValues !== previousValues || isInitialLoad) {
+        arrayValuesRef.current = savedArrayValues
+        setLocalArrayValues(savedArrayValues)
+        previousValuesRef.current = savedArrayValues
+
+        // If there's a current value, keep it only if it exists in the new array
+        const currentValue = getFieldProps(`${fieldPath}.value`).value
+        if (!currentValue || !savedArrayValues.includes(currentValue)) {
+          setFieldValue(`${fieldPath}.value`, '')
+        }
+
+        if (isInitialLoad) {
+          setIsInitialLoad(false)
+        }
+      }
+    }
+  }, [savedArrayValues, fieldPath, currentAttributeType?.name, isInitialLoad])
+
+  // This effect handles non-saved array values
+  useEffect(() => {
+    if (
+      currentAttributeType?.name.toLowerCase() === 'array' &&
+      !savedArrayValues.length
+    ) {
       try {
         const currentValue = getFieldProps(`${fieldPath}.value`).value
-        if (currentValue && currentValue.trim() !== '') {
-          const parsedValues = JSON.parse(currentValue)
-          arrayValuesRef.current = parsedValues
-          setLocalArrayValues(parsedValues)
-          formValueRef.current = currentValue
-        } else {
+        const arrayValues = getFieldProps(`${fieldPath}.arrayValues`).value
+
+        if (Array.isArray(arrayValues) && arrayValues.length > 0) {
+          arrayValuesRef.current = arrayValues
+          setLocalArrayValues(arrayValues)
+          formValueRef.current = JSON.stringify(arrayValues)
+        } else if (currentValue && currentValue.trim() !== '') {
+          try {
+            const parsedValues = JSON.parse(currentValue)
+            if (Array.isArray(parsedValues)) {
+              arrayValuesRef.current = parsedValues
+              setLocalArrayValues(parsedValues)
+              formValueRef.current = currentValue
+            } else {
+              arrayValuesRef.current = [currentValue]
+              setLocalArrayValues([currentValue])
+              formValueRef.current = JSON.stringify([currentValue])
+            }
+          } catch {
+            arrayValuesRef.current = [currentValue]
+            setLocalArrayValues([currentValue])
+            formValueRef.current = JSON.stringify([currentValue])
+          }
+        }
+      } catch (e) {
+        console.error('Error handling array values:', e)
+        if (isInitialLoad) {
           arrayValuesRef.current = []
           setLocalArrayValues([])
           formValueRef.current = ''
+          setIsInitialLoad(false)
         }
-      } catch (e) {
-        console.error('Error parsing array values:', e)
-        arrayValuesRef.current = []
-        setLocalArrayValues([])
-        formValueRef.current = ''
       }
     }
-  }, [currentType, currentAttributeType?.name])
+  }, [
+    currentAttributeType?.name,
+    fieldPath,
+    savedArrayValues.length,
+    isInitialLoad,
+  ])
 
   // Handle adding a new array value
   const handleAddArrayValue = () => {
@@ -599,7 +664,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   )
 }
 
-const IndicatorForm: FC<IIndicatorFormProps> = () => {
+const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
   const [currentStep, setCurrentStep] = useState(0)
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
@@ -607,10 +672,10 @@ const IndicatorForm: FC<IIndicatorFormProps> = () => {
   const queryClient = useQueryClient()
 
   const initialValues = {
-    name: '',
-    description: '',
-    numberOfLevels: 1,
-    levels: [],
+    name: data?.name || '',
+    description: data?.description || '',
+    numberOfLevels: data?.numberOfLevels || 1,
+    levels: data?.levels || [],
   }
 
   const formik = useFormik<IIndicatorManipulator>({
