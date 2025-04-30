@@ -5,16 +5,16 @@ import PageHeader from '@/components/shared/headers/PageHeader'
 import NoResultFound from '@/components/shared/NoResultFound'
 import SheetComponent from '@/components/shared/sheets/SheetComponent'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { getAllIndicators } from '@/lib/actions/indicator.actions'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
+import { IMongoIndicator } from '@/types/indicator'
 import { useQuery } from '@tanstack/react-query'
 import { BadgeCheck, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { FC, useEffect, useMemo } from 'react'
-import { Card } from '@/components/ui/card'
-import { IMongoIndicator } from '@/types/indicator'
 
 const Indicators: FC = () => {
   const pageStaticData = {
@@ -26,6 +26,7 @@ const Indicators: FC = () => {
   const t = useTranslations('general')
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
+  const router = useRouter()
 
   const { actions, isEdit, rowId } = useSheetStore((store) => store)
   const { openSheet, setSearchTerm } = actions
@@ -33,17 +34,15 @@ const Indicators: FC = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ['indicators'],
-    queryFn: async () => 
-       await getAllIndicators()
-    ,
+    queryFn: async () => await getAllIndicators(),
     staleTime: 5 * 60 * 1000, // 2 minutes
   })
 
   const entityData = useMemo(() => data ?? [], [data])
-  
+
   const singleEntityData = isEdit
-  ? (entityData.find((r) => r['_id'] === rowId) as IMongoIndicator | undefined)
-  : undefined
+    ? (entityData.find((r) => r._id === rowId) as IMongoIndicator | undefined)
+    : undefined
 
   const localizedTitle = t('indicators')
 
@@ -74,9 +73,11 @@ const Indicators: FC = () => {
               ? `${t('edit')} ${localizedTitle} ${t('here')}`
               : `${t('define-new')} ${localizedTitle}`
           }
-          className='w-full !max-w-[80vw]'   
-          >
-          <IndicatorForm data={singleEntityData as unknown as IMongoIndicator} />
+          className="w-full !max-w-[80vw]"
+        >
+          <IndicatorForm
+            data={singleEntityData as unknown as IMongoIndicator}
+          />
         </SheetComponent>
         {hasPermission && (
           <Button
@@ -105,9 +106,10 @@ const Indicators: FC = () => {
         ) : entityData && entityData.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {entityData.map((indicator) => (
-              <Card 
+              <Card
                 key={indicator._id}
-                className="flex items-center justify-center p-4 hover:bg-muted/50 cursor-pointer"
+                className="flex cursor-pointer items-center justify-center p-4 hover:bg-muted/50"
+                onClick={() => router.push(`/indicators/${indicator._id}`)}
               >
                 <span className="text-base font-medium">{indicator.name}</span>
               </Card>

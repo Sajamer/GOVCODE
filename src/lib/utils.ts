@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 // import { Prisma } from '@prisma/client'
 import { Calibration, Prisma, Units } from '@prisma/client'
@@ -411,4 +412,16 @@ export const findMatchingRule = (
   if (!rules?.length) return undefined
 
   return rules.find((rule) => actual >= rule.min && actual <= rule.max)
+}
+
+export const getNestedError = (errors: NestedErrors, path: string): string => {
+  const parts = path.split('.')
+  let current: any = errors
+
+  for (const part of parts) {
+    if (!current?.[part]) return ''
+    current = current[part]
+  }
+
+  return typeof current === 'string' ? current : ''
 }

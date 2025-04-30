@@ -5,6 +5,8 @@ import { validate } from '@/lib/validate'
 import ExcelJS from 'exceljs'
 import { NextRequest, NextResponse } from 'next/server'
 
+const rowLimit = 1000
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   return validate(
     null,
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           }
 
           // Unlock all cells in the column (except header)
-          for (let row = 2; row <= 100; row++) {
+          for (let row = 2; row <= rowLimit; row++) {
             const cell = sheet.getCell(row, index + 1)
             cell.protection = { locked: false }
           }
@@ -112,7 +114,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
         // Define validation function
         const addValidation = (col: string, formulaRange: string) => {
-          for (let row = 2; row <= 100; row++) {
+          for (let row = 2; row <= rowLimit; row++) {
             sheet.getCell(`${col}${row}`).dataValidation = {
               type: 'list',
               allowBlank: true,
@@ -132,7 +134,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
         addValidation('K', `'Dropdown Values'!$H$2:$H${types.length + 1}`) // Types
 
         // Handle Status Type and Status columns
-        for (let row = 2; row <= 100; row++) {
+        for (let row = 2; row <= rowLimit; row++) {
           const statusTypeCell = sheet.getCell(`L${row}`)
           const statusCell = sheet.getCell(`M${row}`)
 
