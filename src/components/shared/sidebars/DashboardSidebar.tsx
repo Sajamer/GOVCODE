@@ -26,6 +26,17 @@ const DashboardSidebar: FC = () => {
     ? pathname.replace(/^\/?ar\/?/, '') || '/'
     : pathname
 
+  // Compare normalized current path with normalized item path
+  const isActiveLink = (itemHref: string) => {
+    const normalizedItemHref =
+      itemHref === '/' ? itemHref : itemHref.replace(/^\//, '')
+    const normalizedCurrentPath =
+      normalizedPathname === '/'
+        ? normalizedPathname
+        : normalizedPathname.replace(/^\//, '')
+    return normalizedCurrentPath === normalizedItemHref
+  }
+
   const { data } = useSession()
   const userData = data?.user as CustomUser | undefined
   const role = userData?.role ?? 'user'
@@ -104,8 +115,9 @@ const DashboardSidebar: FC = () => {
                 <Link
                   href={item.href}
                   className={cn(
-                    'w-full flex justify-center items-center gap-3 font-semibold text-base duration-75 py-2 hover:text-primary lg:justify-start lg:pl-5',
-                    normalizedPathname === item.href
+                    'w-full flex justify-center items-center gap-3 font-semibold text-base duration-75 py-2 hover:text-primary lg:justify-start',
+                    isArabic ? 'lg:pr-5' : 'lg:pl-5',
+                    isActiveLink(item.href)
                       ? 'bg-primary rounded-xl text-white hover:text-white'
                       : ' dark:text-white dark:hover:text-primary',
                   )}
@@ -150,7 +162,7 @@ const DashboardSidebar: FC = () => {
               )}
             >
               <span className="text-xs font-semibold text-gray-400">
-                Logged in as
+                {t('Logged-in-as')}
               </span>
               <Link
                 href={'/my-profile'}

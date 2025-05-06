@@ -30,13 +30,13 @@ export const SidebarItems = () => {
       href: '/kpi-status',
     },
     {
-      title: 'kpi-dimensions',
+      title: t('kpi-dimensions'),
       icon: <ListCollapse className="size-4 min-w-4" />,
       permissions: ['superAdmin', 'moderator', 'contributor'],
       href: '/kpi-dimensions',
       submenu: [
         {
-          title: 'status description',
+          title: 'status-description',
           href: '/kpi-dimensions/status',
         },
         {

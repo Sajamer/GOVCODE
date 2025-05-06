@@ -236,7 +236,7 @@ const TableComponent = <T extends object>({
     return (
       <div className="flex items-center justify-between gap-4 py-5">
         <div className="flex items-center gap-4 whitespace-nowrap">
-          <p className="text-sm text-zinc-700">items per page:</p>
+          <p className="text-sm text-zinc-700">{t('items-per-page')}</p>
           <BasicDropdown
             data={itemsPerPageOptions}
             triggerStyle="h-11"
@@ -255,28 +255,29 @@ const TableComponent = <T extends object>({
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            previous
+            {t('previous')}
           </Button>
           <Button
             variant="outline"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            next
+            {t('next')}
           </Button>
         </div>
         <div className="hidden gap-4 sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div className="flex items-center gap-4 whitespace-nowrap">
             <p className="text-sm text-zinc-700">
-              showing{' '}
+              {t('showing')}{' '}
               <span className="font-medium">
                 {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}
               </span>{' '}
-              to{' '}
+              {t('to')}{' '}
               <span className="font-medium">
                 {Math.min(currentPage * itemsPerPage, totalItems)}
               </span>{' '}
-              of <span className="font-medium">{totalItems}</span> results
+              {t('of')} <span className="font-medium">{totalItems}</span>{' '}
+              {t('result')}
             </p>
           </div>
 

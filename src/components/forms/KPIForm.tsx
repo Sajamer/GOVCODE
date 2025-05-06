@@ -406,11 +406,11 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
         />
         <div className="flex w-full flex-col items-start justify-start gap-3">
           <h3 className="text-sm font-medium text-zinc-800">
-            Choose Status Type:
+            {t('choose-status-type')}
           </h3>
           <div className="flex items-center justify-center gap-3">
             <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
-              Default
+              {t('default')}
             </span>
             <Switch
               id="status-mode"
@@ -425,7 +425,7 @@ const KPIForm: FC<IKpiFormProps> = ({ data: kpiData }) => {
               }}
             />
             <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
-              Custom
+              {t('custom')}
             </span>
           </div>
         </div>

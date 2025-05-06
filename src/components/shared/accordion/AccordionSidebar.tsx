@@ -6,8 +6,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import { useAdminDashboard } from '@/hooks/useAdminDashboard'
 import { useTab } from '@/hooks/useTab'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { FC, ReactNode, useState } from 'react'
@@ -26,7 +28,25 @@ const AccordionSidebar: FC<IAccordionSidebarProps> = ({
   icon,
 }) => {
   const pathname = usePathname()
+  const { isSidebarOpened } = useAdminDashboard()
   const tab = useTab()
+  const isArabic = pathname.includes('/ar')
+  const t = useTranslations('general')
+
+  const normalizedPathname = isArabic
+    ? pathname.replace(/^\/?ar\/?/, '') || '/'
+    : pathname
+
+  const isActivePath = (itemPath: string) => {
+    const normalizedItemPath =
+      itemPath === '/' ? itemPath : itemPath.replace(/^\//, '')
+    const normalizedCurrentPath =
+      normalizedPathname === '/'
+        ? normalizedPathname
+        : normalizedPathname.replace(/^\//, '')
+    return normalizedCurrentPath === normalizedItemPath
+  }
+
   const [isOpen, setIsOpen] = useState<boolean>(
     data.some(
       (element) =>
@@ -36,17 +56,22 @@ const AccordionSidebar: FC<IAccordionSidebarProps> = ({
   )
 
   const toggleState = () => {
-    setIsOpen((prev) => !prev)
+    if (isSidebarOpened) {
+      setIsOpen((prev) => !prev)
+    } else {
+      setIsOpen(false)
+    }
   }
 
   return (
     <Accordion
       type="single"
       collapsible
+      value={isSidebarOpened && isOpen ? 'item-1' : ''}
       defaultValue={isOpen ? 'item-1' : 'item-2'}
       className={cn(
         'w-full bg-background dark:bg-dark-background',
-        pathname === path ? 'text-white' : 'dark:text-white',
+        isActivePath(path) ? 'text-white' : 'dark:text-white',
       )}
     >
       <AccordionItem value="item-1" className="border-b-0">
@@ -54,18 +79,32 @@ const AccordionSidebar: FC<IAccordionSidebarProps> = ({
           onClick={() => toggleState()}
           className={cn(
             'flex flex-col gap-4 text-base py-2 hover:no-underline lg:flex-row lg:items-center lg:justify-start lg:px-5',
-            pathname === path
+            isActivePath(path)
               ? 'bg-primary rounded-xl [&[data-state=open]>svg]:hidden [&[data-state=closed]>svg]:hidden lg:[&[data-state=closed]>svg]:block lg:[&[data-state=open]>svg]:block lg:[&[data-state=open]>svg]:text-white lg:[&[data-state=closed]>svg]:text-white'
               : 'hover:text-primary [&[data-state=open]>svg]:hidden [&[data-state=closed]>svg]:hidden lg:[&[data-state=closed]>svg]:block lg:[&[data-state=open]>svg]:block lg:[&[data-state=open]>svg]:hover:text-primary lg:[&[data-state=closed]>svg]:hover:text-primary',
           )}
         >
           <div className="flex items-center gap-3 [&[data-state=open]>svg]:!rotate-0">
             {icon}
-            <span className="hidden lg:block ">{title}</span>
+            <span
+              className={cn(
+                'hidden lg:block',
+                isSidebarOpened ? 'opacity-100' : 'opacity-0',
+              )}
+            >
+              {title}
+            </span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
-          <ul className="hidden w-full flex-col items-start justify-center gap-3 text-xs font-semibold text-gray-400 lg:ml-10 lg:mt-3 lg:flex lg:border-l-2 lg:!border-primary lg:py-2 lg:pl-3">
+          <ul
+            className={cn(
+              'hidden w-full flex-col items-start justify-center gap-3 text-xs font-semibold text-gray-400 lg:mt-3 lg:flex lg:py-2',
+              isArabic
+                ? 'lg:mr-8 lg:border-r-2 lg:!border-primary lg:pr-3'
+                : 'lg:ml-10 lg:border-l-2 lg:!border-primary lg:pl-3',
+            )}
+          >
             {data.map((element) => (
               <li key={element}>
                 <Link
@@ -81,7 +120,7 @@ const AccordionSidebar: FC<IAccordionSidebarProps> = ({
                     pathname !== path && 'hover:text-primary',
                   )}
                 >
-                  {element}
+                  {t(element)}
                 </Link>
               </li>
             ))}

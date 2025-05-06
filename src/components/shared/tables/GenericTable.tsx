@@ -368,7 +368,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="h-11">
           <SlidersHorizontal className="mr-2 size-4" />
-          Columns
+          {t('columns')}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -376,7 +376,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
         className="max-h-[400px] w-[250px] overflow-y-auto overflow-x-hidden"
       >
         <DropdownMenuLabel className="flex items-center justify-between rounded-md">
-          Toggle Columns
+          {t('toggle-columns')}
           <Button
             variant="ghost"
             size="sm"
@@ -387,7 +387,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
             }
             className="h-8 px-2 text-xs hover:underline"
           >
-            Reset
+            {t('reset')}
           </Button>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -578,13 +578,13 @@ const GenericComponent = <T extends Record<string, unknown>>({
               <div className="flex w-full items-center justify-between gap-4">
                 <div className="flex items-center justify-start gap-4">
                   <span className="whitespace-nowrap text-lg font-semibold">
-                    Filter By:
+                    {t('filter-by')}:
                   </span>
                   {departmentOptions && departmentOptions?.length > 0 && (
                     <BasicDropdown
                       data={departmentOptions ?? []}
                       triggerStyle="h-11"
-                      placeholder="department"
+                      placeholder={t('department')}
                       defaultValue={departmentOptions?.find(
                         (option) => +option.id === +filters.departmentId!,
                       )}
@@ -650,7 +650,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
                       onClick={() => setFilters({})}
                       className="h-11"
                     >
-                      Clear Filters
+                      {t('clear-filters')}
                     </Button>
                   )}
                 </div>

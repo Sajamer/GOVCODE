@@ -146,7 +146,6 @@ export async function POST(req: NextRequest) {
       'KPI Name',
       'Department',
       'Status Type',
-      // Add other required headers
     ]
     const missingHeaders = requiredHeaders.filter(
       (header) => !headers.includes(header),
@@ -162,11 +161,47 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Map headers to expected column names
+    const headerMap: Record<string, string> = {
+      'Kpi Code': 'code',
+      'KPI Name': 'name',
+      Owner: 'owner',
+      Description: 'description',
+      Department: 'department',
+      'Measurement Number': 'measurementNumber',
+      Resources: 'resources',
+      Unit: 'unit',
+      Frequency: 'frequency',
+      Calibration: 'calibration',
+      Type: 'type',
+      'Status Type': 'statusType',
+      Status: 'status',
+    }
+
     const parsedRows = dataRows.map((row) => {
       return headers.reduce(
-        (acc: Record<string, ExcelJS.CellValue | null>, header, index) => {
+        (acc: Record<string, string | null>, header, index) => {
           if (typeof header === 'string') {
-            acc[header] = row[index] || null
+            const cellValue = row[index]
+            // Handle different types of cell values
+            let value: string | null = null
+            if (cellValue) {
+              // Handle Excel cell objects
+              if (typeof cellValue === 'object') {
+                if ('text' in cellValue) {
+                  value = String(cellValue.text).trim()
+                } else if ('result' in cellValue) {
+                  value = String(cellValue.result).trim()
+                } else {
+                  value = String(cellValue).trim()
+                }
+              } else {
+                value = String(cellValue).trim()
+              }
+            }
+            // Map the header to our expected column name
+            const mappedHeader = headerMap[header] || header
+            acc[mappedHeader] = value
           }
           return acc
         },
@@ -174,9 +209,9 @@ export async function POST(req: NextRequest) {
       )
     })
 
-    // Filter out rows that are completely empty (i.e. without KPI Code and KPI Name)
+    // Filter out rows that are completely empty
     const nonEmptyParsedRows = parsedRows.filter(
-      (row) => row['Kpi Code'] !== null || row['KPI Name'] !== null,
+      (row) => row.code !== null || row.name !== null,
     )
 
     // Check for duplicates in the Excel file
@@ -186,8 +221,11 @@ export async function POST(req: NextRequest) {
 
     nonEmptyParsedRows.forEach((row, index) => {
       const rowNumber = index + 2
-      const code = row['Kpi Code']?.toString()
-      const name = row['KPI Name']?.toString()
+      const code = row.code
+      const name = row.name
+
+      // Skip empty values
+      if (!code || !name) return
 
       if (kpiCodes.has(code)) {
         duplicateErrors.push(`Row ${rowNumber}: Duplicate KPI Code "${code}"`)
@@ -236,20 +274,20 @@ export async function POST(req: NextRequest) {
         const rowNumber = index + 2 // Adding 2 to account for header row and 0-based index
 
         // Validate required fields
-        if (!row['Kpi Code']) {
+        if (!row.code) {
           throw new Error(`Row ${rowNumber}: KPI Code is required`)
         }
-        if (!row['KPI Name']) {
+        if (!row.name) {
           throw new Error(`Row ${rowNumber}: KPI Name is required`)
         }
-        if (!row.Department || typeof row.Department !== 'string') {
+        if (!row.department || typeof row.department !== 'string') {
           throw new Error(
             `Row ${rowNumber}: Department is required and must be a string`,
           )
         }
 
         // Validate Status Type and Status
-        const statusType = row['Status Type']?.toString()
+        const statusType = row.statusType?.toString()
         if (!statusType || !['default', 'custom'].includes(statusType)) {
           throw new Error(
             `Row ${rowNumber}: Status Type must be either 'default' or 'custom'`,
@@ -258,55 +296,55 @@ export async function POST(req: NextRequest) {
 
         let statusId = null
         if (statusType === 'custom') {
-          if (!row.Status) {
+          if (!row.status) {
             throw new Error(
               `Row ${rowNumber}: Status is required when Status Type is 'custom'`,
             )
           }
-          statusId = await getStatusId(row.Status.toString())
+          statusId = await getStatusId(row.status.toString())
           if (!statusId) {
             throw new Error(`Row ${rowNumber}: Invalid Status value`)
           }
         }
 
-        const departmentId = await getDepartmentId(row.Department)
+        const departmentId = await getDepartmentId(row.department)
         if (!departmentId) {
           throw new Error(
-            `Row ${rowNumber}: Invalid department: ${row.Department}`,
+            `Row ${rowNumber}: Invalid department: ${row.department}`,
           )
         }
 
         // Validate enums
-        if (row.Unit && !Object.values(Units).includes(row.Unit as Units)) {
+        if (row.unit && !Object.values(Units).includes(row.unit as Units)) {
           throw new Error(`Row ${rowNumber}: Invalid Unit value`)
         }
         if (
-          row.Frequency &&
-          !Object.values(Frequency).includes(row.Frequency as Frequency)
+          row.frequency &&
+          !Object.values(Frequency).includes(row.frequency as Frequency)
         ) {
           throw new Error(`Row ${rowNumber}: Invalid Frequency value`)
         }
-        if (row.Type && !Object.values(KPIType).includes(row.Type as KPIType)) {
+        if (row.type && !Object.values(KPIType).includes(row.type as KPIType)) {
           throw new Error(`Row ${rowNumber}: Invalid Type value`)
         }
         if (
-          row.Calibration &&
-          !Object.values(Calibration).includes(row.Calibration as Calibration)
+          row.calibration &&
+          !Object.values(Calibration).includes(row.calibration as Calibration)
         ) {
           throw new Error(`Row ${rowNumber}: Invalid Calibration value`)
         }
 
         return {
-          code: row['Kpi Code'],
-          name: row['KPI Name'],
-          owner: row.Owner,
-          description: row.Description,
-          measurementNumber: row['Measurement Number'],
-          resources: row.Resources,
-          unit: row.Unit as Units,
-          frequency: row.Frequency as Frequency,
-          type: row.Type as KPIType,
-          calibration: row.Calibration as Calibration,
+          code: row.code,
+          name: row.name,
+          owner: row.owner,
+          description: row.description,
+          measurementNumber: row.measurementNumber,
+          resources: row.resources,
+          unit: row.unit as Units,
+          frequency: row.frequency as Frequency,
+          type: row.type as KPIType,
+          calibration: row.calibration as Calibration,
           departmentId,
           statusId,
           statusType,
