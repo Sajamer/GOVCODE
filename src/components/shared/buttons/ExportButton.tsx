@@ -27,20 +27,23 @@ const ExportButton: FC<IExportButtonProps> = ({ data, name, headers }) => {
       return
     }
 
-    const formattedData = headers
-      ? data.map((item) =>
-          Object.keys(headers).reduce(
-            (acc, key) => {
-              acc[headers[key]] = item[key]
-              return acc
-            },
-            {} as Record<string, any>,
-          ),
-        )
-      : data
+    const formattedData = data.map((item) => {
+      if (!headers) return item
 
-    const worksheet = XLSX.utils.json_to_sheet(formattedData)
+      // Get the original data from the item
+      const originalData = item.original
+
+      // Create a new object for each row with the translated headers
+      const newRow: Record<string, any> = {}
+      for (const [originalKey, headerLabel] of Object.entries(headers)) {
+        newRow[headerLabel] = originalData[originalKey]
+      }
+      return newRow
+    })
+
+    // Create a workbook and worksheet
     const workbook = XLSX.utils.book_new()
+    const worksheet = XLSX.utils.json_to_sheet(formattedData)
 
     const timestamp = new Date().toISOString().replace(/[:.-]/g, '')
     const filename = `${name}-${timestamp}.xlsx`
