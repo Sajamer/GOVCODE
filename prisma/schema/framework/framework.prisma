@@ -1,0 +1,19 @@
+model Framework {
+  id         String               @id @default(cuid())
+  name       String               @unique
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  attributes FrameworkAttribute[]
+}
+
+model FrameworkAttribute {
+  id          String    @id @default(cuid())
+  name        String
+  value       String?   @db.Text
+  framework   Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  frameworkId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([frameworkId])
+}

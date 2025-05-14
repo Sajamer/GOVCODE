@@ -15,7 +15,8 @@
     "acceptInvitation": "قبول الدعوة",
     "dashboard": "لوحة التحكم",
     "taskManagement": "إدارة المهام",
-    "indicators": "المؤشرات"
+    "indicators": "المؤشرات",
+    "frameworks": "الأطر"
   },
   "HomePage": {
     "title": "الصفحة الرئيسية"
@@ -49,6 +50,10 @@
   "general": {
     "kpi": "مؤشر الأداء",
     "kpis": "مؤشرات الأداء",
+    "attributes": "السمات",
+    "framework": "إطار العمل",
+    "frameworks": "أطر العمل",
+    "framework-description": "إدارة جميع أطر العمل المتاحة على المنصة.",
     "kpi-analysis": "تحليل المؤشرات",
     "kpi-status": "حالة المؤشر",
     "kpi-dimensions": "أبعاد المؤشر",
@@ -84,6 +89,8 @@
     "actual": "الفعلي",
     "Code": "رمز",
     "Name": "الاسم",
+    "name": "الاسم",
+    "framework-name-placeholder": "أدخل اسم الإطار",
     "Calibration": "الاتجاه المرجو",
     "Description": "الوصف",
     "Frequency": "التكرار",
@@ -252,10 +259,12 @@
     "fullName": "الاسم الكامل",
     "email": "البريد الإلكتروني",
     "create": "إنشاء",
+    "create-framework": "إنشاء إطار عمل",
     "dashboard": "لوحة التحكم",
     "dashboard-description": "مركزك الرئيسي للحصول على الرؤى والتحليلات وأدوات الإدارة.",
     "import-csv": "استيراد من CSV",
     "export-excel": "تصدير إلى Excel",
+    "excel-file": "ملف Excel",
     "please-provide-data": "يرجى تقديم البيانات",
     "no-data-to-export": "لا توجد بيانات للتصدير",
     "task-management": "إدارة المهام",

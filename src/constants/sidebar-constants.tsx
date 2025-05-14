@@ -74,5 +74,10 @@ export const SidebarItems = () => {
       icon: <BadgeCheck className="size-4 min-w-4" />,
       href: '/indicators',
     },
+    {
+      title: t('frameworks'),
+      icon: <BadgeCheck className="size-4 min-w-4" />,
+      href: '/frameworks',
+    },
   ]
 }

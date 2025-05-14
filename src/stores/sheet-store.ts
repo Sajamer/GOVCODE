@@ -9,6 +9,7 @@ export type SheetNames =
   | 'dashboard'
   | 'tasks-management'
   | 'indicator'
+  | 'frameworks'
   | 'kpi-status'
   | 'kpi-dimensions'
 
