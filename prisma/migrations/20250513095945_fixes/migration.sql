@@ -56,17 +56,42 @@ CREATE TABLE `RelatedEvidenceDoc` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `Framework` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Framework_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `FrameworkAttribute` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `value` TEXT NULL,
+    `frameworkId` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `FrameworkAttribute_frameworkId_idx`(`frameworkId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `KPI` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `code` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(1024) NOT NULL,
     `owner` VARCHAR(191) NOT NULL,
-    `measurementNumerator` VARCHAR(191) NULL,
-    `measurementDenominator` VARCHAR(191) NULL,
-    `measurementNumber` VARCHAR(191) NULL,
+    `measurementNumerator` VARCHAR(512) NULL,
+    `measurementDenominator` VARCHAR(512) NULL,
+    `measurementNumber` VARCHAR(512) NULL,
     `resources` VARCHAR(191) NULL,
     `isArchived` BOOLEAN NOT NULL DEFAULT false,
+    `statusType` VARCHAR(191) NOT NULL DEFAULT 'default',
     `unit` ENUM('PERCENTAGE', 'NUMBER', 'TIME', 'DAYS') NOT NULL,
     `frequency` ENUM('MONTHLY', 'QUARTERLY', 'SEMI_ANNUALLY', 'ANNUALLY') NOT NULL,
     `type` ENUM('CUMULATIVE', 'STAGING') NOT NULL,
@@ -74,6 +99,7 @@ CREATE TABLE `KPI` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `departmentId` INTEGER NOT NULL,
+    `statusId` INTEGER NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -147,6 +173,28 @@ CREATE TABLE `Process` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Process_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Status` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Rule` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `min` DOUBLE NOT NULL,
+    `max` DOUBLE NOT NULL,
+    `label` VARCHAR(191) NOT NULL,
+    `color` VARCHAR(191) NOT NULL,
+    `statusId` INTEGER NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -412,13 +460,22 @@ ALTER TABLE `RelatedEvidenceDoc` ADD CONSTRAINT `RelatedEvidenceDoc_auditCycleCa
 ALTER TABLE `RelatedEvidenceDoc` ADD CONSTRAINT `RelatedEvidenceDoc_taskManagementId_fkey` FOREIGN KEY (`taskManagementId`) REFERENCES `TaskManagement`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `FrameworkAttribute` ADD CONSTRAINT `FrameworkAttribute_frameworkId_fkey` FOREIGN KEY (`frameworkId`) REFERENCES `Framework`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `KPI` ADD CONSTRAINT `KPI_departmentId_fkey` FOREIGN KEY (`departmentId`) REFERENCES `Department`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `KPI` ADD CONSTRAINT `KPI_statusId_fkey` FOREIGN KEY (`statusId`) REFERENCES `Status`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `KPITarget` ADD CONSTRAINT `KPITarget_kpiId_fkey` FOREIGN KEY (`kpiId`) REFERENCES `KPI`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `KPIActual` ADD CONSTRAINT `KPIActual_kpiId_fkey` FOREIGN KEY (`kpiId`) REFERENCES `KPI`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Rule` ADD CONSTRAINT `Rule_statusId_fkey` FOREIGN KEY (`statusId`) REFERENCES `Status`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `KPIObjective` ADD CONSTRAINT `KPIObjective_kpiId_fkey` FOREIGN KEY (`kpiId`) REFERENCES `KPI`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

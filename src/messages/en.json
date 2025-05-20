@@ -15,7 +15,8 @@
     "acceptInvitation": "Accept Invitation",
     "dashboard": "Dashboard",
     "taskManagement": "Task Management",
-    "indicators": "Indicators"
+    "indicators": "Indicators",
+    "frameworks": "Frameworks"
   },
   "LocaleSwitcher": {
     "switchLocale": "Switch to {locale, select, ar {Arabic} en {English} other {Unknown}}",
@@ -49,6 +50,10 @@
   "general": {
     "kpi": "KPI",
     "kpis": "KPIs",
+    "attributes": "Attributes",
+    "framework": "Framework",
+    "frameworks": "Frameworks",
+    "framework-description": "Manage all the frameworks available on the platform.",
     "kpi-analysis": "KPI Analysis",
     "kpi-status": "KPI Status",
     "kpi-dimensions": "KPI Dimensions",
@@ -84,6 +89,8 @@
     "actual": "Actual",
     "Code": "Code",
     "Name": "Name",
+    "name": "Name",
+    "framework-name-placeholder": "Enter Framework Name",
     "Calibration": "Calibration",
     "Description": "Description",
     "Frequency": "Frequency",
@@ -270,6 +277,7 @@
     "kpi-placeholder": "Select KPIs",
     "import-csv": "Import CSV",
     "export-excel": "Export Excel",
+    "excel-file": "Excel File",
     "please-provide-data": "Please provide data",
     "no-data-to-export": "No data to export",
     "task-management": "Task Management",
