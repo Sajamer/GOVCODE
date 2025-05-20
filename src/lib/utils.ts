@@ -333,6 +333,8 @@ export const switchUnit = (unit: Units): string => {
       return '%'
     case Units.NUMBER:
       return 'NBR'
+    case Units.TIME:
+      return 'Time'
     default:
       return '-'
   }

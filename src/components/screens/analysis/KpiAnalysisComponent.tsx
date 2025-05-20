@@ -10,6 +10,7 @@ import {
   calculateTrend,
   capitalizeFirstLetter,
   cn,
+  convertToArabicNumerals,
   switchUnit,
 } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
@@ -17,6 +18,8 @@ import { IKpiResponse, MonthlyData } from '@/types/kpi'
 import { Calibration, KPIActual, userRole } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, Fragment } from 'react'
 
 interface IKpiAnalysisProps {
@@ -26,6 +29,9 @@ interface IKpiAnalysisProps {
 const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
   const months = periodsByFrequency.monthly
   const currentYear = new Date().getFullYear()
+  const pathname = usePathname()
+  const isArabic = pathname.includes('/ar')
+  const t = useTranslations('general')
 
   const { departmentId, organizationId } = useGlobalStore((store) => store)
 
@@ -98,7 +104,10 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
   }
 
   return (
-    <div className="max-w-full overflow-x-auto">
+    <div
+      className="w-full max-w-full overflow-x-auto"
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
       <table className="min-w-full border-collapse">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-300">
@@ -111,7 +120,8 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
               colSpan={12}
               className="border border-gray-300 p-2.5 dark:border-gray-800"
             >
-              Year {currentYear}
+              {t('year')}{' '}
+              {isArabic ? convertToArabicNumerals(currentYear) : currentYear}
             </th>
           </tr>
           <tr className="bg-gray-100 dark:bg-gray-300">
@@ -126,7 +136,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                 colSpan={3}
                 className="border border-gray-300 p-2.5 dark:border-gray-800"
               >
-                {quarter.toUpperCase()}
+                {t(`options.${quarter}`)}
               </th>
             ))}
           </tr>
@@ -144,7 +154,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                     className="border border-gray-300 p-2.5 dark:border-gray-800"
                     colSpan={1}
                   >
-                    {month}
+                    {t(`options.${month}`)}
                   </th>
                 ))}
               </Fragment>
@@ -152,26 +162,32 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
           </tr>
           <tr className="bg-gray-100 dark:bg-gray-300">
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Code
+              {t('Code')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              KPI Name
+              {t('kpi-name')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Frequency
+              {t('Frequency')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Unit
+              {t('Unit')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Trend
+              {t('Trend')}
             </th>
             {Object.keys(quarters).map((quarter) => (
               <Fragment key={quarter}>
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
                     <th className="relative h-12 w-20 border border-gray-300 p-2.5 dark:border-gray-800">
-                      <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
+                      <div
+                        className={cn(
+                          'absolute inset-0 flex items-center justify-start',
+                          isArabic ? 'pr-2' : ' pl-2',
+                          'text-sm font-bold',
+                        )}
+                      >
                         <Tooltips
                           content={'Actual Current Year'}
                           variant="bold"
@@ -181,7 +197,12 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                           <span>CY</span>
                         </Tooltips>
                       </div>
-                      <div className="absolute bottom-0 right-1 text-xs font-semibold">
+                      <div
+                        className={cn(
+                          'absolute bottom-0 text-xs font-semibold',
+                          isArabic ? 'left-1' : 'right-1',
+                        )}
+                      >
                         <Tooltips
                           content={'Trend'}
                           variant="bold"
@@ -191,7 +212,12 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                           <span>TRD</span>
                         </Tooltips>
                       </div>
-                      <div className="absolute right-1 top-0 text-xs font-medium">
+                      <div
+                        className={cn(
+                          'absolute top-0 text-xs font-medium',
+                          isArabic ? 'left-1' : 'right-1',
+                        )}
+                      >
                         <Tooltips
                           content={'Actual Previous Year'}
                           variant="bold"
@@ -223,9 +249,9 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                 </td>
                 <td className="border border-gray-300 p-2.5 dark:border-gray-800">
                   {kpi.name}
-                </td>
+                </td>{' '}
                 <td className="border border-gray-300 p-2.5 capitalize dark:border-gray-800">
-                  {kpi.frequency?.toLowerCase()}
+                  {t(`options.${kpi.frequency}`)}
                 </td>
                 <td className="border border-gray-300 p-2.5 text-center dark:border-gray-800">
                   {switchUnit(kpi.unit)}
@@ -246,16 +272,27 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                         <td
                           key={month}
                           className={cn(
-                            'relative h-12 border border-gray-300 dark:border-gray-800 p-2.5 text-center',
+                            'relative h-12 border border-gray-300 dark:border-gray-800 p-2.5',
                             !cy
                               ? 'bg-gray-200 border-dashed border-gray-300 dark:border-gray-800 dark:bg-gray-400'
                               : '',
                           )}
                         >
-                          <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
+                          <div
+                            className={cn(
+                              'absolute inset-0 flex items-center justify-start',
+                              isArabic ? 'pr-2' : ' pl-2',
+                              'text-sm font-bold',
+                            )}
+                          >
                             {cy ?? ''}
                           </div>
-                          <div className="absolute bottom-0 right-1 text-xs font-semibold">
+                          <div
+                            className={cn(
+                              'absolute bottom-0 text-xs font-semibold',
+                              isArabic ? 'left-1' : 'right-1',
+                            )}
+                          >
                             {!cy
                               ? ''
                               : !py
@@ -268,9 +305,13 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                                         : 'NEUTRAL',
                                   )}
                           </div>
-                          <div className="absolute right-1 top-0 text-xs font-medium">
+                          <div
+                            className={cn(
+                              'absolute top-0 text-xs font-medium',
+                              isArabic ? 'left-1' : 'right-1',
+                            )}
+                          >
                             {!cy ? (py ?? '') : (py ?? '')}
-                            {/* {!cy ? (py ?? '') : (py ?? 'N/A')} */}
                           </div>
                         </td>
                       )

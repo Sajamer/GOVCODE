@@ -366,7 +366,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
   const ColumnSelector = () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="h-11">
+        <Button variant="outline" className="h-11 ">
           <SlidersHorizontal className="mr-2 size-4" />
           {t('columns')}
         </Button>
