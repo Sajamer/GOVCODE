@@ -94,6 +94,7 @@
     "Calibration": "الاتجاه المرجو",
     "Description": "الوصف",
     "Frequency": "التكرار",
+    "Trend": "الاتجاه",
     "Unit": "الوحدة",
     "Type": "النوع",
     "kpi-code": "رمز المؤشر",
@@ -170,21 +171,7 @@
       "Infrastructure": "البنية التحتية",
       "Integration and Data": "التكامل والبيانات"
     },
-    "objective-options": {
-      "Objective 1": "الهدف 1",
-      "Objective 2": "الهدف 2",
-      "Objective 3": "الهدف 3"
-    },
-    "compliance-options": {
-      "Compliance 1": "التشريع 1",
-      "Compliance 2": "التشريع 2",
-      "Compliance 3": "التشريع 3"
-    },
-    "process-options": {
-      "Process 1": "العملية 1",
-      "Process 2": "العملية 2",
-      "Process 3": "العملية 3"
-    },
+    "show-custom-status": "إظهار الحالة المخصصة",
     "options": {
       "Cumulative": "تراكمي",
       "CUMULATIVE": "تراكمي",
@@ -226,13 +213,30 @@
       "high": "عالي",
       "todo": "للقيام به",
       "inProgress": "قيد التنفيذ",
-      "done": "تم"
+      "done": "تم",
+      "Jan": "يناير",
+      "Feb": "فبراير",
+      "Mar": "مارس",
+      "Apr": "أبريل",
+      "May": "مايو",
+      "Jun": "يونيو",
+      "Jul": "يوليو",
+      "Aug": "أغسطس",
+      "Sep": "سبتمبر",
+      "Oct": "أكتوبر",
+      "Nov": "نوفمبر",
+      "Dec": "ديسمبر",
+      "q1": "الربع الأول",
+      "q2": "الربع الثاني",
+      "q3": "الربع الثالث",
+      "q4": "الربع الرابع"
     },
     "current-target": "الهدف الحالي",
     "current-actual": "الفعلي الحالي",
     "status": "الحالة",
     "Status": "الحالة",
     "kpi-charts": "رسم بياني للمؤشرات",
+    "year": "عام",
     "year-options": {
       "2021": "٢٠٢١",
       "2022": "٢٠٢٢",

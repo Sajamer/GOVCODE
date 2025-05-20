@@ -11,6 +11,7 @@ import {
   calculateStatus,
   capitalizeFirstLetter,
   cn,
+  convertToArabicNumerals,
   findMatchingRule,
   switchUnit,
 } from '@/lib/utils'
@@ -19,6 +20,8 @@ import { IKpiResponse, MonthlyData } from '@/types/kpi'
 import { KPIActual, KPITarget, userRole } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, Fragment, useState } from 'react'
 
 interface IKpiStatusProps {
@@ -30,6 +33,9 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
 
   const months = periodsByFrequency.monthly
   const currentYear = new Date().getFullYear()
+  const pathname = usePathname()
+  const isArabic = pathname.includes('/ar')
+  const t = useTranslations('general')
 
   const { departmentId, organizationId } = useGlobalStore((store) => store)
 
@@ -99,17 +105,26 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
   }
 
   return (
-    <div className="max-w-full overflow-x-auto">
+    <div
+      className="w-full max-w-full overflow-x-auto"
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
       <table className="relative min-w-full border-collapse">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-300">
             <th>
-              <div className="absolute left-5 top-5 flex items-center gap-2 px-4">
+              <div
+                className={cn(
+                  'absolute top-5 flex items-center gap-3 px-4',
+                  isArabic ? 'right-5' : 'left-5',
+                )}
+              >
                 <span className="text-xl font-semibold underline">
-                  Show Custom Status
+                  {t('show-custom-status')}
                 </span>
                 <Switch
                   id="status-switch"
+                  dir={isArabic ? 'rtl' : 'ltr'}
                   checked={showCustomStatus}
                   onCheckedChange={setShowCustomStatus}
                 />
@@ -123,7 +138,8 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
               colSpan={12}
               className="border border-gray-300 p-2.5 dark:border-gray-800"
             >
-              Year {currentYear}
+              {t('year')}{' '}
+              {isArabic ? convertToArabicNumerals(currentYear) : currentYear}
             </th>
           </tr>
           <tr className="bg-gray-100 dark:bg-gray-300">
@@ -138,7 +154,7 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                 colSpan={3}
                 className="border border-gray-300 p-2.5 dark:border-gray-800"
               >
-                {quarter.toUpperCase()}
+                {t(`options.${quarter}`)}
               </th>
             ))}
           </tr>
@@ -156,7 +172,7 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                     className="border border-gray-300 p-2.5 dark:border-gray-800"
                     colSpan={1}
                   >
-                    {month}
+                    {t(`options.${month}`)}
                   </th>
                 ))}
               </Fragment>
@@ -164,26 +180,31 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
           </tr>
           <tr className="bg-gray-100 dark:bg-gray-300">
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Code
+              {t('Code')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              KPI Name
+              {t('kpi-name')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Frequency
+              {t('Frequency')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Unit
+              {t('Unit')}
             </th>
             <th className="border border-gray-300 p-2.5 dark:border-gray-800">
-              Trend
+              {t('Trend')}
             </th>
             {Object.keys(quarters).map((quarter) => (
               <Fragment key={quarter}>
                 {quarters[quarter as keyof typeof quarters].map((month) => (
                   <Fragment key={month}>
                     <th className="relative h-12 w-20 border border-gray-300 p-2.5 dark:border-gray-800">
-                      <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
+                      <div
+                        className={cn(
+                          'absolute inset-0 flex items-center justify-start text-sm font-bold',
+                          isArabic ? 'pr-2' : ' pl-2',
+                        )}
+                      >
                         <Tooltips
                           content={'Current Target'}
                           variant="bold"
@@ -193,7 +214,12 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                           <span>CT</span>
                         </Tooltips>
                       </div>
-                      <div className="absolute bottom-0 right-1 text-xs font-semibold">
+                      <div
+                        className={cn(
+                          'absolute bottom-0 text-xs font-semibold',
+                          isArabic ? 'left-1' : 'right-1',
+                        )}
+                      >
                         <Tooltips
                           content={'Status'}
                           variant="bold"
@@ -203,7 +229,12 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                           <span>ST</span>
                         </Tooltips>
                       </div>
-                      <div className="absolute right-1 top-0 text-xs font-medium">
+                      <div
+                        className={cn(
+                          'absolute top-0 text-xs font-medium',
+                          isArabic ? 'left-1' : 'right-1',
+                        )}
+                      >
                         <Tooltips
                           content={'Current Actual'}
                           variant="bold"
@@ -242,7 +273,7 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                   {kpi.name}
                 </td>
                 <td className="border border-gray-300 p-2.5 capitalize dark:border-gray-800">
-                  {kpi.frequency?.toLowerCase()}
+                  {t(`options.${kpi.frequency}`)}
                 </td>
                 <td className="border border-gray-300 p-2.5 text-center dark:border-gray-800">
                   {switchUnit(kpi.unit)}
@@ -276,17 +307,32 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                                   : '',
                             )}
                           >
-                            <div className="absolute inset-0 flex items-center justify-start pl-2 text-sm font-bold">
+                            <div
+                              className={cn(
+                                'absolute inset-0 flex items-center justify-start text-sm font-bold',
+                                isArabic ? 'pr-2' : ' pl-2',
+                              )}
+                            >
                               {actual !== undefined && target === undefined
                                 ? ''
                                 : (target ?? '')}
                             </div>
-                            <div className="absolute right-1 top-1 text-xs font-semibold">
+                            <div
+                              className={cn(
+                                'absolute top-1 text-xs font-semibold',
+                                isArabic ? 'left-1' : 'right-1',
+                              )}
+                            >
                               {target !== undefined && actual === undefined
                                 ? ''
                                 : (actual ?? '')}
                             </div>
-                            <div className="absolute bottom-1 left-1">
+                            <div
+                              className={cn(
+                                'absolute bottom-1',
+                                isArabic ? 'right-1' : 'left-1',
+                              )}
+                            >
                               {target !== undefined &&
                               actual !== undefined &&
                               showCustomStatus &&
@@ -311,7 +357,12 @@ const KpiStatusComponent: FC<IKpiStatusProps> = () => {
                                   })()
                                 : null}
                             </div>
-                            <div className="absolute bottom-1 right-1 text-xs font-medium">
+                            <div
+                              className={cn(
+                                'absolute bottom-1 text-xs font-medium',
+                                isArabic ? 'left-1' : 'right-1',
+                              )}
+                            >
                               {target !== undefined && actual !== undefined
                                 ? statusIndicatorSwitch(status)
                                 : ''}
