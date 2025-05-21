@@ -137,7 +137,7 @@ const Frameworks: FC = () => {
             ))}
           </div>
         ) : (
-          <NoResultFound label={`No ${pageStaticData?.title} yet.`} />
+          <NoResultFound label={t('no-frameworks-yet')} />
         )}
       </div>
     </div>

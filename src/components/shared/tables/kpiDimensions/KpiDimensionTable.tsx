@@ -189,7 +189,7 @@ const KpiDimensionTable = <T extends Record<string, unknown>>({
               />
             </div>
           ) : (
-            <NoResultFound label={`No ${title} yet.`} />
+            <NoResultFound label={`${t('no')} ${t(title)} ${t('yet')}.`} />
           )}
         </div>
       </div>

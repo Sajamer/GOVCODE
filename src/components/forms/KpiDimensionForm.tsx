@@ -296,8 +296,8 @@ const KpiDimensionForm: FC<IKpiDimensionFormProps> = ({
     >
       <div className="flex w-full flex-col items-center gap-3">
         <LabeledInput
-          label={'Name'}
-          placeholder={'Enter status name'}
+          label={t('Name')}
+          placeholder={t('name-placeholder')}
           {...getFieldProps('name')}
           error={touched.name && errors.name ? errors.name : ''}
         />

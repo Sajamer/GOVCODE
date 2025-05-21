@@ -145,23 +145,23 @@ const OrganizationForm: FC = () => {
     >
       <div className="flex flex-col items-center justify-center gap-4 ">
         <LabeledInput
-          label={'Organization Name*'}
-          placeholder={'Enter organization name'}
+          label={`${t('organization-name')}*`}
+          placeholder={t('organization-name-placeholder')}
           {...getFieldProps('name')}
           error={touched.name && errors.name ? errors.name : ''}
         />
 
         <LabeledInput
           type="email"
-          label={'Organization Email*'}
-          placeholder={'Enter organization email'}
+          label={`${t('organization-email')}*`}
+          placeholder={t('organization-email-placeholder')}
           {...getFieldProps('email')}
           error={touched.email && errors.email ? errors.email : ''}
         />
 
         <LabeledTextArea
           label={t('Description')}
-          placeholder={'Enter description'}
+          placeholder={t('description-placeholder')}
           className="resize-none"
           {...getFieldProps('description')}
           error={
@@ -170,29 +170,29 @@ const OrganizationForm: FC = () => {
         />
 
         <LabeledInput
-          label={'Country'}
-          placeholder={'Enter country'}
+          label={t('country')}
+          placeholder={t('country-placeholder')}
           {...getFieldProps('country')}
           error={touched.country && errors.country ? errors.country : ''}
         />
 
         <LabeledInput
-          label={'City'}
-          placeholder={'Enter city'}
+          label={t('city')}
+          placeholder={t('city-placeholder')}
           {...getFieldProps('city')}
           error={touched.city && errors.city ? errors.city : ''}
         />
 
         <LabeledInput
-          label={'State'}
-          placeholder={'Enter state'}
+          label={t('state')}
+          placeholder={t('state-placeholder')}
           {...getFieldProps('state')}
           error={touched.state && errors.state ? errors.state : ''}
         />
 
         <div className="flex w-full flex-col items-start gap-5">
           <h3 className="text-sm font-medium text-neutral-800">
-            Add Departments
+            {t('add-departments')}
           </h3>
           <div className="flex w-full flex-col items-start gap-2">
             {values.departments.map((item, index) => (
@@ -250,7 +250,7 @@ const OrganizationForm: FC = () => {
             ))}
             <div className="relative w-full">
               <AddNewComponent
-                placeholder="New Department"
+                placeholder={t('new-department')}
                 callback={(label) => handleNewDepartment(label)}
               />
               {errors.departments && (
@@ -281,7 +281,7 @@ const OrganizationForm: FC = () => {
           isLoading={addLoading}
           disabled={addLoading || !dirty}
         >
-          Create Organization
+          {t('create')}
         </Button>
       </div>
     </form>
