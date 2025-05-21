@@ -7,7 +7,11 @@ import {
   restoreTask,
 } from '@/lib/actions/task.actions'
 import { CustomUser } from '@/lib/auth'
-import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
+import {
+  convertToArabicNumerals,
+  generateTableData,
+  searchObjectValueRecursive,
+} from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
 import { ITasksManagementResponse } from '@/types/tasks'
@@ -267,14 +271,16 @@ const TasksTable = <T extends Record<string, unknown>>({
               <div className="flex w-full items-center justify-start gap-5">
                 {showTabs && (
                   <div className="flex items-center justify-start gap-4">
-                    <span className="text-lg font-semibold">Filter By:</span>
+                    <span className="text-lg font-semibold">
+                      {t('filter-by')}:
+                    </span>
                     <Button
                       variant={
                         activeFilter === 'my-tasks' ? 'default' : 'outline'
                       }
                       onClick={() => setActiveFilter('my-tasks')}
                     >
-                      My Tasks
+                      {t('my-tasks')}
                     </Button>
                     <Button
                       variant={
@@ -284,7 +290,7 @@ const TasksTable = <T extends Record<string, unknown>>({
                       }
                       onClick={() => setActiveFilter('assigned-tasks')}
                     >
-                      Assigned Tasks
+                      {t('assigned-tasks')}
                     </Button>
                     <Button
                       variant={
@@ -294,14 +300,16 @@ const TasksTable = <T extends Record<string, unknown>>({
                       }
                       onClick={() => setActiveFilter('archived-tasks')}
                     >
-                      Archived Tasks
+                      {t('archived-tasks')}
                     </Button>
                   </div>
                 )}
                 <h5 className="text-lg font-semibold">
-                  Total Tasks:{' '}
+                  {t('total-tasks')}:{' '}
                   <span className="rounded-full bg-gray-300 px-3 py-1 text-base">
-                    {totalTaskRef.current}
+                    {isArabic
+                      ? convertToArabicNumerals(totalTaskRef.current)
+                      : totalTaskRef.current}
                   </span>
                 </h5>
               </div>
@@ -317,7 +325,7 @@ const TasksTable = <T extends Record<string, unknown>>({
               />
             </div>
           ) : (
-            <NoResultFound label={`No ${title} yet.`} />
+            <NoResultFound label={t('no-task-yet')} />
           )}
         </div>
       </div>

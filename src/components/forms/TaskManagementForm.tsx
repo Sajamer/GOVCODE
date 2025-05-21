@@ -193,14 +193,14 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
     >
       <div className="flex w-full flex-col items-center gap-3">
         <LabeledInput
-          label={'Name'}
-          placeholder={'Enter task name'}
+          label={t('Name')}
+          placeholder={t('task-name-placeholder')}
           {...getFieldProps('name')}
           error={touched.name && errors.name ? errors.name : ''}
         />
         <LabeledTextArea
-          label={'Description'}
-          placeholder={'Enter description here'}
+          label={t('Description')}
+          placeholder={t('description-placeholder')}
           className="resize-none"
           {...getFieldProps('description')}
           error={
@@ -209,9 +209,9 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
         />
         <BasicDropdown
           data={statusOptions ?? []}
-          label={'Task Status'}
+          label={t('task-status')}
           triggerStyle="h-11"
-          placeholder={'Select Status'}
+          placeholder={t('task-status-placeholder')}
           defaultValue={statusOptions?.find(
             (option) => +option.id === values.statusId,
           )}
@@ -221,9 +221,9 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
         />
         <BasicDropdown
           data={priorityOptions ?? []}
-          label={'Priority'}
+          label={t('priority')}
           triggerStyle="h-11"
-          placeholder={'Select Priority'}
+          placeholder={t('priority-placeholder')}
           defaultValue={priorityOptions?.find(
             (option) => option.id === values.priority,
           )}
@@ -233,8 +233,8 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
         />
         <MultiSelect
           instanceId={'users'}
-          label={'Assign task to'}
-          placeholder={'Select users'}
+          label={t('assign-task-to')}
+          placeholder={t('assign-task-to-placeholder')}
           data={userOptions ?? []}
           hasArrow
           isMulti
@@ -261,8 +261,8 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
         />
 
         <LabeledInput
-          label={'Start Date'}
-          placeholder={'Enter start date'}
+          label={t('start-date')}
+          placeholder={t('start-date-placeholder')}
           type="date"
           value={
             values.startDate
@@ -279,8 +279,8 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           }
         />
         <LabeledInput
-          label={'Due Date'}
-          placeholder={'Enter due date'}
+          label={t('due-date')}
+          placeholder={t('due-date-placeholder')}
           type="date"
           value={
             values.dueDate ? moment(values.dueDate).format('YYYY-MM-DD') : ''
@@ -295,8 +295,8 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
         {isEdit && (
           <div className="flex w-full flex-col items-center gap-3">
             <LabeledInput
-              label={'Actual End Date'}
-              placeholder={'Enter actual end date'}
+              label={t('actual-end-date')}
+              placeholder={t('actual-end-date-placeholder')}
               type="date"
               value={
                 values.actualEndDate
@@ -313,9 +313,9 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
               }
             />
             <LabeledInput
-              label={'Percentage Done'}
+              label={t('percentage-done')}
               type="number"
-              placeholder={'Enter percentage done'}
+              placeholder={t('percentage-done-placeholder')}
               {...getFieldProps('percentDone')}
               error={
                 touched.percentDone && errors.percentDone
@@ -326,8 +326,8 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
           </div>
         )}
         <LabeledTextArea
-          label={'Comment'}
-          placeholder={'Enter comment here'}
+          label={t('comment')}
+          placeholder={t('comment-placeholder')}
           className="resize-none"
           {...getFieldProps('comment')}
           error={touched.comment && errors.comment ? errors.comment : ''}

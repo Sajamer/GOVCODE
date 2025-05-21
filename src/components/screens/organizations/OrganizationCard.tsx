@@ -1,6 +1,11 @@
+'use client'
+
 import { Link } from '@/i18n/routing'
+import { cn } from '@/lib/utils'
 import { ArrowRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 
 interface IOrganizationCardProps {
@@ -8,6 +13,9 @@ interface IOrganizationCardProps {
 }
 
 const OrganizationCard: FC<IOrganizationCardProps> = ({ data }) => {
+  const isArabic = usePathname().includes('/ar')
+  const t = useTranslations('general')
+
   return (
     <div className="flex w-full items-center justify-between gap-3 rounded-3xl bg-neutral-200 px-3 py-6 md:gap-[3.12rem] md:px-[1.88rem]">
       <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-center lg:gap-[3.12rem]">
@@ -33,7 +41,7 @@ const OrganizationCard: FC<IOrganizationCardProps> = ({ data }) => {
         <div className="flex w-full gap-11">
           <div className="flex flex-col items-start gap-3 md:flex-row">
             <h2 className="text-[0.875rem] font-normal leading-normal text-neutral-600 ">
-              Address
+              {t('address')}:
             </h2>
             <span className="text-[0.875rem] font-medium leading-normal text-neutral-800">
               {data.country + ', ' + data.state + ', ' + data.city}
@@ -41,7 +49,7 @@ const OrganizationCard: FC<IOrganizationCardProps> = ({ data }) => {
           </div>
           <div className="flex flex-col items-start gap-3 md:flex-row">
             <h2 className="text-[0.875rem] font-normal leading-normal text-neutral-600 ">
-              Email
+              {t('email')}:
             </h2>
             <span className="text-[0.875rem] font-medium leading-normal text-neutral-800">
               {data.email}
@@ -51,7 +59,10 @@ const OrganizationCard: FC<IOrganizationCardProps> = ({ data }) => {
       </div>
       <div>
         <Link href={`/organization/${data.id}`}>
-          <ArrowRight size={24} className="text-neutral-800" />
+          <ArrowRight
+            size={24}
+            className={cn('text-neutral-800', isArabic && 'rotate-180')}
+          />
         </Link>
       </div>
     </div>

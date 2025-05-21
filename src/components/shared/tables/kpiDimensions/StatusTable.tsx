@@ -175,7 +175,7 @@ const StatusTable = <T extends Record<string, unknown>>({
               />
             </div>
           ) : (
-            <NoResultFound label={`No ${title} yet.`} />
+            <NoResultFound label={t('no-status-yet')} />
           )}
         </div>
       </div>

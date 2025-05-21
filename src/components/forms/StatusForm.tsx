@@ -173,20 +173,20 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
     >
       <div className="flex w-full flex-col items-center gap-3">
         <LabeledInput
-          label={'Name'}
-          placeholder={'Enter status name'}
+          label={t('Name')}
+          placeholder={t('status-name-placeholder')}
           {...getFieldProps('name')}
           error={touched.name && errors.name ? errors.name : ''}
         />
 
         <div className="mt-4 flex w-full flex-col gap-4 overflow-x-hidden">
-          <h2 className="text-base font-medium text-zinc-800">Rules</h2>
+          <h2 className="text-base font-medium text-zinc-800">{t('rules')}</h2>
           <div className="flex w-full flex-col items-center text-sm">
             <div className="flex w-full items-center gap-4 text-sm">
-              <span className="w-full">Label</span>
-              <span className="w-full">Min &gt;=</span>
-              <span className="w-full">Max &lt;=</span>
-              <span className="w-40">Color</span>
+              <span className="w-full">{t('label')}</span>
+              <span className="w-full">{t('min')} &gt;=</span>
+              <span className="w-full">{t('max')} &lt;=</span>
+              <span className="w-40">{t('color')}</span>
               <span className="w-20"></span>
             </div>
             {values.rules.map((rule, index) => {
@@ -284,7 +284,7 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
             onClick={handleAddRule}
             className="self-end text-sm text-primary hover:underline"
           >
-            + Add More
+            + {t('add-more')}
           </button>
         </div>
       </div>
