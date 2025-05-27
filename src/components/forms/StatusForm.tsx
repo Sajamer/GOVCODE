@@ -185,7 +185,7 @@ const StatusForm: FC<IStatusFormProps> = ({ data: statusData }) => {
             <div className="flex w-full items-center gap-4 text-sm">
               <span className="w-full">{t('label')}</span>
               <span className="w-full">{t('min')} &gt;=</span>
-              <span className="w-full">{t('max')} &lt;=</span>
+              <span className="w-full">{t('max')} &lt;</span>
               <span className="w-40">{t('color')}</span>
               <span className="w-20"></span>
             </div>
