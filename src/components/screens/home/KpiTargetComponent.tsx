@@ -63,7 +63,6 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
       })
     },
   })
-
   const handleAddYear = () => {
     const existingYears = values.map((target) => target.year)
     const nextYear = existingYears.length
@@ -80,6 +79,22 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
     setValues([...values, ...newYearTargets])
   }
 
+  const handleAddPreviousYear = () => {
+    const existingYears = values.map((target) => target.year)
+    const previousYear = existingYears.length
+      ? Math.min(...existingYears) - 1
+      : currentYear - 1
+
+    const newPreviousYearTargets = periods.map((period) => ({
+      kpiId: id,
+      year: previousYear,
+      period,
+      targetValue: 0,
+    }))
+
+    setValues([...newPreviousYearTargets, ...values])
+  }
+
   const handleInputChange = (
     year: number,
     period: string,
@@ -94,7 +109,9 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
     }
   }
 
-  const uniqueYears = Array.from(new Set(values.map((target) => target.year)))
+  const uniqueYears = Array.from(
+    new Set(values.map((target) => target.year)),
+  ).sort((a, b) => a - b) // Sort years in ascending order
 
   return (
     <div className="w-full">
@@ -117,9 +134,17 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
           <h1 className="text-xl font-semibold text-secondary">Frequency:</h1>
           <p className="font-medium capitalize text-black">{frequencyKey}</p>
         </div>
-      </div>
+      </div>{' '}
       {hasPermission && (
-        <div className="flex w-full items-center justify-end">
+        <div className="flex w-full items-center justify-end gap-5">
+          <Button
+            variant={'secondary'}
+            type="button"
+            className="w-40"
+            onClick={handleAddPreviousYear}
+          >
+            Add previous Target
+          </Button>
           <Button
             variant={'secondary'}
             type="button"

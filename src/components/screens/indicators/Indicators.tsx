@@ -18,8 +18,8 @@ import { FC, useEffect, useMemo } from 'react'
 
 const Indicators: FC = () => {
   const pageStaticData = {
-    title: 'Indicators',
-    description: 'indicator-description',
+    title: 'frameworks',
+    description: 'framework-description',
     sheetName: 'indicators',
   }
 
@@ -44,7 +44,7 @@ const Indicators: FC = () => {
     ? (entityData.find((r) => r._id === rowId) as IMongoIndicator | undefined)
     : undefined
 
-  const localizedTitle = t('indicators')
+  const localizedTitle = t('framework')
 
   useEffect(() => {
     setSearchTerm('')

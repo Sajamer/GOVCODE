@@ -23,7 +23,7 @@ const formSchema = z.object({
   }),
 })
 
-export default function FrameworkForm() {
+export default function ComplianceFrameworkForm() {
   const t = useTranslations('general')
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,7 +61,6 @@ export default function FrameworkForm() {
       setIsLoading(false)
     }
   }
-  // Form submission handler
 
   return (
     <Form {...form}>

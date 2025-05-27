@@ -70,12 +70,12 @@ export const SidebarItems = () => {
       href: '/task-management',
     },
     {
-      title: t('indicators'),
+      title: t('frameworks'),
       icon: <BadgeCheck className="size-4 min-w-4" />,
       href: '/indicators',
     },
     {
-      title: t('frameworks'),
+      title: t('compliance-frameworks'),
       icon: <BadgeCheck className="size-4 min-w-4" />,
       href: '/frameworks',
     },

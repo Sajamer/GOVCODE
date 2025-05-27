@@ -78,13 +78,13 @@ const AccordionSidebar: FC<IAccordionSidebarProps> = ({
         <AccordionTrigger
           onClick={() => toggleState()}
           className={cn(
-            'flex flex-col gap-4 text-base py-2 hover:no-underline lg:flex-row lg:items-center lg:justify-start lg:px-5',
+            'flex flex-col gap-4 text-base py-2 hover:no-underline lg:flex-row lg:items-center lg:justify-start lg:px-4',
             isActivePath(path)
               ? 'bg-primary rounded-xl [&[data-state=open]>svg]:hidden [&[data-state=closed]>svg]:hidden lg:[&[data-state=closed]>svg]:block lg:[&[data-state=open]>svg]:block lg:[&[data-state=open]>svg]:text-white lg:[&[data-state=closed]>svg]:text-white'
               : 'hover:text-primary [&[data-state=open]>svg]:hidden [&[data-state=closed]>svg]:hidden lg:[&[data-state=closed]>svg]:block lg:[&[data-state=open]>svg]:block lg:[&[data-state=open]>svg]:hover:text-primary lg:[&[data-state=closed]>svg]:hover:text-primary',
           )}
         >
-          <div className="flex items-center gap-3 [&[data-state=open]>svg]:!rotate-0">
+          <div className="flex items-center gap-3 whitespace-nowrap [&[data-state=open]>svg]:!rotate-0">
             {icon}
             <span
               className={cn(
