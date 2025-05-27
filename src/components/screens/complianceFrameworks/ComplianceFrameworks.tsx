@@ -96,30 +96,29 @@ const ComplianceFrameworks: FC = () => {
                     <h4 className="text-sm font-medium text-muted-foreground">
                       {t('attributes')}:
                     </h4>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                       {Object.entries(
-                        framework.attributes.reduce<Record<string, string[]>>(
-                          (acc, attr) => {
-                            if (!acc[attr.name]) {
-                              acc[attr.name] = []
-                            }
-                            if (attr.value) {
-                              acc[attr.name].push(attr.value)
-                            }
-                            return acc
-                          },
-                          {},
-                        ),
-                      ).map(([name, values]: [string, string[]]) => (
+                        framework.attributes.reduce<
+                          Record<string, Set<string>>
+                        >((acc, attr) => {
+                          if (!acc[attr.name]) {
+                            acc[attr.name] = new Set<string>()
+                          }
+                          if (attr.value) {
+                            acc[attr.name].add(attr.value)
+                          }
+                          return acc
+                        }, {}),
+                      ).map(([name, valueSet]: [string, Set<string>]) => (
                         <div
                           key={name}
                           className="rounded-lg border bg-card p-4"
                         >
-                          <div className="font-medium text-card-foreground">
+                          <div className="font-bold text-card-foreground">
                             {name}
-                          </div>
+                          </div>{' '}
                           <div className="mt-2 space-y-1">
-                            {values.map((value, index) => (
+                            {Array.from(valueSet).map((value, index) => (
                               <div
                                 key={`${name}-${index}`}
                                 className="text-sm text-muted-foreground"
