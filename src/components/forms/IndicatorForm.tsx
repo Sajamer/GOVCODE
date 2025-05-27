@@ -21,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { ChevronDown, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, useEffect, useRef, useState } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import ErrorText from '../shared/ErrorText'
@@ -92,6 +93,7 @@ const LevelComponent: FC<ILevelComponentProps> = ({
   showDelete = true,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true)
+  const t = useTranslations('general')
 
   // Build the path based on the level index
   const currentPath =
@@ -144,8 +146,8 @@ const LevelComponent: FC<ILevelComponentProps> = ({
         </Button>
         <div className="flex-1">
           <LabeledInput
-            label={`Level ${depth === 0 ? '1.' + (levelIndex[0] + 1) : depth + 1 + '.' + (levelIndex[levelIndex.length - 1] + 1)} Name`}
-            placeholder="Enter level name"
+            label={`${t('level')} ${depth === 0 ? '1.' + (levelIndex[0] + 1) : depth + 1 + '.' + (levelIndex[levelIndex.length - 1] + 1)} ${t('name')}`}
+            placeholder={t('level-name-placeholder')}
             {...getFieldProps(`${currentPath}.levelName`)}
             error={getNestedError(
               errors as NestedErrors,
@@ -177,7 +179,7 @@ const LevelComponent: FC<ILevelComponentProps> = ({
                 onClick={addSubLevel}
                 className="flex items-center gap-2"
               >
-                <Plus className="size-4" /> Add Sub-Level
+                <Plus className="size-4" /> {t('add-sub-level')}
               </Button>
             )}
           </div>
@@ -224,15 +226,17 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   totalFields,
   currentPath,
 }) => {
+  const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
   // Use refs to maintain state across renders and Dialog open/close cycles
-  const [isArrayValueDialogOpen, setIsArrayValueDialogOpen] = useState(false)
+  const formValueRef = useRef<string>('')
   const arrayValuesRef = useRef<string[]>([])
+  const previousValuesRef = useRef<string[]>([])
+  const [isArrayValueDialogOpen, setIsArrayValueDialogOpen] = useState(false)
   const [localArrayValues, setLocalArrayValues] = useState<string[]>([])
   const [newArrayValue, setNewArrayValue] = useState('')
   const [duplicateError, setDuplicateError] = useState<string | null>(null)
-  const formValueRef = useRef<string>('')
   const [urlError, setUrlError] = useState<string>('')
-  const previousValuesRef = useRef<string[]>([])
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   const { data: attributeTypes = [] } = useQuery<IAttributeType[]>({
@@ -404,14 +408,13 @@ const DynamicField: FC<IDynamicFieldProps> = ({
 
   const renderValueInput = () => {
     if (!currentAttributeType) return null
-
     switch (currentAttributeType.name.toLowerCase()) {
       case 'array':
         return (
           <div className="flex w-full items-end gap-2">
             <div className="relative flex w-full flex-col gap-1">
               <label className="text-sm font-medium text-neutral-800">
-                Manage Values first, then select one
+                {t('manage-first')}
               </label>
               <Select
                 value={getFieldProps(`${fieldPath}.value`).value}
@@ -422,7 +425,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
                 }}
               >
                 <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select a value" />
+                  <SelectValue placeholder={t('select-value')} />
                 </SelectTrigger>
                 <SelectContent>
                   {localArrayValues.map((value, index) => (
@@ -445,15 +448,18 @@ const DynamicField: FC<IDynamicFieldProps> = ({
                   size="sm"
                   className="flex items-center gap-2"
                 >
-                  <Plus className="size-4" /> Manage Values
+                  <Plus className="size-4" /> {t('manage-values')}
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="sm:max-w-md">
+              <DialogContent
+                className="sm:max-w-md"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
                 <DialogHeader>
-                  <DialogTitle>Manage Array Values</DialogTitle>
+                  <DialogTitle>{t('manage-array-values')}</DialogTitle>
                   <DialogDescription>
-                    Add or remove values for this array field.
+                    {t('add-or-remove-values')}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -480,7 +486,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
                     </ul>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      No values added yet.
+                      {t('no-values-added-yet')}
                     </p>
                   )}
 
@@ -490,7 +496,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
                       <LabeledInput
                         label=""
                         type="text"
-                        placeholder="Enter new value"
+                        placeholder={t('enter-new-value')}
                         value={newArrayValue}
                         onChange={(e) => {
                           setNewArrayValue(e.target.value)
@@ -509,7 +515,7 @@ const DynamicField: FC<IDynamicFieldProps> = ({
                         onClick={handleAddArrayValue}
                         className="mt-6"
                       >
-                        Add
+                        {t('add')}
                       </Button>
                     </div>
                   </div>
@@ -521,8 +527,8 @@ const DynamicField: FC<IDynamicFieldProps> = ({
       case 'object':
         return (
           <LabeledTextArea
-            label="Value (JSON format)"
-            placeholder="Enter JSON object"
+            label={t('value-object')}
+            placeholder={t('value-object-placeholder')}
             {...getFieldProps(`${fieldPath}.value`)}
             error={getNestedError(errors as NestedErrors, `${fieldPath}.value`)}
             onChange={(e) => {
@@ -541,26 +547,27 @@ const DynamicField: FC<IDynamicFieldProps> = ({
         return (
           <div className="flex h-14 w-full items-end justify-start gap-3">
             <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
-              No
+              {t('no')}
             </span>
             <Switch
               id="yes-no-mode"
+              dir={isArabic ? 'rtl' : 'ltr'}
               checked={getFieldProps(`${fieldPath}.value`).value === true}
               onCheckedChange={(checked) => {
                 setFieldValue(`${fieldPath}.value`, checked)
               }}
             />
             <span className="text-sm font-medium leading-[1.05625rem] text-zinc-500">
-              Yes
+              {t('yes')}
             </span>
           </div>
         )
       case 'attachment':
         return (
           <LabeledInput
-            label="Value (URL)"
+            label={t('value-url')}
             type="url"
-            placeholder="Enter URL"
+            placeholder={t('value-url-placeholder')}
             {...getFieldProps(`${fieldPath}.value`)}
             error={
               urlError ||
@@ -587,9 +594,9 @@ const DynamicField: FC<IDynamicFieldProps> = ({
       case 'number':
         return (
           <LabeledInput
-            label="Value (optional)"
+            label={t('value-optional')}
             type="number"
-            placeholder="Enter number value"
+            placeholder={t('value-number-placeholder')}
             {...getFieldProps(`${fieldPath}.value`)}
             onChange={(e) => {
               // Convert the number input to a string before setting it in the form
@@ -601,9 +608,9 @@ const DynamicField: FC<IDynamicFieldProps> = ({
       default:
         return (
           <LabeledInput
-            label="Value (optional)"
+            label={t('value-optional')}
             type={currentAttributeType.name.toLowerCase() ?? 'text'}
-            placeholder="Enter value"
+            placeholder={t('value-placeholder')}
             {...getFieldProps(`${fieldPath}.value`)}
             error={getNestedError(errors as NestedErrors, `${fieldPath}.value`)}
           />
@@ -614,8 +621,8 @@ const DynamicField: FC<IDynamicFieldProps> = ({
   return (
     <div className="mb-4 flex items-start gap-4">
       <LabeledInput
-        label={`Field ${fieldIndex + 1} Name*`}
-        placeholder="Enter attribute name"
+        label={`${t('field')} ${fieldIndex + 1} ${t('Name')}*`}
+        placeholder={t('field-placeholder')}
         {...getFieldProps(`${fieldPath}.attributeName`)}
         error={getNestedError(
           errors as NestedErrors,
@@ -623,7 +630,9 @@ const DynamicField: FC<IDynamicFieldProps> = ({
         )}
       />
       <div className="relative flex flex-col gap-1">
-        <label className="text-sm font-medium text-neutral-800">Type*</label>
+        <label className="text-sm font-medium text-neutral-800">
+          {t('type')}*
+        </label>
         <Select
           value={getFieldProps(`${fieldPath}.type`).value}
           onValueChange={(value) => {
@@ -632,12 +641,12 @@ const DynamicField: FC<IDynamicFieldProps> = ({
           }}
         >
           <SelectTrigger className="h-11 w-52">
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder={t('select-type')} />
           </SelectTrigger>
           <SelectContent>
             {attributeTypes.map((type) => (
               <SelectItem key={type._id} value={type._id}>
-                {type.name}
+                {t(type.name?.toLocaleLowerCase())}
               </SelectItem>
             ))}
           </SelectContent>
@@ -863,14 +872,14 @@ const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
         return (
           <div className="flex w-full flex-col items-center gap-3">
             <LabeledInput
-              label={'What is the name of this indicator?'}
-              placeholder={'Enter indicator name'}
+              label={t('indicator-name')}
+              placeholder={t('indicator-name-placeholder')}
               {...getFieldProps('name')}
               error={touched.name && errors.name ? errors.name : ''}
             />
             <LabeledTextArea
-              label={'What is the description of this indicator?'}
-              placeholder={'Enter description here'}
+              label={t('indicator-textArea-description')}
+              placeholder={t('indicator-textArea-description-placeholder')}
               className="resize-none"
               {...getFieldProps('description')}
               error={
@@ -880,11 +889,11 @@ const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
               }
             />
             <LabeledInput
-              label={'How many depth levels this indicator can have?'}
+              label={t('indicator-depth')}
               type="number"
               min={1}
               max={5}
-              placeholder={'Enter number of depth levels'}
+              placeholder={t('indicator-depth-placeholder')}
               {...getFieldProps('numberOfLevels')}
               onChange={(e) => {
                 const value = parseInt(e.target.value)
@@ -908,14 +917,14 @@ const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
         return (
           <div className="w-full">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold">Level Configuration</h2>
+              <h2 className="text-xl font-bold">{t('level-configuration')}</h2>
               <Button
                 type="button"
                 variant="outline"
                 onClick={addTopLevel}
                 className="flex items-center gap-2"
               >
-                <Plus className="size-4" /> Add Level
+                <Plus className="size-4" /> {t('add-level')}
               </Button>
             </div>
             {values.levels.map((level: ILevel, index: number) => (
@@ -985,7 +994,7 @@ const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
                   }}
                   className="flex items-center gap-2"
                 >
-                  <Plus className="size-4" /> Add Field
+                  <Plus className="size-4" /> {t('add-field')}
                 </Button>
               </div>
               {level.subLevels?.map((subLevel: ILevel, subIndex: number) =>
@@ -997,7 +1006,9 @@ const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
 
         return (
           <div className="w-full">
-            <h2 className="mb-4 text-xl font-bold">Field Configuration</h2>
+            <h2 className="mb-4 text-xl font-bold">
+              {t('field-configuration')}
+            </h2>
             {values.levels.map((level: ILevel, index: number) =>
               renderLevel(level, [index]),
             )}
@@ -1042,7 +1053,9 @@ const IndicatorForm: FC<IIndicatorFormProps> = ({ data }) => {
           className="w-full max-w-36 sm:max-w-[10.25rem]"
           onClick={handleNext}
         >
-          {currentStep === INDICATOR_FORM_STEPS.length - 1 ? t('save') : 'next'}
+          {currentStep === INDICATOR_FORM_STEPS.length - 1
+            ? t('save')
+            : t('next')}
         </Button>
       </div>
     </form>

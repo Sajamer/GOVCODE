@@ -1,6 +1,6 @@
 'use client'
 
-import FrameworkForm from '@/components/forms/FrameworkForm'
+import ComplianceFrameworkForm from '@/components/forms/ComplianceFrameworkForm'
 import PageHeader from '@/components/shared/headers/PageHeader'
 import NoResultFound from '@/components/shared/NoResultFound'
 import SheetComponent from '@/components/shared/sheets/SheetComponent'
@@ -15,10 +15,10 @@ import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { FC, useEffect } from 'react'
 
-const Frameworks: FC = () => {
+const ComplianceFrameworks: FC = () => {
   const pageStaticData = {
-    title: 'Frameworks',
-    description: 'framework-description',
+    title: 'compliance-frameworks',
+    description: 'compliance-frameworks-description',
     sheetName: 'frameworks',
   }
 
@@ -36,7 +36,7 @@ const Frameworks: FC = () => {
   })
 
   const frameworks = data?.frameworks || []
-  const localizedTitle = t('frameworks')
+  const localizedTitle = t('compliance-frameworks')
 
   useEffect(() => {
     setSearchTerm('')
@@ -58,7 +58,7 @@ const Frameworks: FC = () => {
           title={`${t('add-new')} ${localizedTitle}`}
           subtitle={`${t('define-new')} ${localizedTitle}`}
         >
-          <FrameworkForm />
+          <ComplianceFrameworkForm />
         </SheetComponent>
         {hasPermission && (
           <Button
@@ -144,4 +144,4 @@ const Frameworks: FC = () => {
   )
 }
 
-export default Frameworks
+export default ComplianceFrameworks

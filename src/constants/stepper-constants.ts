@@ -1,17 +1,17 @@
 export const INDICATOR_FORM_STEPS = [
   {
     id: 'basic-info',
-    title: 'Basic Information',
-    description: 'Enter indicator basic information',
+    title: 'basic-information',
+    description: 'basic-information-description',
   },
   {
     id: 'level-config',
-    title: 'Level Configuration',
-    description: 'Configure indicator levels',
+    title: 'level-configuration',
+    description: 'level-configuration-description',
   },
   {
     id: 'fields-config',
-    title: 'Fields Configuration',
-    description: 'Configure fields for each level',
+    title: 'field-configuration',
+    description: 'field-configuration-description',
   },
 ]

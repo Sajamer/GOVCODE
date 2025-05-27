@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 interface Step {
   id: string
   title: string
@@ -15,6 +19,8 @@ const StepperIndicator = ({
   currentStep,
   onStepClick,
 }: StepperIndicatorProps) => {
+  const t = useTranslations('general')
+
   return (
     <div className="w-full">
       <div className="relative flex justify-between">
@@ -65,9 +71,11 @@ const StepperIndicator = ({
                     isActive || isCompleted ? 'text-primary' : 'text-gray-500'
                   }`}
                 >
-                  {step.title}
+                  {t(step.title)}
                 </div>
-                <div className="text-xs text-gray-400">{step.description}</div>
+                <div className="text-xs text-gray-400">
+                  {t(step.description)}
+                </div>
               </div>
             </div>
           )

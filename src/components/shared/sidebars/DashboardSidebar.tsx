@@ -116,7 +116,7 @@ const DashboardSidebar: FC = () => {
                   href={item.href}
                   className={cn(
                     'w-full flex justify-center items-center gap-3 font-semibold text-base duration-75 py-2 hover:text-primary lg:justify-start',
-                    isArabic ? 'lg:pr-5' : 'lg:pl-5',
+                    isArabic ? 'lg:pr-4' : 'lg:pl-4',
                     isActiveLink(item.href)
                       ? 'bg-primary rounded-xl text-white hover:text-white'
                       : ' dark:text-white dark:hover:text-primary',
@@ -135,7 +135,7 @@ const DashboardSidebar: FC = () => {
                   )}
                   <p
                     className={cn(
-                      'text-base font-medium transition-opacity duration-500',
+                      'text-sm font-medium transition-opacity duration-500 whitespace-nowrap',
                       isSidebarOpened ? 'opacity-100' : 'opacity-0',
                     )}
                   >

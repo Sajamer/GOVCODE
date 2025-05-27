@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Frameworks from '@/components/screens/frameworks/Frameworks'
+import ComplianceFrameworks from '@/components/screens/complianceFrameworks/ComplianceFrameworks'
 import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import {
   dehydrate,
@@ -32,7 +32,7 @@ export default async function FrameworksPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Frameworks />
+      <ComplianceFrameworks />
     </HydrationBoundary>
   )
 }
