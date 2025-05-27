@@ -33,19 +33,19 @@ const DashboardCard: FC<IDashboardCardProps> = ({ data }) => {
   const getChartImage = (chartType?: string) => {
     switch (chartType) {
       case 'bar':
-        return '/assets/images/bar.png'
+        return '/assets/images/bar.jpg'
       case 'line':
-        return '/assets/images/line.png'
+        return '/assets/images/line.jpg'
       case 'pie':
-        return '/assets/images/pie.png'
+        return '/assets/images/pie.jpg'
       case 'radar':
-        return '/assets/images/radar.png'
+        return '/assets/images/radar.jpg'
       case 'area':
-        return '/assets/images/area.png'
+        return '/assets/images/area.jpg'
       case 'barStacked':
-        return '/assets/images/stacked-bar.png'
+        return '/assets/images/stacked-bar.jpg'
       default:
-        return '/assets/images/bar.png'
+        return '/assets/images/bar.jpg'
     }
   }
 
