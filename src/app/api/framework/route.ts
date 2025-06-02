@@ -67,9 +67,13 @@ export async function POST(req: NextRequest) {
           },
           { status: STATUS_CODES.BAD_REQUEST },
         )
-      }
-
-      const attributes: Array<{ name: string; value: string }> = []
+      } // Modified to include row and column indices for parent-child relationships
+      const attributes: Array<{
+        name: string
+        value: string
+        rowIndex: number
+        colIndex: number
+      }> = []
       const maxRows = Math.min(worksheet.rowCount, 1000) // Limit number of rows to process
 
       // Process each row (skip header row)
@@ -106,6 +110,8 @@ export async function POST(req: NextRequest) {
                 attributes.push({
                   name: headers[colIndex],
                   value: cellValue.substring(0, 1000), // Limit value length
+                  rowIndex: rowNumber - 2, // Zero-based row index
+                  colIndex,
                 })
                 rowHasData = true
               } catch (err) {
@@ -132,29 +138,68 @@ export async function POST(req: NextRequest) {
           },
           { status: STATUS_CODES.BAD_REQUEST },
         )
-      }
-
-      // Create framework with its attributes in a transaction
+      } // Create framework with its attributes in a transaction with parent-child relationships
       const result = await prisma.$transaction(async (tx) => {
         const framework = await tx.framework.create({
           data: { name },
         })
 
-        // Create attributes in smaller batches to avoid payload size issues
-        const batchSize = 100
-        for (let i = 0; i < attributes.length; i += batchSize) {
-          const batch = attributes.slice(i, i + batchSize)
-          await tx.frameworkAttribute.createMany({
-            data: batch.map((attr) => ({
-              ...attr,
-              frameworkId: framework.id,
-            })),
-          })
-        }
+        // Group attributes by row for hierarchical structure
+        const attributesByRow: Record<number, (typeof attributes)[0][]> = {}
 
+        // Group attributes by row
+        attributes.forEach((attr) => {
+          if (!attributesByRow[attr.rowIndex]) {
+            attributesByRow[attr.rowIndex] = []
+          }
+          attributesByRow[attr.rowIndex].push(attr)
+        })
+
+        // Store created attribute IDs for relationship building
+        const createdAttributeIds: Record<number, Record<number, string>> = {}
+
+        // Process each row of attributes
+        for (const rowIndex in attributesByRow) {
+          const rowIdx = parseInt(rowIndex)
+          createdAttributeIds[rowIdx] = {}
+
+          // Sort by column index to ensure proper hierarchy (left to right)
+          const rowAttributes = attributesByRow[rowIdx].sort(
+            (a, b) => a.colIndex - b.colIndex,
+          )
+
+          // Create attributes for this row with parent-child relationships
+          let previousAttributeId: string | null = null
+
+          for (const attr of rowAttributes) {
+            // Create the attribute with parent reference if not the first column
+            const createdAttr: { id: string } =
+              await tx.frameworkAttribute.create({
+                data: {
+                  name: attr.name,
+                  value: attr.value,
+                  frameworkId: framework.id,
+                  rowIndex: rowIdx,
+                  colIndex: attr.colIndex,
+                  parentId: previousAttributeId, // Link to previous column in same row
+                },
+              })
+
+            // Store the created ID for next attribute's parent reference
+            createdAttributeIds[rowIdx][attr.colIndex] = createdAttr.id
+            previousAttributeId = createdAttr.id
+          }
+        }
         return await tx.framework.findUnique({
           where: { id: framework.id },
-          include: { attributes: true },
+          include: {
+            attributes: {
+              include: {
+                children: true, // Include children attributes
+              },
+              orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
+            },
+          },
         })
       })
 
@@ -203,7 +248,12 @@ export async function GET() {
   try {
     const frameworks = await prisma.framework.findMany({
       include: {
-        attributes: true,
+        attributes: {
+          include: {
+            children: true, // Include children attributes
+          },
+          orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
+        },
       },
     })
 
