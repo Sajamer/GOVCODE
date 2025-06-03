@@ -14,7 +14,7 @@ import { IFrameworkAttribute } from '@/types/framework'
 import { useQuery } from '@tanstack/react-query'
 import { BadgeCheck, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { FC, useEffect } from 'react'
 
 const ComplianceFrameworks: FC = () => {
@@ -23,9 +23,9 @@ const ComplianceFrameworks: FC = () => {
     description: 'compliance-frameworks-description',
     sheetName: 'frameworks',
   }
-
   const t = useTranslations('general')
   const pathname = usePathname()
+  const router = useRouter()
   const isArabic = pathname.includes('/ar')
   const { actions } = useSheetStore((store) => store)
   const { openSheet, setSearchTerm } = actions
@@ -39,10 +39,14 @@ const ComplianceFrameworks: FC = () => {
 
   const frameworks = data?.frameworks || []
   const localizedTitle = t('compliance-frameworks')
-
   useEffect(() => {
     setSearchTerm('')
   }, [setSearchTerm])
+
+  const handleAttributeClick = (frameworkId: string, attributeId: string) => {
+    const currentPath = pathname.split('/').slice(0, -1).join('/')
+    router.push(`${currentPath}/frameworks/${frameworkId}/${attributeId}`)
+  }
 
   return (
     <div
@@ -197,7 +201,12 @@ const ComplianceFrameworks: FC = () => {
                                       (child) => (
                                         <div
                                           key={child.id}
-                                          onClick={() => {}}
+                                          onClick={() =>
+                                            handleAttributeClick(
+                                              framework.id,
+                                              child.id,
+                                            )
+                                          }
                                           className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
                                         >
                                           {child.value}
@@ -224,7 +233,12 @@ const ComplianceFrameworks: FC = () => {
                                       .map((child) => (
                                         <div
                                           key={`fallback-${child.id}`}
-                                          onClick={() => {}}
+                                          onClick={() =>
+                                            handleAttributeClick(
+                                              framework.id,
+                                              child.id,
+                                            )
+                                          }
                                           className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
                                         >
                                           {child.value}
