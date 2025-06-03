@@ -8,7 +8,7 @@ export const ParamsSchema = z.object({
 
 export const BodySchema = object({
   code: string().min(3),
-  name: string().min(5),
+  name: string().min(3),
   description: string().min(5),
   owner: string().min(5),
   measurementNumerator: string().optional(),
