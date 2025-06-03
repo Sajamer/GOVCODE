@@ -7,11 +7,10 @@ export const getAllFrameworks = async () => {
     const frameworks = await prisma.framework.findMany({
       include: {
         attributes: {
-          select: {
-            id: true,
-            name: true,
-            value: true,
+          include: {
+            children: true, // Include children relationships
           },
+          orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
         },
       },
     })
@@ -31,6 +30,18 @@ export const getAllFrameworks = async () => {
         id: attribute.id,
         name: attribute.name,
         value: attribute.value,
+        parentId: attribute.parentId,
+        rowIndex: attribute.rowIndex,
+        colIndex: attribute.colIndex,
+        children:
+          attribute.children?.map((child) => ({
+            id: child.id,
+            name: child.name,
+            value: child.value,
+            parentId: child.parentId,
+            rowIndex: child.rowIndex,
+            colIndex: child.colIndex,
+          })) || [],
       })),
     }))
 

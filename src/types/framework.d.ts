@@ -1,11 +1,15 @@
-interface IFrameworkAttribute {
+export interface IFrameworkAttribute {
   id: string
   name: string
   value: string | null
-  frameworkId: string
+  frameworkId?: string
+  parentId?: string | null
+  children?: IFrameworkAttribute[]
+  rowIndex?: number
+  colIndex?: number
 }
 
-interface IFramework {
+export interface IFramework {
   id: string
   name: string
   attributes: IFrameworkAttribute[]
