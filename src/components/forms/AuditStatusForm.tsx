@@ -8,7 +8,7 @@ import {
 import {
   auditStatusSchema,
   IAuditStatusManipulator,
-} from '@/schema/audit-status.schema'
+} from '@/schema/kpi-dimensions/audit-status.schema'
 import { useSheetStore } from '@/stores/sheet-store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { getIn, useFormik } from 'formik'
