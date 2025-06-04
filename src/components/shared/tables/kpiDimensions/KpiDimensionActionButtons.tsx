@@ -9,12 +9,14 @@ interface IKpiDimensionActionButtonsProps {
   rowId: string
   callback: () => void
   sheetName: SheetNames
+  isDeleteHidden?: boolean
 }
 
 const KpiDimensionActionButtons: FC<IKpiDimensionActionButtonsProps> = ({
   rowId,
   callback,
   sheetName,
+  isDeleteHidden = false,
 }) => {
   const { openSheet } = useSheetStore((store) => store.actions)
   const t = useTranslations('general')
@@ -38,11 +40,18 @@ const KpiDimensionActionButtons: FC<IKpiDimensionActionButtonsProps> = ({
               <Edit2 size={16} />
             </button>
           </Tooltips>
-          <Tooltips content={t('delete')} variant="bold" position="top" asChild>
-            <button onClick={callback} className="text-red-600">
-              <Trash size={16} />
-            </button>
-          </Tooltips>
+          {!isDeleteHidden && hasPermission && (
+            <Tooltips
+              content={t('delete')}
+              variant="bold"
+              position="top"
+              asChild
+            >
+              <button onClick={callback} className="text-red-600">
+                <Trash size={16} />
+              </button>
+            </Tooltips>
+          )}
         </>
       )}
     </div>
