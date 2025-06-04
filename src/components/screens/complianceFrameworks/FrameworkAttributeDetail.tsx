@@ -174,7 +174,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
           return (
             <div
               key={child.id}
-              className="flex w-full items-center gap-6 border-b bg-[#266a55]/60 p-4 text-white hover:bg-primary"
+              className="flex w-full items-center gap-6 border-b p-4 hover:bg-[#266a55]/60 hover:text-white"
             >
               <span className="w-10 shrink-0 font-medium">
                 {childIndex + 1}
