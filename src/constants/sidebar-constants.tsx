@@ -40,6 +40,10 @@ export const SidebarItems = () => {
           href: '/kpi-dimensions/status',
         },
         {
+          title: 'audit-status',
+          href: '/kpi-dimensions/audit-status',
+        },
+        {
           title: 'processes',
           href: '/kpi-dimensions/processes',
         },

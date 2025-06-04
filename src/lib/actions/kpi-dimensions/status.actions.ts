@@ -84,11 +84,6 @@ export async function updateStatusById(id: number, data: IStatusManipulator) {
 
 export async function deleteStatusById(id: number) {
   try {
-    // Delete related rules first (if cascade delete isn’t configured)
-    // await prisma.rule.deleteMany({
-    //   where: { statusId: id },
-    // })
-
     // Delete the status
     return await prisma.status.delete({
       where: { id },
