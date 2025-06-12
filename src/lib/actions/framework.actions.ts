@@ -6,11 +6,26 @@ export const getAllFrameworks = async () => {
   try {
     const frameworks = await prisma.framework.findMany({
       include: {
+        status: {
+          include: {
+            auditRules: true,
+          },
+        },
         attributes: {
           include: {
             children: true, // Include children relationships
           },
           orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
+        },
+        auditCycles: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+              },
+            },
+          },
         },
       },
     })
@@ -26,6 +41,15 @@ export const getAllFrameworks = async () => {
     const frameworksWithAttributes = frameworks.map((framework) => ({
       id: framework.id,
       name: framework.name,
+      status: {
+        id: framework.status.id,
+        name: framework.status.name,
+        auditRules: framework.status.auditRules.map((rule) => ({
+          id: rule.id,
+          label: rule.label,
+          color: rule.color,
+        })),
+      },
       attributes: framework.attributes.map((attribute) => ({
         id: attribute.id,
         name: attribute.name,
@@ -42,6 +66,17 @@ export const getAllFrameworks = async () => {
             rowIndex: child.rowIndex,
             colIndex: child.colIndex,
           })) || [],
+      })),
+      auditCycles: framework.auditCycles.map((cycle) => ({
+        id: cycle.id,
+        name: cycle.name,
+        startDate: cycle.startDate,
+        auditBy: cycle.auditBy,
+        description: cycle.description,
+        user: {
+          id: cycle.user.id,
+          fullName: cycle.user.fullName,
+        },
       })),
     }))
 

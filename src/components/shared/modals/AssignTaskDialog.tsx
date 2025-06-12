@@ -101,7 +101,6 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
       statusId: 0,
       allocatorId: user?.id ?? '',
       kpiId: 0,
-      auditCycleCaseId: null,
       assignees: [],
     },
     enableReinitialize: false,

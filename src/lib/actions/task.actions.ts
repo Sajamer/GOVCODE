@@ -81,7 +81,6 @@ export const createTask = async (dto: ITaskManagementManipulator) => {
           statusId: dto.statusId,
           allocatorId: dto.allocatorId,
           kpiId: dto.kpiId,
-          auditCycleCaseId: dto.auditCycleCaseId,
           lastAssigneeId: dto.allocatorId,
           assignees: {
             connect: dto.assignees.map((id) => ({ id })),
@@ -159,7 +158,6 @@ export const updateTaskById = async (
           statusId: dto.statusId,
           allocatorId: dto.allocatorId,
           kpiId: dto.kpiId,
-          auditCycleCaseId: dto.auditCycleCaseId,
           lastAssigneeId: dto.assignees[dto.assignees.length - 1], // Update last assignee
           assignees: {
             set: dto.assignees.map((id) => ({ id })),

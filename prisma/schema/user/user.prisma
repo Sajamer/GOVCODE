@@ -22,9 +22,9 @@ model User {
   lastAssignedTasks  TaskManagement[] @relation(name: "LastAssignee")
   assignedHistories  TaskHistory[]    @relation(name: "TaskAssignedTo") // Tracks tasks the user was assigned to
   allocatedHistories TaskHistory[]    @relation(name: "TaskAssignedBy") // Tracks tasks the user assigned
-
-  audits       AuditCycle[]
-  auditDetails AuditDetails[]
+  audits             AuditCycle[]
+  auditDetails       AuditDetails[]
+  ownedAudits        AuditDetails[]   @relation(name: "AuditOwner")
 }
 
 model Account {

@@ -5,6 +5,9 @@ model Framework {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  statusId Int         @default(1)
+  status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
   attributes  FrameworkAttribute[]
   auditCycles AuditCycle[]
 }
@@ -34,7 +37,8 @@ model FrameworkAttribute {
 }
 
 model AuditDetails {
-  id String @id @default(cuid())
+  id      String  @id @default(cuid())
+  comment String? @db.Text
 
   frameworkAttributeId String
   frameworkAttribute   FrameworkAttribute @relation(fields: [frameworkAttributeId], references: [id], onDelete: Cascade)
@@ -42,8 +46,11 @@ model AuditDetails {
   auditCycleId Int
   auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
 
-  auditBy String?
-  auditor User?   @relation(fields: [auditBy], references: [id])
+  auditBy String
+  auditor User   @relation(fields: [auditBy], references: [id])
+
+  ownedBy String?
+  owner   User?   @relation(fields: [ownedBy], references: [id], name: "AuditOwner")
 
   statusId Int
   status   auditStatus @relation(fields: [statusId], references: [id])
@@ -58,24 +65,22 @@ model AuditDetails {
   @@index([frameworkAttributeId])
   @@index([auditCycleId])
   @@index([auditBy])
+  @@index([ownedBy])
 }
 
 model AuditCycle {
   id          Int       @id @default(autoincrement())
   name        String
   description String?   @db.Text
-  startDate   DateTime
+  startDate   DateTime  @default(now())
   endDate     DateTime?
   comment     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  auditBy String?
-  user    User?   @relation(fields: [auditBy], references: [id])
-
-  statusId Int
-  status   auditStatus @relation(fields: [statusId], references: [id])
+  auditBy String
+  user    User   @relation(fields: [auditBy], references: [id])
 
   frameworkId String?
   framework   Framework? @relation(fields: [frameworkId], references: [id], onDelete: SetNull)
@@ -93,8 +98,8 @@ model auditStatus {
   updatedAt DateTime @updatedAt
 
   auditRules   auditRules[]
-  auditCycles  AuditCycle[]
   auditDetails AuditDetails[]
+  frameworks   Framework[]
 }
 
 model auditRules {

@@ -1,14 +1,23 @@
 'use client'
 
-import { IFramework, IFrameworkAttribute } from '@/types/framework'
+import { cn } from '@/lib/utils'
+import {
+  IFramework,
+  IFrameworkAttribute,
+  IFrameWorkAuditCycle,
+} from '@/types/framework'
 import { usePathname, useRouter } from 'next/navigation'
 import { FC } from 'react'
 
 interface IComplianceMapViewProps {
   frameworks: IFramework[]
+  auditData?: IFrameWorkAuditCycle | null
 }
 
-const ComplianceMapView: FC<IComplianceMapViewProps> = ({ frameworks }) => {
+const ComplianceMapView: FC<IComplianceMapViewProps> = ({
+  frameworks,
+  auditData,
+}) => {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -16,6 +25,8 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({ frameworks }) => {
     const currentPath = pathname.split('/').slice(0, -1).join('/')
     router.push(`${currentPath}/frameworks/${frameworkId}/${attributeId}`)
   }
+
+  console.log('auditData:', auditData)
 
   return (
     <div>
@@ -94,12 +105,42 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({ frameworks }) => {
 
                 return (
                   <div className="flex items-end gap-2">
-                    <div className="flex max-w-48 flex-col items-start justify-end text-center text-white">
-                      <div className="w-full border-b-2 bg-primary p-1.5 text-sm">
-                        {firstColumnName}
-                      </div>
-                      <div className="w-full bg-[#266a55]/60 p-2 text-sm text-white">
-                        {secondColumnName}
+                    <div
+                      className={cn(
+                        'flex flex-col items-start justify-between h-full',
+                        !auditData && 'justify-end',
+                      )}
+                    >
+                      {auditData && (
+                        <div className="flex flex-col gap-1">
+                          <span>
+                            <b>Audit:</b>{' '}
+                            {auditData?.name.split('-').slice(0, 2).join('-')}
+                          </span>
+                          <span>
+                            <b>Initiated By:</b> {auditData?.user?.fullName}
+                          </span>
+                          <span>
+                            <b>Initiated date:</b> <br />
+                            {auditData?.startDate
+                              ? new Date(
+                                  auditData.startDate,
+                                ).toLocaleDateString('en-GB', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                              : ''}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex max-w-48 flex-col items-start justify-end text-center text-white">
+                        <div className="w-full border-b-2 bg-primary p-1.5 text-sm">
+                          {firstColumnName}
+                        </div>
+                        <div className="w-full bg-[#266a55]/60 p-2 text-sm text-white">
+                          {secondColumnName}
+                        </div>
                       </div>
                     </div>
                     <div className="grid md:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4">

@@ -18,7 +18,6 @@ export const taskSchema = object({
   statusId: number(),
   allocatorId: string(),
   kpiId: number().nullable(),
-  auditCycleCaseId: number().nullable(),
   assignees: array(string()),
 })
 

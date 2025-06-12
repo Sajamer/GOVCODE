@@ -2,16 +2,19 @@
 
 import ComplianceFrameworkForm from '@/components/forms/ComplianceFrameworkForm'
 import PageHeader from '@/components/shared/headers/PageHeader'
+import AuditDialog from '@/components/shared/modals/AuditDialog'
 import NoResultFound from '@/components/shared/NoResultFound'
 import SheetComponent from '@/components/shared/sheets/SheetComponent'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { getAllAudits } from '@/lib/actions/audit-framework.actions'
 import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import { cn } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
+import { IFrameWorkAuditCycle } from '@/types/framework'
 import { useQuery } from '@tanstack/react-query'
-import { BadgeCheck, Loader2, Plus } from 'lucide-react'
+import { BadgeCheck, House, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
@@ -32,6 +35,13 @@ const ComplianceFrameworks: FC = () => {
   const { hasPermission } = useGlobalStore((store) => store)
 
   const [view, setView] = useState('map')
+  const [selectedAudit, setSelectedAudit] =
+    useState<IFrameWorkAuditCycle | null>(null)
+  const [openAuditDialog, setOpenAuditDialog] = useState({
+    open: false,
+    frameworkId: '',
+    frameworkName: '',
+  })
 
   const { data, isLoading } = useQuery({
     queryKey: ['frameworks'],
@@ -39,8 +49,15 @@ const ComplianceFrameworks: FC = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
+  const { data: allAuditsData } = useQuery({
+    queryKey: ['all-audits'],
+    queryFn: async () => getAllAudits(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
   const frameworks = data?.frameworks || []
   const localizedTitle = t('compliance-frameworks')
+
   useEffect(() => {
     setSearchTerm('')
   }, [setSearchTerm])
@@ -92,30 +109,84 @@ const ComplianceFrameworks: FC = () => {
             {frameworks.map((framework) => (
               <Card
                 key={framework.id}
-                className="flex flex-col space-y-4 border-none bg-transparent p-0 shadow-none"
+                className="mt-5 flex flex-col space-y-4 border-none bg-transparent p-0 shadow-none"
               >
                 <div className="flex items-center justify-start gap-5">
-                  <h3 className="text-lg font-semibold">{framework.name}</h3>
+                  <Button
+                    onClick={() => setSelectedAudit(null)}
+                    className={cn(
+                      !selectedAudit && 'bg-[#266a55]/60 hover:bg-[#266a55]/60',
+                    )}
+                  >
+                    <House className="size-5" />
+                    {framework.name}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      setOpenAuditDialog({
+                        open: true,
+                        frameworkId: framework.id,
+                        frameworkName: framework.name,
+                      })
+                    }
+                  >
+                    <span>Initiate Audit Cycle</span>
+                    <Plus className="size-4" />
+                  </Button>{' '}
+                  {framework.auditCycles &&
+                    framework.auditCycles.length > 0 &&
+                    framework.auditCycles.map((cycle) => (
+                      <Button
+                        key={cycle.id}
+                        onClick={() => setSelectedAudit(cycle)}
+                        className={cn(
+                          selectedAudit?.id === cycle?.id &&
+                            'bg-[#266a55]/60 hover:bg-[#266a55]/60',
+                        )}
+                      >
+                        Audit: {cycle.name.split('-').slice(0, 2).join('-')}
+                      </Button>
+                    ))}
                   <Button
                     onClick={() => {
                       setView((prev) => (prev === 'map' ? 'list' : 'map'))
                     }}
                   >
-                    {view === 'map' ? 'Map View' : 'List View'}
+                    {view === 'map' ? 'List View' : 'Map View'}
                   </Button>
                 </div>
-                {view === 'map' ? (
-                  <ComplianceMapView frameworks={frameworks} />
-                ) : (
-                  <ComplianceListView frameworks={frameworks} />
-                )}
               </Card>
             ))}
+            <div className="mt-6">
+              {view === 'map' ? (
+                <ComplianceMapView
+                  frameworks={frameworks}
+                  auditData={selectedAudit}
+                />
+              ) : (
+                <ComplianceListView frameworks={frameworks} />
+              )}
+            </div>
           </div>
         ) : (
           <NoResultFound label={t('no-frameworks-yet')} />
         )}
       </div>
+
+      <AuditDialog
+        open={openAuditDialog.open}
+        frameworkId={openAuditDialog.frameworkId}
+        frameworkName={openAuditDialog.frameworkName}
+        onClose={() =>
+          setOpenAuditDialog({
+            open: false,
+            frameworkId: '',
+            frameworkName: '',
+          })
+        }
+        auditLength={allAuditsData?.length || 0}
+      />
     </div>
   )
 }
