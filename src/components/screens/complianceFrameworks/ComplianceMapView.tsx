@@ -23,10 +23,12 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
 
   const handleAttributeClick = (frameworkId: string, attributeId: string) => {
     const currentPath = pathname.split('/').slice(0, -1).join('/')
-    router.push(`${currentPath}/frameworks/${frameworkId}/${attributeId}`)
+    const baseUrl = `${currentPath}/frameworks/${frameworkId}/${attributeId}`
+    const urlWithQuery = auditData
+      ? `${baseUrl}?auditId=${auditData.id}`
+      : baseUrl
+    router.push(urlWithQuery)
   }
-
-  console.log('auditData:', auditData)
 
   return (
     <div>

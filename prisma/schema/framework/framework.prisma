@@ -37,8 +37,9 @@ model FrameworkAttribute {
 }
 
 model AuditDetails {
-  id      String  @id @default(cuid())
-  comment String? @db.Text
+  id             String  @id @default(cuid())
+  comment        String? @db.Text
+  recommendation String? @db.Text
 
   frameworkAttributeId String
   frameworkAttribute   FrameworkAttribute @relation(fields: [frameworkAttributeId], references: [id], onDelete: Cascade)
@@ -47,13 +48,12 @@ model AuditDetails {
   auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
 
   auditBy String
-  auditor User   @relation(fields: [auditBy], references: [id])
-
+  auditor User    @relation(fields: [auditBy], references: [id])
   ownedBy String?
   owner   User?   @relation(fields: [ownedBy], references: [id], name: "AuditOwner")
 
-  statusId Int
-  status   auditStatus @relation(fields: [statusId], references: [id])
+  auditRuleId Int
+  auditRule   auditRules @relation(fields: [auditRuleId], references: [id])
 
   attachmentUrl  String? @db.Text
   attachmentName String?
@@ -97,9 +97,8 @@ model auditStatus {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  auditRules   auditRules[]
-  auditDetails AuditDetails[]
-  frameworks   Framework[]
+  auditRules auditRules[]
+  frameworks Framework[]
 }
 
 model auditRules {
@@ -112,4 +111,6 @@ model auditRules {
 
   statusId Int
   status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  auditDetails AuditDetails[]
 }

@@ -62,6 +62,7 @@
     "select-status": "اختر الحالة",
     "audit-cycle-number": "رقم دورة التدقيق",
     "audit-cycle-number-placeholder": "أدخل رقم دورة التدقيق",
+    "audit-cycle": "دورة التدقيق",
     "creation-date": "تاريخ الإنشاء",
     "creation-date-placeholder": "اختر تاريخ الإنشاء",
     "created-by": "تم الإنشاء بواسطة",
@@ -223,6 +224,8 @@
     "define-new": "تعريف جديد",
     "deleteConfirmation": "هل أنت متأكد أنك تريد حذف هذا {title} لا يمكن التراجع عن هذا الإجراء",
     "deleteSuccess": "تم حذف {title} بنجاح.",
+    "success": "تم بنجاح",
+    "recommendations": "التوصيات",
     "deleteError": "حدث خطأ أثناء حذف {title}.",
     "confirm-deletion": "تأكيد الحذف",
     "department-options": {

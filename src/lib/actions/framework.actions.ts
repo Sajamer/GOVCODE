@@ -14,6 +14,27 @@ export const getAllFrameworks = async () => {
         attributes: {
           include: {
             children: true, // Include children relationships
+            auditDetails: {
+              include: {
+                auditor: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                  },
+                },
+                owner: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                  },
+                },
+                auditRule: {
+                  include: {
+                    status: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
         },
@@ -65,6 +86,35 @@ export const getAllFrameworks = async () => {
             parentId: child.parentId,
             rowIndex: child.rowIndex,
             colIndex: child.colIndex,
+          })) || [],
+        auditDetails:
+          attribute.auditDetails?.map((detail) => ({
+            id: detail.id,
+            frameworkAttributeId: detail.frameworkAttributeId,
+            auditCycleId: detail.auditCycleId,
+            auditBy: detail.auditBy,
+            ownedBy: detail.ownedBy,
+            auditRuleId: detail.auditRuleId,
+            comment: detail.comment,
+            recommendation: detail.recommendation,
+            attachmentUrl: detail.attachmentUrl,
+            attachmentName: detail.attachmentName,
+            auditor: {
+              id: detail.auditor.id,
+              fullName: detail.auditor.fullName,
+            },
+            owner: detail.owner
+              ? {
+                  id: detail.owner.id,
+                  fullName: detail.owner.fullName,
+                }
+              : null,
+            auditRule: {
+              id: detail.auditRule.id,
+              label: detail.auditRule.label,
+              color: detail.auditRule.color,
+              statusId: detail.auditRule.statusId,
+            },
           })) || [],
       })),
       auditCycles: framework.auditCycles.map((cycle) => ({
