@@ -136,9 +136,16 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
               </span>
             )
           })}
+          <span>{t('audit-status')}</span>
+          <span>{t('owner')}</span>
+          <span>{t('auditor')}</span>
+          <span>{t('attachment')}</span>
+          <span>{t('comment')}</span>
         </div>{' '}
         {/* Table Body */}
         {directChildren.map((child, childIndex) => {
+          console.log(`Child ${childIndex + 1}:`, child)
+
           // Get the specific related attribute for this child in the given column
           const getChildSpecificAttribute = (columnIndex: number) => {
             // Find the current child's index in the framework attributes

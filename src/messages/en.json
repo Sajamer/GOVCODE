@@ -67,6 +67,7 @@
     "created-by": "Created By",
     "created-by-placeholder": "Select Creator",
     "new-audit-cycle": "New Audit Cycle",
+    "auditor": "Auditor",
     "kpi-status": "KPI Status",
     "kpi-dimensions": "KPI Dimensions",
     "kpiDescription": "Manage all the kpi available on the platform.",
