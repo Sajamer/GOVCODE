@@ -1,6 +1,7 @@
 'use client'
 
 import NoResultFound from '@/components/shared/NoResultFound'
+import ConfirmationDialog from '@/components/shared/modals/ConfirmationDialog'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -25,7 +26,7 @@ import { House, Loader2, Paperclip, Save } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { FC, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 
 interface FrameworkAttributeDetailProps {
   frameworkId: string
@@ -51,11 +52,14 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
   const selectedAuditCycleId = auditIdFromQuery
     ? Number(auditIdFromQuery)
     : null
-
   // State for audit details
   const [auditDetailsData, setAuditDetailsData] = useState<
     Record<string, IAuditDetailsManipulator>
   >({})
+
+  // State for tracking unsaved changes and navigation confirmation
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['frameworks'],
@@ -75,7 +79,6 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
   const frameworks = data?.frameworks || []
   const currentFramework = frameworks.find((f) => f.id === frameworkId)
-
   // Save audit details mutation
   const { mutate: saveAuditDetails, isPending: isSaving } = useMutation({
     mutationFn: async () => {
@@ -95,6 +98,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['frameworks'] })
+      setHasUnsavedChanges(false) // Reset unsaved changes after successful save
       toast({
         variant: 'success',
         title: t('success'),
@@ -112,6 +116,115 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       })
     },
   })
+
+  // Function to update audit detail
+  const updateAuditDetail = useCallback(
+    (
+      attributeId: string,
+      field: keyof IAuditDetailsManipulator,
+      value: string | number,
+    ) => {
+      const key = `${attributeId}-${selectedAuditCycleId}`
+
+      // Ensure the audit detail exists first
+      if (!auditDetailsData[key] && selectedAuditCycleId) {
+        const attribute = currentFramework?.attributes.find(
+          (attr) => attr.id === attributeId,
+        )
+
+        const existingAuditDetail = attribute?.auditDetails?.find(
+          (detail) => detail.auditCycleId === selectedAuditCycleId,
+        )
+
+        const newAuditDetail: IAuditDetailsManipulator = {
+          frameworkAttributeId: attributeId,
+          auditCycleId: selectedAuditCycleId,
+          auditBy: userData?.id || '', // Always set to current user when creating new audit detail
+          ownedBy: existingAuditDetail?.ownedBy || '', // Use existing owner or empty
+          auditRuleId: existingAuditDetail?.auditRuleId || 1,
+          comment: existingAuditDetail?.comment || '',
+          recommendation: existingAuditDetail?.recommendation || '',
+          attachmentUrl: existingAuditDetail?.attachmentUrl || '',
+          attachmentName: existingAuditDetail?.attachmentName || '',
+        }
+
+        setAuditDetailsData((prev) => ({
+          ...prev,
+          [key]: newAuditDetail,
+        }))
+      }
+      setAuditDetailsData((prev) => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          frameworkAttributeId: attributeId,
+          auditCycleId: selectedAuditCycleId || 0,
+          auditBy: userData?.id || '', // Always update auditor to current user when any change is made
+          ownedBy: prev[key]?.ownedBy || '', // Only update owner when explicitly changed
+          auditRuleId: prev[key]?.auditRuleId || 1,
+          [field]: value,
+        },
+      }))
+
+      // Mark as having unsaved changes
+      setHasUnsavedChanges(true)
+    },
+    [
+      selectedAuditCycleId,
+      currentFramework?.attributes,
+      userData?.id,
+      auditDetailsData,
+    ],
+  )
+
+  // Navigation guard function
+  const handleGoBack = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setShowLeaveConfirmation(true)
+    } else {
+      router.back()
+    }
+  }, [hasUnsavedChanges, router])
+  // Confirm navigation without saving
+  const handleConfirmLeave = useCallback(() => {
+    setHasUnsavedChanges(false)
+    setShowLeaveConfirmation(false)
+    // Use window.history.go(-2) for browser navigation to handle both router and browser back
+    window.history.go(-2)
+  }, [])
+
+  // Add browser navigation guard for back button, refresh, and tab close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault()
+        return '' // This is required for some browsers
+      }
+    }
+
+    // Push a dummy state to capture back button clicks
+    if (hasUnsavedChanges) {
+      window.history.pushState(null, '', window.location.href)
+    }
+
+    const handlePopState = () => {
+      if (hasUnsavedChanges) {
+        // Push the current state back to prevent navigation
+        window.history.pushState(null, '', window.location.href)
+        setShowLeaveConfirmation(true)
+      }
+    }
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('popstate', handlePopState)
+
+    // Cleanup event listeners
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('popstate', handlePopState)
+    }
+  }, [hasUnsavedChanges])
 
   if (isLoading) {
     return (
@@ -187,61 +300,11 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
     return relatedAttributes
   }
-
   // Get remaining columns (include column 2 and up)
   const remainingColumns = Object.keys(attributesByColumn)
     .map(Number)
     .filter((colIndex) => colIndex >= 2) // Changed to include column 2
     .sort((a, b) => a - b)
-
-  // Function to update audit detail
-  const updateAuditDetail = (
-    attributeId: string,
-    field: keyof IAuditDetailsManipulator,
-    value: string | number,
-  ) => {
-    const key = `${attributeId}-${selectedAuditCycleId}`
-
-    // Ensure the audit detail exists first
-    if (!auditDetailsData[key] && selectedAuditCycleId) {
-      const attribute = currentFramework.attributes.find(
-        (attr) => attr.id === attributeId,
-      )
-
-      const existingAuditDetail = attribute?.auditDetails?.find(
-        (detail) => detail.auditCycleId === selectedAuditCycleId,
-      )
-
-      const newAuditDetail: IAuditDetailsManipulator = {
-        frameworkAttributeId: attributeId,
-        auditCycleId: selectedAuditCycleId,
-        auditBy: userData?.id || '', // Always set to current user when creating new audit detail
-        ownedBy: existingAuditDetail?.ownedBy || '', // Use existing owner or empty
-        auditRuleId: existingAuditDetail?.auditRuleId || 1,
-        comment: existingAuditDetail?.comment || '',
-        recommendation: existingAuditDetail?.recommendation || '',
-        attachmentUrl: existingAuditDetail?.attachmentUrl || '',
-        attachmentName: existingAuditDetail?.attachmentName || '',
-      }
-
-      setAuditDetailsData((prev) => ({
-        ...prev,
-        [key]: newAuditDetail,
-      }))
-    }
-    setAuditDetailsData((prev) => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        frameworkAttributeId: attributeId,
-        auditCycleId: selectedAuditCycleId || 0,
-        auditBy: userData?.id || '', // Always update auditor to current user when any change is made
-        ownedBy: prev[key]?.ownedBy || '', // Only update owner when explicitly changed
-        auditRuleId: prev[key]?.auditRuleId || 1,
-        [field]: value,
-      },
-    }))
-  }
   // Function to get audit detail value from existing data or current state
   const getAuditDetailValue = (
     attributeId: string,
@@ -301,272 +364,292 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
   }
 
   return (
-    <div
-      dir={isArabic ? 'rtl' : 'ltr'}
-      className="flex w-full flex-col items-start gap-[1.875rem]"
-    >
-      <div className="flex w-full items-center justify-center gap-2">
-        <House
-          className="size-5 cursor-pointer"
-          onClick={() => router.back()}
-        />
-        <span className="font-medium">
-          {parentSelectedAttribute?.value} -&gt;{' '}
-        </span>{' '}
-        {selectedAttribute.value}{' '}
-      </div>
-
-      {/* Show audit details section only when auditId exists in query */}
-      {selectedAuditCycleId && (
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-5">
-            <span>
-              <b>Audit:</b> {auditData?.name.split('-').slice(0, 2).join('-')}
-            </span>
-            <span>
-              <b>Initiated By:</b> {auditData?.user?.fullName}
-            </span>
-            <span>
-              <b>Initiated date:</b>
-              {auditData?.startDate
-                ? new Date(auditData.startDate).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : ''}
-            </span>
-          </div>
-          <Button
-            onClick={() => saveAuditDetails()}
-            disabled={isSaving}
-            className="flex items-center gap-2"
-          >
-            {isSaving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Save className="size-4" />
-            )}
-            {t('save')}
-          </Button>
+    <>
+      <div
+        dir={isArabic ? 'rtl' : 'ltr'}
+        className="flex w-full flex-col items-start gap-[1.875rem]"
+      >
+        {' '}
+        <div className="flex w-full items-center justify-center gap-2">
+          <House className="size-5 cursor-pointer" onClick={handleGoBack} />
+          <span className="font-medium">
+            {parentSelectedAttribute?.value} -&gt;{' '}
+          </span>{' '}
+          {selectedAttribute.value}{' '}
         </div>
-      )}
-      <div className="flex w-full flex-col items-center justify-center gap-0.5">
-        {/* Table Header */}
-        <div className="flex w-full items-center gap-6 rounded-t-lg border-b bg-primary p-4 text-white">
-          <span className="w-10 shrink-0">#</span>
-          {remainingColumns.map((columnIndex) => {
-            const relatedAttributes =
-              getRelatedAttributesFromColumn(columnIndex)
-            return (
-              <span key={columnIndex} className="flex-1">
-                {relatedAttributes?.[0]?.name}
+        {/* Show audit details section only when auditId exists in query */}
+        {selectedAuditCycleId && (
+          <div className="flex w-full items-center justify-between">
+            <div className="flex items-center gap-5">
+              <span>
+                <b>Audit:</b> {auditData?.name.split('-').slice(0, 2).join('-')}
               </span>
-            )
-          })}
-          {selectedAuditCycleId && (
-            <>
-              <span className="w-32">{t('audit-status')}</span>
-              <span className="w-32">{t('owner')}</span>
-              <span className="w-32">{t('auditor')}</span>
-              <span className="w-24">{t('attachment')}</span>
-              <span className="w-40">{t('comment')}</span>
-              <span className="w-40">{t('recommendations')}</span>
-            </>
-          )}
-        </div>
+              <span>
+                <b>Initiated By:</b> {auditData?.user?.fullName}
+              </span>
+              <span>
+                <b>Initiated date:</b>
+                {auditData?.startDate
+                  ? new Date(auditData.startDate).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                    })
+                  : ''}
+              </span>
+            </div>
+            <Button
+              onClick={() => saveAuditDetails()}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              {isSaving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Save className="size-4" />
+              )}
+              {t('save')}
+            </Button>
+          </div>
+        )}
+        <div className="flex w-full flex-col items-center justify-center gap-0.5">
+          {/* Table Header */}
+          <div className="flex w-full items-center gap-6 rounded-t-lg border-b bg-primary p-4 text-white">
+            <span className="w-10 shrink-0">#</span>
+            {remainingColumns.map((columnIndex) => {
+              const relatedAttributes =
+                getRelatedAttributesFromColumn(columnIndex)
+              return (
+                <span key={columnIndex} className="flex-1">
+                  {relatedAttributes?.[0]?.name}
+                </span>
+              )
+            })}
+            {selectedAuditCycleId && (
+              <>
+                <span className="w-32">{t('audit-status')}</span>
+                <span className="w-32">{t('owner')}</span>
+                <span className="w-32">{t('auditor')}</span>
+                <span className="w-24">{t('attachment')}</span>
+                <span className="w-40">{t('comment')}</span>
+                <span className="w-40">{t('recommendations')}</span>
+              </>
+            )}
+          </div>
 
-        {/* Table Body */}
-        {directChildren.map((child, childIndex) => {
-          // Get the specific related attribute for this child in the given column
-          const getChildSpecificAttribute = (columnIndex: number) => {
-            // Find the current child's index in the framework attributes
-            const currentChildIndex = currentFramework.attributes.findIndex(
-              (attr) => attr.id === child.id,
-            )
+          {/* Table Body */}
+          {directChildren.map((child, childIndex) => {
+            // Get the specific related attribute for this child in the given column
+            const getChildSpecificAttribute = (columnIndex: number) => {
+              // Find the current child's index in the framework attributes
+              const currentChildIndex = currentFramework.attributes.findIndex(
+                (attr) => attr.id === child.id,
+              )
 
-            if (currentChildIndex !== -1) {
-              // Look for the next attribute in the specified column after this child
-              for (
-                let i = currentChildIndex + 1;
-                i < currentFramework.attributes.length;
-                i++
-              ) {
-                const attr = currentFramework.attributes[i]
+              if (currentChildIndex !== -1) {
+                // Look for the next attribute in the specified column after this child
+                for (
+                  let i = currentChildIndex + 1;
+                  i < currentFramework.attributes.length;
+                  i++
+                ) {
+                  const attr = currentFramework.attributes[i]
 
-                // Stop if we hit a new section (colIndex <= child.colIndex)
-                if (attr.colIndex <= child.colIndex) {
-                  break
-                }
+                  // Stop if we hit a new section (colIndex <= child.colIndex)
+                  if (attr.colIndex <= child.colIndex) {
+                    break
+                  }
 
-                // Return the first attribute that matches the target column
-                if (attr.colIndex === columnIndex) {
-                  return attr
+                  // Return the first attribute that matches the target column
+                  if (attr.colIndex === columnIndex) {
+                    return attr
+                  }
                 }
               }
+
+              return null
             }
 
-            return null
-          }
+            // Create one row per child
+            return (
+              <div
+                key={child.id}
+                className="flex w-full items-center gap-6 border-b p-4 hover:bg-[#266a55]/10"
+              >
+                <span className="w-10 shrink-0 font-medium">
+                  {childIndex + 1}
+                </span>
+                {remainingColumns.map((columnIndex) => {
+                  const currentAttribute =
+                    getChildSpecificAttribute(columnIndex)
 
-          // Create one row per child
-          return (
-            <div
-              key={child.id}
-              className="flex w-full items-center gap-6 border-b p-4 hover:bg-[#266a55]/10"
-            >
-              <span className="w-10 shrink-0 font-medium">
-                {childIndex + 1}
-              </span>
-              {remainingColumns.map((columnIndex) => {
-                const currentAttribute = getChildSpecificAttribute(columnIndex)
-
-                return (
-                  <span
-                    key={`${child.id}-${columnIndex}`}
-                    className="flex-1 text-sm"
-                  >
-                    {currentAttribute ? currentAttribute.value : '-'}
-                  </span>
-                )
-              })}{' '}
-              {selectedAuditCycleId && (
-                <>
-                  {/* Audit Status */}
-                  <div
-                    className="w-32 rounded p-1"
-                    style={{
-                      backgroundColor:
-                        getFrameworkAuditRules()?.find(
-                          (rule) =>
-                            rule.id ===
-                            Number(
-                              getAuditDetailValue(child.id, 'auditRuleId'),
-                            ),
-                        )?.color || 'transparent',
-                    }}
-                  >
-                    <Select
-                      value={
-                        getAuditDetailValue(
-                          child.id,
-                          'auditRuleId',
-                        )?.toString() || ''
-                      }
-                      onValueChange={(value) =>
-                        updateAuditDetail(
-                          child.id,
-                          'auditRuleId',
-                          Number(value),
-                        )
-                      }
+                  return (
+                    <span
+                      key={`${child.id}-${columnIndex}`}
+                      className="flex-1 text-sm"
                     >
-                      <SelectTrigger className="w-full bg-white/70">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getFrameworkAuditRules()?.map((rule) => (
-                          <SelectItem key={rule.id} value={rule.id.toString()}>
-                            {rule.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>{' '}
-                  {/* Owner */}
-                  <div className="w-32">
-                    <Select
-                      value={
-                        getAuditDetailValue(child.id, 'ownedBy')?.toString() ||
-                        ''
-                      }
-                      onValueChange={(value) =>
-                        updateAuditDetail(child.id, 'ownedBy', value)
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Owner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {organizationUsers?.map((user) => (
-                          <SelectItem key={user.id} value={user.id}>
-                            {user.fullName || user.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* Auditor */}
-                  <div className="w-32">
-                    <span className="text-sm text-gray-700">
-                      {getAuditDetailValue(child.id, 'auditBy')
-                        ? getUserDisplayName(
-                            getAuditDetailValue(child.id, 'auditBy') as string,
-                          )
-                        : '-'}
+                      {currentAttribute ? currentAttribute.value : '-'}
                     </span>
-                  </div>
-                  {/* Attachment */}
-                  <div className="w-24">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => {
-                        // Handle file upload here
-                        toast({
-                          title: 'Coming Soon',
-                          description:
-                            'File upload functionality will be added',
-                        })
+                  )
+                })}{' '}
+                {selectedAuditCycleId && (
+                  <>
+                    {/* Audit Status */}
+                    <div
+                      className="w-32 rounded p-1"
+                      style={{
+                        backgroundColor:
+                          getFrameworkAuditRules()?.find(
+                            (rule) =>
+                              rule.id ===
+                              Number(
+                                getAuditDetailValue(child.id, 'auditRuleId'),
+                              ),
+                          )?.color || 'transparent',
                       }}
                     >
-                      <Paperclip className="size-4" />
-                    </Button>
-                  </div>
-                  {/* Comment */}
-                  <div className="w-40">
-                    <Textarea
-                      placeholder="Add comment..."
-                      value={
-                        getAuditDetailValue(child.id, 'comment')?.toString() ||
-                        ''
-                      }
-                      onChange={(e) =>
-                        updateAuditDetail(child.id, 'comment', e.target.value)
-                      }
-                      className="min-h-[40px] resize-none"
-                      rows={1}
-                    />
-                  </div>
-                  {/* Recommendation */}
-                  <div className="w-40">
-                    <Textarea
-                      placeholder="Add recomme..."
-                      value={
-                        getAuditDetailValue(
-                          child.id,
-                          'recommendation',
-                        )?.toString() || ''
-                      }
-                      onChange={(e) =>
-                        updateAuditDetail(
-                          child.id,
-                          'recommendation',
-                          e.target.value,
-                        )
-                      }
-                      className="min-h-[40px] resize-none"
-                      rows={1}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          )
-        })}
+                      <Select
+                        value={
+                          getAuditDetailValue(
+                            child.id,
+                            'auditRuleId',
+                          )?.toString() || ''
+                        }
+                        onValueChange={(value) =>
+                          updateAuditDetail(
+                            child.id,
+                            'auditRuleId',
+                            Number(value),
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-full bg-white/70">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {getFrameworkAuditRules()?.map((rule) => (
+                            <SelectItem
+                              key={rule.id}
+                              value={rule.id.toString()}
+                            >
+                              {rule.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>{' '}
+                    {/* Owner */}
+                    <div className="w-32">
+                      <Select
+                        value={
+                          getAuditDetailValue(
+                            child.id,
+                            'ownedBy',
+                          )?.toString() || ''
+                        }
+                        onValueChange={(value) =>
+                          updateAuditDetail(child.id, 'ownedBy', value)
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Owner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizationUsers?.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              {user.fullName || user.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Auditor */}
+                    <div className="w-32">
+                      <span className="text-sm text-gray-700">
+                        {getAuditDetailValue(child.id, 'auditBy')
+                          ? getUserDisplayName(
+                              getAuditDetailValue(
+                                child.id,
+                                'auditBy',
+                              ) as string,
+                            )
+                          : '-'}
+                      </span>
+                    </div>
+                    {/* Attachment */}
+                    <div className="w-24">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          // Handle file upload here
+                          toast({
+                            title: 'Coming Soon',
+                            description:
+                              'File upload functionality will be added',
+                          })
+                        }}
+                      >
+                        <Paperclip className="size-4" />
+                      </Button>
+                    </div>
+                    {/* Comment */}
+                    <div className="w-40">
+                      <Textarea
+                        placeholder="Add comment..."
+                        value={
+                          getAuditDetailValue(
+                            child.id,
+                            'comment',
+                          )?.toString() || ''
+                        }
+                        onChange={(e) =>
+                          updateAuditDetail(child.id, 'comment', e.target.value)
+                        }
+                        className="min-h-[40px] resize-none"
+                        rows={1}
+                      />
+                    </div>
+                    {/* Recommendation */}
+                    <div className="w-40">
+                      <Textarea
+                        placeholder="Add recomme..."
+                        value={
+                          getAuditDetailValue(
+                            child.id,
+                            'recommendation',
+                          )?.toString() || ''
+                        }
+                        onChange={(e) =>
+                          updateAuditDetail(
+                            child.id,
+                            'recommendation',
+                            e.target.value,
+                          )
+                        }
+                        className="min-h-[40px] resize-none"
+                        rows={1}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* Confirmation Dialog for Unsaved Changes */}
+      <ConfirmationDialog
+        open={showLeaveConfirmation}
+        onClose={() => setShowLeaveConfirmation(false)}
+        callback={() => handleConfirmLeave()}
+        title="Unsaved Changes"
+        subTitle="You have unsaved changes. Are you sure you want to leave this page? Your changes will be lost."
+        type="warning"
+      />
+    </>
   )
 }
 
