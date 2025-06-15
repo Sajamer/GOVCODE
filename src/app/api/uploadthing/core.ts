@@ -12,6 +12,19 @@ export const ourFileRouter = {
     .onUploadComplete(async ({ file }) => {
       return { image: file.url }
     }),
+  fileUploader: f({
+    pdf: { maxFileSize: '16MB' },
+    text: { maxFileSize: '16MB' },
+    image: { maxFileSize: '8MB' },
+    blob: { maxFileSize: '16MB' },
+  })
+    .input(z.object({ description: z.string().optional() }))
+    .middleware(async ({ input }) => {
+      return { input }
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.url, name: file.name }
+    }),
 } satisfies FileRouter
 
 export type OurFileRouter = typeof ourFileRouter

@@ -19,6 +19,7 @@ import {
 import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
+import { uploadFiles } from '@/lib/uploadthing'
 import { useGlobalStore } from '@/stores/global-store'
 import { IFrameworkAttribute } from '@/types/framework'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -26,7 +27,7 @@ import { House, Loader2, Paperclip, Save } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { FC, useCallback, useEffect, useState } from 'react'
+import { FC, useCallback, useEffect, useRef, useState } from 'react'
 
 interface FrameworkAttributeDetailProps {
   frameworkId: string
@@ -56,10 +57,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
   const [auditDetailsData, setAuditDetailsData] = useState<
     Record<string, IAuditDetailsManipulator>
   >({})
-
   // State for tracking unsaved changes and navigation confirmation
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
+
+  // State for file upload management
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set())
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const { data, isLoading } = useQuery({
     queryKey: ['frameworks'],
@@ -176,6 +180,100 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       auditDetailsData,
     ],
   )
+  // File upload functions
+  const handleFileUpload = useCallback(
+    async (attributeId: string, file: File) => {
+      if (!file || !selectedAuditCycleId) return
+
+      setUploadingFiles((prev) => new Set(prev).add(attributeId))
+
+      try {
+        const uploadResponse = await uploadFiles('fileUploader', {
+          files: [file],
+          input: {
+            description: `Attachment for framework attribute ${attributeId}`,
+          },
+        })
+
+        console.log('Upload response:', uploadResponse)
+
+        if (!uploadResponse || !uploadResponse[0]?.url) {
+          throw new Error('Failed to upload file')
+        }
+
+        const fileUrl = uploadResponse[0].url
+        const fileName = uploadResponse[0].name || file.name
+
+        console.log('File URL:', fileUrl, 'File Name:', fileName)
+
+        // Update audit detail with attachment info
+        updateAuditDetail(attributeId, 'attachmentUrl', fileUrl)
+        updateAuditDetail(attributeId, 'attachmentName', fileName)
+
+        // Force re-render by updating the component state
+        setAuditDetailsData((prev) => ({
+          ...prev,
+          [`${attributeId}-${selectedAuditCycleId}`]: {
+            ...prev[`${attributeId}-${selectedAuditCycleId}`],
+            attachmentUrl: fileUrl,
+            attachmentName: fileName,
+          },
+        }))
+
+        toast({
+          variant: 'success',
+          title: 'File uploaded',
+          description: `${fileName} uploaded successfully`,
+        })
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Upload failed',
+          description: `Failed to upload file: ${error}`,
+        })
+      } finally {
+        setUploadingFiles((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(attributeId)
+          return newSet
+        })
+      }
+    },
+    [selectedAuditCycleId, updateAuditDetail],
+  )
+  // Function to trigger file input
+  const triggerFileInput = (attributeId: string) => {
+    const input = fileInputRefs.current[attributeId]
+    if (input) {
+      input.click()
+    }
+  }
+
+  // Function to handle file input change
+  const handleFileInputChange = (
+    attributeId: string,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handleFileUpload(attributeId, file)
+    }
+    // Reset the input value to allow selecting the same file again
+    event.target.value = ''
+  }
+
+  // Function to download/view attachment
+  const handleAttachmentClick = (url: string, name: string) => {
+    if (url) {
+      const link = document.createElement('a')
+      link.href = url
+      link.target = '_blank'
+      link.download = name || 'attachment'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
 
   // Navigation guard function
   const handleGoBack = useCallback(() => {
@@ -432,7 +530,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                 <span className="w-32">{t('auditor')}</span>
                 <span className="w-24">{t('attachment')}</span>
                 <span className="w-40">{t('comment')}</span>
-                <span className="w-40">{t('recommendations')}</span>
+                <span className="w-80">{t('recommendations')}</span>
               </>
             )}
           </div>
@@ -575,24 +673,72 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                             )
                           : '-'}
                       </span>
-                    </div>
+                    </div>{' '}
                     {/* Attachment */}
                     <div className="w-24">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => {
-                          // Handle file upload here
-                          toast({
-                            title: 'Coming Soon',
-                            description:
-                              'File upload functionality will be added',
-                          })
+                      <input
+                        type="file"
+                        ref={(el) => {
+                          fileInputRefs.current[child.id] = el
                         }}
-                      >
-                        <Paperclip className="size-4" />
-                      </Button>
+                        style={{ display: 'none' }}
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.xls,.xlsx"
+                        onChange={(e) => handleFileInputChange(child.id, e)}
+                      />
+                      {getAuditDetailValue(child.id, 'attachmentUrl') ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full p-1 text-xs"
+                            onClick={() =>
+                              handleAttachmentClick(
+                                getAuditDetailValue(
+                                  child.id,
+                                  'attachmentUrl',
+                                ) as string,
+                                (getAuditDetailValue(
+                                  child.id,
+                                  'attachmentName',
+                                ) as string) || 'attachment',
+                              )
+                            }
+                            title={
+                              (getAuditDetailValue(
+                                child.id,
+                                'attachmentName',
+                              ) as string) || 'View attachment'
+                            }
+                          >
+                            View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full p-1 text-xs"
+                            onClick={() => triggerFileInput(child.id)}
+                            disabled={uploadingFiles.has(child.id)}
+                            title="Replace attachment"
+                          >
+                            {uploadingFiles.has(child.id) ? '⏳' : '🔄'}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => triggerFileInput(child.id)}
+                          disabled={uploadingFiles.has(child.id)}
+                          title="Upload attachment"
+                        >
+                          {uploadingFiles.has(child.id) ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Paperclip className="size-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                     {/* Comment */}
                     <div className="w-40">
@@ -612,9 +758,9 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       />
                     </div>
                     {/* Recommendation */}
-                    <div className="w-40">
+                    <div className="w-80">
                       <Textarea
-                        placeholder="Add recomme..."
+                        placeholder="Add recommendation..."
                         value={
                           getAuditDetailValue(
                             child.id,
