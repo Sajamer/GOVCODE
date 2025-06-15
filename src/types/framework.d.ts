@@ -10,6 +10,14 @@ export interface IFrameWorkAuditCycle {
   }
 }
 
+export interface IAttachment {
+  id: string
+  name: string
+  url: string
+  size?: number | null
+  type?: string | null
+}
+
 export interface IAuditDetails {
   id: string
   frameworkAttributeId: string
@@ -19,8 +27,6 @@ export interface IAuditDetails {
   auditRuleId: number
   comment?: string | null
   recommendation?: string | null
-  attachmentUrl?: string | null
-  attachmentName?: string | null
   auditor: {
     id: string
     fullName: string | null
@@ -35,6 +41,7 @@ export interface IAuditDetails {
     color: string
     statusId: number
   }
+  attachments?: IAttachment[]
 }
 
 export interface IFrameworkAttribute {

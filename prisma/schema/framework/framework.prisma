@@ -47,16 +47,14 @@ model AuditDetails {
   auditCycleId Int
   auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
 
-  auditBy String
-  auditor User    @relation(fields: [auditBy], references: [id])
-  ownedBy String?
-  owner   User?   @relation(fields: [ownedBy], references: [id], name: "AuditOwner")
-
+  auditBy     String
+  auditor     User       @relation(fields: [auditBy], references: [id])
+  ownedBy     String?
+  owner       User?      @relation(fields: [ownedBy], references: [id], name: "AuditOwner")
   auditRuleId Int
   auditRule   auditRules @relation(fields: [auditRuleId], references: [id])
 
-  attachmentUrl  String? @db.Text
-  attachmentName String?
+  attachments Attachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -113,4 +111,20 @@ model auditRules {
   status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
 
   auditDetails AuditDetails[]
+}
+
+model Attachment {
+  id   String  @id @default(cuid())
+  name String
+  url  String  @db.Text
+  size Int?
+  type String?
+
+  auditDetailId String
+  auditDetail   AuditDetails @relation(fields: [auditDetailId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([auditDetailId])
 }

@@ -11,6 +11,7 @@ export interface IAuditDetailsManipulator {
   auditRuleId: number
   comment?: string
   recommendation?: string
+  // Legacy fields - will be removed after migration
   attachmentUrl?: string
   attachmentName?: string
 }
@@ -52,6 +53,11 @@ export const getAuditDetailsByFrameworkAndCycle = async (
             value: true,
           },
         },
+        attachments: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     })
 
@@ -79,8 +85,6 @@ export const createOrUpdateAuditDetail = async (
         auditRuleId: data.auditRuleId,
         comment: data.comment,
         recommendation: data.recommendation,
-        attachmentUrl: data.attachmentUrl,
-        attachmentName: data.attachmentName,
       },
       create: {
         frameworkAttributeId: data.frameworkAttributeId,
@@ -90,8 +94,6 @@ export const createOrUpdateAuditDetail = async (
         auditRuleId: data.auditRuleId,
         comment: data.comment,
         recommendation: data.recommendation,
-        attachmentUrl: data.attachmentUrl,
-        attachmentName: data.attachmentName,
       },
       include: {
         auditor: {
@@ -109,6 +111,11 @@ export const createOrUpdateAuditDetail = async (
         auditRule: {
           include: {
             status: true,
+          },
+        },
+        attachments: {
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -154,5 +161,50 @@ export const deleteAuditDetail = async (
   } catch (error) {
     sendError(error)
     throw new Error('Error while deleting audit detail.')
+  }
+}
+
+export const getAuditDetailWithAttachments = async (
+  frameworkAttributeId: string,
+  auditCycleId: number,
+) => {
+  try {
+    const auditDetail = await prisma.auditDetails.findUnique({
+      where: {
+        frameworkAttributeId_auditCycleId: {
+          frameworkAttributeId,
+          auditCycleId,
+        },
+      },
+      include: {
+        attachments: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        auditor: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        owner: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        auditRule: {
+          include: {
+            status: true,
+          },
+        },
+      },
+    })
+
+    return auditDetail
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while fetching audit detail with attachments.')
   }
 }

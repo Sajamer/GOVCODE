@@ -16,6 +16,10 @@ import {
   IAuditDetailsManipulator,
   saveMultipleAuditDetails,
 } from '@/lib/actions/audit-details.actions'
+import {
+  createAttachment,
+  deleteAttachment,
+} from '@/lib/actions/attachment.actions'
 import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
@@ -23,7 +27,7 @@ import { uploadFiles } from '@/lib/uploadthing'
 import { useGlobalStore } from '@/stores/global-store'
 import { IFrameworkAttribute } from '@/types/framework'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { House, Loader2, Paperclip, Save } from 'lucide-react'
+import { House, Loader2, Plus, Save, Trash2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -53,16 +57,33 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
   const selectedAuditCycleId = auditIdFromQuery
     ? Number(auditIdFromQuery)
     : null
+
   // State for audit details
   const [auditDetailsData, setAuditDetailsData] = useState<
     Record<string, IAuditDetailsManipulator>
   >({})
+
   // State for tracking unsaved changes and navigation confirmation
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
 
   // State for file upload management
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set())
+  const [deletingAttachments, setDeletingAttachments] = useState<Set<string>>(
+    new Set(),
+  )
+  const [attachmentsByAttribute, setAttachmentsByAttribute] = useState<
+    Record<
+      string,
+      Array<{
+        id: string
+        name: string
+        url: string
+        size?: number
+        type?: string
+      }>
+    >
+  >({})
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const { data, isLoading } = useQuery({
@@ -83,6 +104,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
   const frameworks = data?.frameworks || []
   const currentFramework = frameworks.find((f) => f.id === frameworkId)
+
   // Save audit details mutation
   const { mutate: saveAuditDetails, isPending: isSaving } = useMutation({
     mutationFn: async () => {
@@ -98,15 +120,57 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         throw new Error('No valid audit details to save')
       }
 
-      return await saveMultipleAuditDetails(auditDetailsArray)
+      // Save audit details first
+      const savedAuditDetails =
+        await saveMultipleAuditDetails(auditDetailsArray)
+
+      // Process temporary attachments
+      const attachmentPromises: Promise<unknown>[] = []
+
+      Object.entries(attachmentsByAttribute).forEach(
+        ([attributeId, attachments]) => {
+          // Find the corresponding saved audit detail
+          const auditDetail = savedAuditDetails.find(
+            (detail) => detail.frameworkAttributeId === attributeId,
+          )
+
+          if (auditDetail) {
+            // Filter only temporary attachments (those with "temp-" prefix)
+            const tempAttachments = attachments.filter((att) =>
+              att.id.startsWith('temp-'),
+            )
+
+            tempAttachments.forEach((tempAttachment) => {
+              attachmentPromises.push(
+                createAttachment({
+                  name: tempAttachment.name,
+                  url: tempAttachment.url,
+                  size: tempAttachment.size,
+                  type: tempAttachment.type,
+                  auditDetailId: auditDetail.id,
+                }),
+              )
+            })
+          }
+        },
+      )
+
+      // Wait for all attachments to be created
+      if (attachmentPromises.length > 0) {
+        await Promise.all(attachmentPromises)
+      }
+
+      return savedAuditDetails
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['frameworks'] })
+    onSuccess: async () => {
+      // Invalidate and refetch framework data to get updated attachments
+      await queryClient.invalidateQueries({ queryKey: ['frameworks'] })
       setHasUnsavedChanges(false) // Reset unsaved changes after successful save
+
       toast({
         variant: 'success',
         title: t('success'),
-        description: 'Audit details saved successfully',
+        description: 'Audit details and attachments saved successfully',
       })
     },
     onError: (error) => {
@@ -142,14 +206,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
         const newAuditDetail: IAuditDetailsManipulator = {
           frameworkAttributeId: attributeId,
-          auditCycleId: selectedAuditCycleId,
+          auditCycleId: selectedAuditCycleId, // TypeScript knows this is not null due to the guard above
           auditBy: userData?.id || '', // Always set to current user when creating new audit detail
           ownedBy: existingAuditDetail?.ownedBy || '', // Use existing owner or empty
           auditRuleId: existingAuditDetail?.auditRuleId || 1,
           comment: existingAuditDetail?.comment || '',
           recommendation: existingAuditDetail?.recommendation || '',
-          attachmentUrl: existingAuditDetail?.attachmentUrl || '',
-          attachmentName: existingAuditDetail?.attachmentName || '',
         }
 
         setAuditDetailsData((prev) => ({
@@ -157,6 +219,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
           [key]: newAuditDetail,
         }))
       }
+
       setAuditDetailsData((prev) => ({
         ...prev,
         [key]: {
@@ -180,6 +243,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       auditDetailsData,
     ],
   )
+
   // File upload functions
   const handleFileUpload = useCallback(
     async (attributeId: string, file: File) => {
@@ -188,14 +252,19 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       setUploadingFiles((prev) => new Set(prev).add(attributeId))
 
       try {
+        // First, ensure audit detail exists
+        const key = `${attributeId}-${selectedAuditCycleId}`
+        if (!auditDetailsData[key]) {
+          updateAuditDetail(attributeId, 'comment', '')
+        }
+
+        // Upload file to storage
         const uploadResponse = await uploadFiles('fileUploader', {
           files: [file],
           input: {
             description: `Attachment for framework attribute ${attributeId}`,
           },
         })
-
-        console.log('Upload response:', uploadResponse)
 
         if (!uploadResponse || !uploadResponse[0]?.url) {
           throw new Error('Failed to upload file')
@@ -204,26 +273,26 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         const fileUrl = uploadResponse[0].url
         const fileName = uploadResponse[0].name || file.name
 
-        console.log('File URL:', fileUrl, 'File Name:', fileName)
+        // For now, we'll store attachments temporarily in local state
+        // They will be properly linked to audit details when saved
+        const tempAttachment = {
+          id: `temp-${Date.now()}-${Math.random()}`, // Temporary ID
+          name: fileName,
+          url: fileUrl,
+          size: file.size,
+          type: file.type,
+        }
 
-        // Update audit detail with attachment info
-        updateAuditDetail(attributeId, 'attachmentUrl', fileUrl)
-        updateAuditDetail(attributeId, 'attachmentName', fileName)
-
-        // Force re-render by updating the component state
-        setAuditDetailsData((prev) => ({
+        // Update local state
+        setAttachmentsByAttribute((prev) => ({
           ...prev,
-          [`${attributeId}-${selectedAuditCycleId}`]: {
-            ...prev[`${attributeId}-${selectedAuditCycleId}`],
-            attachmentUrl: fileUrl,
-            attachmentName: fileName,
-          },
+          [attributeId]: [...(prev[attributeId] || []), tempAttachment],
         }))
 
         toast({
           variant: 'success',
           title: 'File uploaded',
-          description: `${fileName} uploaded successfully`,
+          description: `${fileName} uploaded successfully. Save audit details to persist.`,
         })
       } catch (error) {
         toast({
@@ -239,8 +308,59 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         })
       }
     },
-    [selectedAuditCycleId, updateAuditDetail],
+    [selectedAuditCycleId, updateAuditDetail, auditDetailsData],
   )
+
+  // Function to delete attachment
+  const handleDeleteAttachment = useCallback(
+    async (attributeId: string, attachmentId: string) => {
+      setDeletingAttachments((prev) => new Set(prev).add(attachmentId))
+
+      try {
+        // Check if it's a temporary attachment (starts with "temp-")
+        if (attachmentId.startsWith('temp-')) {
+          // Just remove from local state for temporary attachments
+          setAttachmentsByAttribute((prev) => ({
+            ...prev,
+            [attributeId]: (prev[attributeId] || []).filter(
+              (att) => att.id !== attachmentId,
+            ),
+          }))
+        } else {
+          // For real attachments, delete from database
+          await deleteAttachment(attachmentId)
+
+          // Update local state
+          setAttachmentsByAttribute((prev) => ({
+            ...prev,
+            [attributeId]: (prev[attributeId] || []).filter(
+              (att) => att.id !== attachmentId,
+            ),
+          }))
+        }
+
+        toast({
+          variant: 'success',
+          title: 'Attachment deleted',
+          description: 'Attachment deleted successfully',
+        })
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Delete failed',
+          description: `Failed to delete attachment: ${error}`,
+        })
+      } finally {
+        setDeletingAttachments((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(attachmentId)
+          return newSet
+        })
+      }
+    },
+    [],
+  )
+
   // Function to trigger file input
   const triggerFileInput = (attributeId: string) => {
     const input = fileInputRefs.current[attributeId]
@@ -283,6 +403,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       router.back()
     }
   }, [hasUnsavedChanges, router])
+
   // Confirm navigation without saving
   const handleConfirmLeave = useCallback(() => {
     setHasUnsavedChanges(false)
@@ -323,6 +444,40 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       window.removeEventListener('popstate', handlePopState)
     }
   }, [hasUnsavedChanges])
+
+  // Load attachments when framework data is available
+  useEffect(() => {
+    if (currentFramework && selectedAuditCycleId) {
+      const newAttachments: Record<
+        string,
+        Array<{
+          id: string
+          name: string
+          url: string
+          size?: number
+          type?: string
+        }>
+      > = {}
+
+      currentFramework.attributes.forEach((attr) => {
+        const auditDetail = attr.auditDetails?.find(
+          (detail) => detail.auditCycleId === selectedAuditCycleId,
+        )
+
+        if (auditDetail?.attachments && auditDetail.attachments.length > 0) {
+          newAttachments[attr.id] = auditDetail.attachments.map((att) => ({
+            id: att.id,
+            name: att.name,
+            url: att.url,
+            size: att.size || undefined,
+            type: att.type || undefined,
+          }))
+        }
+      })
+
+      setAttachmentsByAttribute(newAttachments)
+    }
+  }, [currentFramework, selectedAuditCycleId])
 
   if (isLoading) {
     return (
@@ -398,11 +553,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
     return relatedAttributes
   }
+
   // Get remaining columns (include column 2 and up)
   const remainingColumns = Object.keys(attributesByColumn)
     .map(Number)
     .filter((colIndex) => colIndex >= 2) // Changed to include column 2
     .sort((a, b) => a - b)
+
   // Function to get audit detail value from existing data or current state
   const getAuditDetailValue = (
     attributeId: string,
@@ -434,14 +591,11 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
           return existingAuditDetail.comment
         case 'recommendation':
           return existingAuditDetail.recommendation
-        case 'attachmentUrl':
-          return existingAuditDetail.attachmentUrl
-        case 'attachmentName':
-          return existingAuditDetail.attachmentName
         default:
           return ''
       }
     }
+
     return field === 'auditBy'
       ? userData?.id || ''
       : field === 'auditRuleId'
@@ -467,14 +621,14 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         dir={isArabic ? 'rtl' : 'ltr'}
         className="flex w-full flex-col items-start gap-[1.875rem]"
       >
-        {' '}
         <div className="flex w-full items-center justify-center gap-2">
           <House className="size-5 cursor-pointer" onClick={handleGoBack} />
           <span className="font-medium">
             {parentSelectedAttribute?.value} -&gt;{' '}
-          </span>{' '}
-          {selectedAttribute.value}{' '}
+          </span>
+          {selectedAttribute.value}
         </div>
+
         {/* Show audit details section only when auditId exists in query */}
         {selectedAuditCycleId && (
           <div className="flex w-full items-center justify-between">
@@ -510,6 +664,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
             </Button>
           </div>
         )}
+
         <div className="flex w-full flex-col items-center justify-center gap-0.5">
           {/* Table Header */}
           <div className="flex w-full items-center gap-6 rounded-t-lg border-b bg-primary p-4 text-white">
@@ -589,7 +744,8 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       {currentAttribute ? currentAttribute.value : '-'}
                     </span>
                   )
-                })}{' '}
+                })}
+
                 {selectedAuditCycleId && (
                   <>
                     {/* Audit Status */}
@@ -635,7 +791,8 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>{' '}
+                    </div>
+
                     {/* Owner */}
                     <div className="w-32">
                       <Select
@@ -661,6 +818,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
+
                     {/* Auditor */}
                     <div className="w-32">
                       <span className="text-sm text-gray-700">
@@ -673,7 +831,8 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                             )
                           : '-'}
                       </span>
-                    </div>{' '}
+                    </div>
+
                     {/* Attachment */}
                     <div className="w-24">
                       <input
@@ -685,61 +844,67 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.xls,.xlsx"
                         onChange={(e) => handleFileInputChange(child.id, e)}
                       />
-                      {getAuditDetailValue(child.id, 'attachmentUrl') ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full p-1 text-xs"
-                            onClick={() =>
-                              handleAttachmentClick(
-                                getAuditDetailValue(
-                                  child.id,
-                                  'attachmentUrl',
-                                ) as string,
-                                (getAuditDetailValue(
-                                  child.id,
-                                  'attachmentName',
-                                ) as string) || 'attachment',
-                              )
-                            }
-                            title={
-                              (getAuditDetailValue(
-                                child.id,
-                                'attachmentName',
-                              ) as string) || 'View attachment'
-                            }
+
+                      {/* Render multiple attachments */}
+                      <div className="flex flex-col gap-1">
+                        {attachmentsByAttribute[child.id]?.map((attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center gap-1"
                           >
-                            View
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full p-1 text-xs"
-                            onClick={() => triggerFileInput(child.id)}
-                            disabled={uploadingFiles.has(child.id)}
-                            title="Replace attachment"
-                          >
-                            {uploadingFiles.has(child.id) ? '⏳' : '🔄'}
-                          </Button>
-                        </div>
-                      ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 truncate p-1 text-xs"
+                              onClick={() =>
+                                handleAttachmentClick(
+                                  attachment.url,
+                                  attachment.name,
+                                )
+                              }
+                              title={attachment.name}
+                            >
+                              {attachment.name.length > 8
+                                ? `${attachment.name.substring(0, 8)}...`
+                                : attachment.name}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-1 text-red-500 hover:text-red-700"
+                              onClick={() =>
+                                handleDeleteAttachment(child.id, attachment.id)
+                              }
+                              disabled={deletingAttachments.has(attachment.id)}
+                              title="Delete attachment"
+                            >
+                              {deletingAttachments.has(attachment.id) ? (
+                                <Loader2 className="size-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="size-3" />
+                              )}
+                            </Button>
+                          </div>
+                        ))}
+
+                        {/* Add attachment button */}
                         <Button
                           variant="outline"
                           size="sm"
                           className="w-full"
                           onClick={() => triggerFileInput(child.id)}
                           disabled={uploadingFiles.has(child.id)}
-                          title="Upload attachment"
+                          title="Add attachment"
                         >
                           {uploadingFiles.has(child.id) ? (
                             <Loader2 className="size-4 animate-spin" />
                           ) : (
-                            <Paperclip className="size-4" />
+                            <Plus className="size-4" />
                           )}
                         </Button>
-                      )}
+                      </div>
                     </div>
+
                     {/* Comment */}
                     <div className="w-40">
                       <Textarea
@@ -757,6 +922,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         rows={1}
                       />
                     </div>
+
                     {/* Recommendation */}
                     <div className="w-80">
                       <Textarea

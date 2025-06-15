@@ -33,6 +33,11 @@ export const getAllFrameworks = async () => {
                     status: true,
                   },
                 },
+                attachments: {
+                  orderBy: {
+                    createdAt: 'desc',
+                  },
+                },
               },
             },
           },
@@ -97,8 +102,6 @@ export const getAllFrameworks = async () => {
             auditRuleId: detail.auditRuleId,
             comment: detail.comment,
             recommendation: detail.recommendation,
-            attachmentUrl: detail.attachmentUrl,
-            attachmentName: detail.attachmentName,
             auditor: {
               id: detail.auditor.id,
               fullName: detail.auditor.fullName,
@@ -115,6 +118,14 @@ export const getAllFrameworks = async () => {
               color: detail.auditRule.color,
               statusId: detail.auditRule.statusId,
             },
+            attachments:
+              detail.attachments?.map((attachment) => ({
+                id: attachment.id,
+                name: attachment.name,
+                url: attachment.url,
+                size: attachment.size,
+                type: attachment.type,
+              })) || [],
           })) || [],
       })),
       auditCycles: framework.auditCycles.map((cycle) => ({
