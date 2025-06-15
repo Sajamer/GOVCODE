@@ -106,102 +106,120 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                 const secondColumnName = secondColumnAttributes[0]?.name || ''
 
                 return (
-                  <div className="flex items-end gap-2">
-                    <div
-                      className={cn(
-                        'flex flex-col items-start justify-between h-full',
-                        !auditData && 'justify-end',
-                      )}
-                    >
-                      {auditData && (
-                        <div className="flex flex-col gap-1">
-                          <span>
-                            <b>Audit:</b>{' '}
-                            {auditData?.name.split('-').slice(0, 2).join('-')}
-                          </span>
-                          <span>
-                            <b>Initiated By:</b> {auditData?.user?.fullName}
-                          </span>
-                          <span>
-                            <b>Initiated date:</b> <br />
-                            {auditData?.startDate
-                              ? new Date(
-                                  auditData.startDate,
-                                ).toLocaleDateString('en-GB', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                })
-                              : ''}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex max-w-48 flex-col items-start justify-end text-center text-white">
-                        <div className="w-full border-b-2 bg-primary p-1.5 text-sm">
-                          {firstColumnName}
-                        </div>
-                        <div className="w-full bg-[#266a55]/60 p-2 text-sm text-white">
-                          {secondColumnName}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-end gap-2">
+                      <div
+                        className={cn(
+                          'flex flex-col items-start justify-between h-full',
+                          !auditData && 'justify-end',
+                        )}
+                      >
+                        {auditData && (
+                          <div className="flex flex-col gap-1">
+                            <span>
+                              <b>Audit:</b>{' '}
+                              {auditData?.name.split('-').slice(0, 2).join('-')}
+                            </span>
+                            <span>
+                              <b>Initiated By:</b> {auditData?.user?.fullName}
+                            </span>
+                            <span>
+                              <b>Initiated date:</b> <br />
+                              {auditData?.startDate
+                                ? new Date(
+                                    auditData.startDate,
+                                  ).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })
+                                : ''}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex max-w-48 flex-col items-start justify-end text-center text-white">
+                          <div className="w-full border-b-2 bg-primary p-1.5 text-sm">
+                            {firstColumnName}
+                          </div>
+                          <div className="w-full bg-[#266a55]/60 p-2 text-sm text-white">
+                            {secondColumnName}
+                          </div>
                         </div>
                       </div>
+                      <div className="grid w-full md:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4">
+                        {firstColumnAttributes
+                          .sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0))
+                          .map((parent) => (
+                            <div key={parent.id} className="border bg-white">
+                              <div className="mb-3 border-b-2 bg-primary p-1 text-center text-white">
+                                {parent.value}
+                              </div>
+                              <div className="flex flex-wrap gap-1 p-1">
+                                {(childrenByParent[parent.id] || []).map(
+                                  (child) => (
+                                    <div
+                                      key={child.id}
+                                      onClick={() =>
+                                        handleAttributeClick(
+                                          framework.id,
+                                          child.id,
+                                        )
+                                      }
+                                      className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                    >
+                                      {child.value}
+                                    </div>
+                                  ),
+                                )}
+                                {/* Fallback: Also check if any children reference this parent by value */}
+                                {secondColumnAttributes
+                                  .filter((attr) => {
+                                    // Find parent in all first column attributes that matches current parent value
+                                    const matchingParent =
+                                      allFirstColumnAttributes.find(
+                                        (p) =>
+                                          p.value === parent.value &&
+                                          p.id === attr.parentId,
+                                      )
+                                    return (
+                                      matchingParent &&
+                                      !childrenByParent[parent.id]?.some(
+                                        (c) => c.id === attr.id,
+                                      )
+                                    )
+                                  })
+                                  .map((child) => (
+                                    <div
+                                      key={`fallback-${child.id}`}
+                                      onClick={() =>
+                                        handleAttributeClick(
+                                          framework.id,
+                                          child.id,
+                                        )
+                                      }
+                                      className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                    >
+                                      {child.value}
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                    <div className="grid md:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4">
-                      {firstColumnAttributes
-                        .sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0))
-                        .map((parent) => (
-                          <div key={parent.id} className="border bg-white">
-                            <div className="mb-3 border-b-2 bg-primary p-1 text-center text-white">
-                              {parent.value}
-                            </div>
-                            <div className="flex flex-wrap gap-1 p-1">
-                              {(childrenByParent[parent.id] || []).map(
-                                (child) => (
-                                  <div
-                                    key={child.id}
-                                    onClick={() =>
-                                      handleAttributeClick(
-                                        framework.id,
-                                        child.id,
-                                      )
-                                    }
-                                    className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
-                                  >
-                                    {child.value}
-                                  </div>
-                                ),
-                              )}
-                              {/* Fallback: Also check if any children reference this parent by value */}
-                              {secondColumnAttributes
-                                .filter((attr) => {
-                                  // Find parent in all first column attributes that matches current parent value
-                                  const matchingParent =
-                                    allFirstColumnAttributes.find(
-                                      (p) =>
-                                        p.value === parent.value &&
-                                        p.id === attr.parentId,
-                                    )
-                                  return (
-                                    matchingParent &&
-                                    !childrenByParent[parent.id]?.some(
-                                      (c) => c.id === attr.id,
-                                    )
-                                  )
-                                })
-                                .map((child) => (
-                                  <div
-                                    key={`fallback-${child.id}`}
-                                    onClick={() =>
-                                      handleAttributeClick(
-                                        framework.id,
-                                        child.id,
-                                      )
-                                    }
-                                    className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
-                                  >
-                                    {child.value}
-                                  </div>
-                                ))}
-                            </div>
+                    <div className="flex items-center justify-start gap-1">
+                      {auditData &&
+                        framework?.status?.auditRules?.map((rule) => (
+                          <div
+                            key={rule.id}
+                            className="flex h-8 w-fit min-w-40 items-center justify-center rounded-sm"
+                            style={{
+                              backgroundColor: rule.color || '#ccc',
+                            }}
+                          >
+                            <span className="p-2 text-sm font-semibold text-white">
+                              {rule.label}
+                            </span>
                           </div>
                         ))}
                     </div>
