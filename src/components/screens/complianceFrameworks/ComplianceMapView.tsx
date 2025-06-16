@@ -28,6 +28,45 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
       ? `${baseUrl}?auditId=${auditData.id}`
       : baseUrl
     router.push(urlWithQuery)
+  } // Function to get the audit rule for a specific child
+  const getChildAuditRule = (childId: string, framework: IFramework) => {
+    if (!auditData) return null
+
+    const attribute = framework.attributes.find((attr) => attr.id === childId)
+    if (!attribute?.auditDetails) return null
+
+    const auditDetail = attribute.auditDetails.find(
+      (detail) => detail.auditCycleId === auditData.id,
+    )
+
+    if (!auditDetail?.auditRuleId) return null
+
+    // Find the rule in framework status
+    return (
+      framework?.status?.auditRules?.find(
+        (rule) => rule.id === auditDetail.auditRuleId,
+      ) || null
+    )
+  }
+
+  // Function to calculate heatmap data for a single child
+  const getChildHeatmapData = (childId: string, framework: IFramework) => {
+    if (!auditData || !framework?.status?.auditRules) return {}
+
+    const heatmapData: Record<number, number> = {}
+
+    // Initialize all rules with 0 count
+    framework.status.auditRules.forEach((rule) => {
+      heatmapData[rule.id] = 0
+    })
+
+    // Get the audit rule for this specific child
+    const auditRule = getChildAuditRule(childId, framework)
+    if (auditRule) {
+      heatmapData[auditRule.id] = 1
+    }
+
+    return heatmapData
   }
 
   return (
@@ -146,65 +185,139 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                           </div>
                         </div>
                       </div>
-                      <div className="grid w-full md:grid-cols-2 xl:grid-cols-3 3xl:grid-cols-4">
+                      <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-5">
                         {firstColumnAttributes
                           .sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0))
-                          .map((parent) => (
-                            <div key={parent.id} className="border bg-white">
-                              <div className="mb-3 border-b-2 bg-primary p-1 text-center text-white">
-                                {parent.value}
-                              </div>
-                              <div className="flex flex-wrap gap-1 p-1">
-                                {(childrenByParent[parent.id] || []).map(
-                                  (child) => (
-                                    <div
-                                      key={child.id}
-                                      onClick={() =>
-                                        handleAttributeClick(
-                                          framework.id,
-                                          child.id,
-                                        )
-                                      }
-                                      className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
-                                    >
-                                      {child.value}
-                                    </div>
-                                  ),
-                                )}
-                                {/* Fallback: Also check if any children reference this parent by value */}
-                                {secondColumnAttributes
-                                  .filter((attr) => {
-                                    // Find parent in all first column attributes that matches current parent value
-                                    const matchingParent =
-                                      allFirstColumnAttributes.find(
-                                        (p) =>
-                                          p.value === parent.value &&
-                                          p.id === attr.parentId,
+                          .map((parent) => {
+                            return (
+                              <div key={parent.id} className="border bg-white">
+                                <div className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white">
+                                  {parent.value}
+                                </div>
+                                <div className="flex flex-wrap gap-1 p-1">
+                                  {(childrenByParent[parent.id] || []).map(
+                                    (child) => {
+                                      const childHeatmapData =
+                                        getChildHeatmapData(child.id, framework)
+                                      return (
+                                        <div
+                                          key={child.id}
+                                          className="flex flex-col"
+                                        >
+                                          <div
+                                            onClick={() =>
+                                              handleAttributeClick(
+                                                framework.id,
+                                                child.id,
+                                              )
+                                            }
+                                            className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                          >
+                                            {child.value}
+                                          </div>
+                                          {/* Individual heatmap for this child */}
+                                          {auditData &&
+                                            framework?.status?.auditRules && (
+                                              <div className="mt-1 flex gap-1">
+                                                {framework.status.auditRules.map(
+                                                  (rule) => {
+                                                    const count =
+                                                      childHeatmapData[
+                                                        rule.id
+                                                      ] || 0
+                                                    return (
+                                                      <div
+                                                        key={rule.id}
+                                                        className="flex h-6 flex-1 items-center justify-center rounded text-xs font-bold text-white"
+                                                        style={{
+                                                          backgroundColor:
+                                                            rule.color ||
+                                                            '#ccc',
+                                                        }}
+                                                        title={`${rule.label}: ${count > 0 ? 'Applied' : 'Not Applied'}`}
+                                                      >
+                                                        {count}
+                                                      </div>
+                                                    )
+                                                  },
+                                                )}
+                                              </div>
+                                            )}
+                                        </div>
                                       )
-                                    return (
-                                      matchingParent &&
-                                      !childrenByParent[parent.id]?.some(
-                                        (c) => c.id === attr.id,
-                                      )
-                                    )
-                                  })
-                                  .map((child) => (
-                                    <div
-                                      key={`fallback-${child.id}`}
-                                      onClick={() =>
-                                        handleAttributeClick(
-                                          framework.id,
-                                          child.id,
+                                    },
+                                  )}{' '}
+                                  {/* Fallback: Also check if any children reference this parent by value */}
+                                  {secondColumnAttributes
+                                    .filter((attr) => {
+                                      // Find parent in all first column attributes that matches current parent value
+                                      const matchingParent =
+                                        allFirstColumnAttributes.find(
+                                          (p) =>
+                                            p.value === parent.value &&
+                                            p.id === attr.parentId,
                                         )
-                                      }
-                                      className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
-                                    >
-                                      {child.value}
-                                    </div>
-                                  ))}
+                                      return (
+                                        matchingParent &&
+                                        !childrenByParent[parent.id]?.some(
+                                          (c) => c.id === attr.id,
+                                        )
+                                      )
+                                    })
+                                    .map((child) => {
+                                      const childHeatmapData =
+                                        getChildHeatmapData(child.id, framework)
+                                      return (
+                                        <div
+                                          key={`fallback-${child.id}`}
+                                          className="flex flex-col"
+                                        >
+                                          <div
+                                            onClick={() =>
+                                              handleAttributeClick(
+                                                framework.id,
+                                                child.id,
+                                              )
+                                            }
+                                            className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                          >
+                                            {child.value}
+                                          </div>
+                                          {/* Individual heatmap for this child */}
+                                          {auditData &&
+                                            framework?.status?.auditRules && (
+                                              <div className="mt-1 flex gap-1">
+                                                {framework.status.auditRules.map(
+                                                  (rule) => {
+                                                    const count =
+                                                      childHeatmapData[
+                                                        rule.id
+                                                      ] || 0
+                                                    return (
+                                                      <div
+                                                        key={rule.id}
+                                                        className="flex h-6 flex-1 items-center justify-center rounded text-xs font-bold text-white"
+                                                        style={{
+                                                          backgroundColor:
+                                                            rule.color ||
+                                                            '#ccc',
+                                                        }}
+                                                        title={`${rule.label}: ${count > 0 ? 'Applied' : 'Not Applied'}`}
+                                                      >
+                                                        {count}
+                                                      </div>
+                                                    )
+                                                  },
+                                                )}
+                                              </div>
+                                            )}
+                                        </div>
+                                      )
+                                    })}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                       </div>
                     </div>
                     <div className="flex items-center justify-start gap-1">
