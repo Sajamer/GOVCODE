@@ -28,29 +28,13 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
       ? `${baseUrl}?auditId=${auditData.id}`
       : baseUrl
     router.push(urlWithQuery)
-  } // Function to get the audit rule for a specific child
-  const getChildAuditRule = (childId: string, framework: IFramework) => {
-    if (!auditData) return null
-
-    const attribute = framework.attributes.find((attr) => attr.id === childId)
-    if (!attribute?.auditDetails) return null
-
-    const auditDetail = attribute.auditDetails.find(
-      (detail) => detail.auditCycleId === auditData.id,
-    )
-
-    if (!auditDetail?.auditRuleId) return null
-
-    // Find the rule in framework status
-    return (
-      framework?.status?.auditRules?.find(
-        (rule) => rule.id === auditDetail.auditRuleId,
-      ) || null
-    )
   }
 
-  // Function to calculate heatmap data for a single child
-  const getChildHeatmapData = (childId: string, framework: IFramework) => {
+  // Function to calculate heatmap data by attribute value (aggregating all attributes with same value)
+  const getHeatmapDataByValue = (
+    attributeValue: string,
+    framework: IFramework,
+  ) => {
     if (!auditData || !framework?.status?.auditRules) return {}
 
     const heatmapData: Record<number, number> = {}
@@ -60,11 +44,29 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
       heatmapData[rule.id] = 0
     })
 
-    // Get the audit rule for this specific child
-    const auditRule = getChildAuditRule(childId, framework)
-    if (auditRule) {
-      heatmapData[auditRule.id] = 1
-    }
+    // Find all attributes with the same value
+    const attributesWithSameValue = framework.attributes.filter(
+      (attr) => attr.value === attributeValue,
+    )
+
+    // Count audit rules across all attributes with the same value
+    attributesWithSameValue.forEach((attribute) => {
+      if (!attribute?.auditDetails) return
+
+      const auditDetail = attribute.auditDetails.find(
+        (detail) => detail.auditCycleId === auditData.id,
+      )
+
+      if (auditDetail?.auditRuleId) {
+        const auditRule = framework?.status?.auditRules?.find(
+          (rule) => rule.id === auditDetail.auditRuleId,
+        )
+
+        if (auditRule) {
+          heatmapData[auditRule.id] = (heatmapData[auditRule.id] || 0) + 1
+        }
+      }
+    })
 
     return heatmapData
   }
@@ -195,10 +197,14 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                                   {parent.value}
                                 </div>
                                 <div className="flex flex-wrap gap-1 p-1">
+                                  {' '}
                                   {(childrenByParent[parent.id] || []).map(
                                     (child) => {
                                       const childHeatmapData =
-                                        getChildHeatmapData(child.id, framework)
+                                        getHeatmapDataByValue(
+                                          child.value || '',
+                                          framework,
+                                        )
                                       return (
                                         <div
                                           key={child.id}
@@ -266,7 +272,10 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                                     })
                                     .map((child) => {
                                       const childHeatmapData =
-                                        getChildHeatmapData(child.id, framework)
+                                        getHeatmapDataByValue(
+                                          child.value || '',
+                                          framework,
+                                        )
                                       return (
                                         <div
                                           key={`fallback-${child.id}`}
