@@ -55,6 +55,7 @@ model AuditDetails {
   auditRule   auditRules @relation(fields: [auditRuleId], references: [id])
 
   attachments Attachment[]
+  tasks       TaskManagement[] // Related tasks for this audit detail
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

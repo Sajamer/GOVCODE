@@ -3,6 +3,7 @@ model TaskManagement {
   name          String
   description   String?
   priority      Priority  @default(LOW)
+  taskType      TaskType  @default(KPI_RELATED)
   note          String?
   startDate     DateTime
   dueDate       DateTime
@@ -26,6 +27,8 @@ model TaskManagement {
   KPI            KPI?          @relation(fields: [kpiId], references: [id])
   lastAssigneeId String? // Tracks the most recent assignee
   lastAssignee   User?         @relation(fields: [lastAssigneeId], references: [id], name: "LastAssignee")
+  auditDetailId  String? // Optional relation to audit details
+  auditDetail    AuditDetails? @relation(fields: [auditDetailId], references: [id])
 }
 
 model TaskHistory {
@@ -53,4 +56,9 @@ enum Priority {
   LOW
   MEDIUM
   HIGH
+}
+
+enum TaskType {
+  KPI_RELATED // Tasks for KPI tracking, measurement, data collection
+  AUDIT_RELATED // Tasks for audit findings, remediation, compliance
 }

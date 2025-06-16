@@ -151,7 +151,7 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                     <div className="flex items-end gap-2">
                       <div
                         className={cn(
-                          'flex flex-col items-start justify-between h-full',
+                          'flex flex-col items-start justify-between h-full w-full max-w-28',
                           !auditData && 'justify-end',
                         )}
                       >
@@ -178,8 +178,8 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                             </span>
                           </div>
                         )}
-                        <div className="flex max-w-48 flex-col items-start justify-end text-center text-white">
-                          <div className="w-full border-b-2 bg-primary p-1.5 text-sm">
+                        <div className="flex flex-col items-start justify-end text-center text-white">
+                          <div className="w-full border-b-2 bg-primary p-2.5 text-sm">
                             {firstColumnName}
                           </div>
                           <div className="w-full bg-[#266a55]/60 p-2 text-sm text-white">

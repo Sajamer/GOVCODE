@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
 import { getAllAuditStatuses } from '@/lib/actions/kpi-dimensions/audit-status.actions'
 import {
   complianceFrameworkSchema,
@@ -72,6 +73,12 @@ export default function ComplianceFrameworkForm() {
         throw new Error('Failed to create framework')
       }
 
+      toast({
+        title: 'Framework Created',
+        variant: 'success',
+        description: 'The compliance framework has been created successfully.',
+      })
+
       queryClient.invalidateQueries({
         queryKey: ['frameworks'],
       })
@@ -79,6 +86,11 @@ export default function ComplianceFrameworkForm() {
     } catch (error) {
       console.error('Error creating framework:', error)
       // You might want to add an error toast or message here
+      toast({
+        title: 'Creation Failed',
+        description: 'There was an error creating the compliance framework.',
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }
