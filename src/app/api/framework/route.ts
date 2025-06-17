@@ -152,88 +152,79 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // Create framework with its attributes - improved for production
-      // Step 1: Create framework first
-      const framework = await prisma.framework.create({
-        data: {
-          name,
-          statusId: parseInt(statusId),
-        },
-      })
-
-      try {
-        // Step 2: Create all attributes without parent relationships first
-        const attributeData = attributes.map((attr) => ({
-          name: attr.name,
-          value: attr.value,
-          frameworkId: framework.id,
-          rowIndex: attr.rowIndex,
-          colIndex: attr.colIndex,
-          parentId: null,
-        }))
-
-        await prisma.frameworkAttribute.createMany({
-          data: attributeData,
+      // Create framework with its attributes in a transaction with parent-child relationships
+      const result = await prisma.$transaction(async (tx) => {
+        const framework = await tx.framework.create({
+          data: {
+            name,
+            statusId: parseInt(statusId, 10),
+          },
         })
 
-        // Step 3: Get all created attributes
-        const createdAttributes = await prisma.frameworkAttribute.findMany({
-          where: { frameworkId: framework.id },
-          orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
-        })
+        // Group attributes by row for hierarchical structure
+        const attributesByRow: Record<number, (typeof attributes)[0][]> = {}
 
-        // Step 4: Update parent relationships in smaller batches
-        const attributesByRow: Record<number, typeof createdAttributes> = {}
-        createdAttributes.forEach((attr) => {
+        // Group attributes by row
+        attributes.forEach((attr) => {
           if (!attributesByRow[attr.rowIndex]) {
             attributesByRow[attr.rowIndex] = []
           }
           attributesByRow[attr.rowIndex].push(attr)
         })
 
-        // Update parent relationships row by row
+        // Store created attribute IDs for relationship building
+        const createdAttributeIds: Record<number, Record<number, string>> = {}
+
+        // Process each row of attributes
         for (const rowIndex in attributesByRow) {
-          const rowAttributes = attributesByRow[parseInt(rowIndex)].sort(
+          const rowIdx = parseInt(rowIndex)
+          createdAttributeIds[rowIdx] = {}
+
+          // Sort by column index to ensure proper hierarchy (left to right)
+          const rowAttributes = attributesByRow[rowIdx].sort(
             (a, b) => a.colIndex - b.colIndex,
           )
 
-          for (let i = 1; i < rowAttributes.length; i++) {
-            await prisma.frameworkAttribute.update({
-              where: { id: rowAttributes[i].id },
-              data: { parentId: rowAttributes[i - 1].id },
-            })
+          // Create attributes for this row with parent-child relationships
+          let previousAttributeId: string | null = null
+
+          for (const attr of rowAttributes) {
+            // Create the attribute with parent reference if not the first column
+            const createdAttr: { id: string } =
+              await tx.frameworkAttribute.create({
+                data: {
+                  name: attr.name,
+                  value: attr.value,
+                  frameworkId: framework.id,
+                  rowIndex: rowIdx,
+                  colIndex: attr.colIndex,
+                  parentId: previousAttributeId, // Link to previous column in same row
+                },
+              })
+
+            // Store the created ID for next attribute's parent reference
+            createdAttributeIds[rowIdx][attr.colIndex] = createdAttr.id
+            previousAttributeId = createdAttr.id
           }
         }
-
-        // Step 5: Return the complete framework
-        const result = await prisma.framework.findUnique({
+        return await tx.framework.findUnique({
           where: { id: framework.id },
           include: {
             attributes: {
               include: {
-                children: true,
+                children: true, // Include children attributes
               },
               orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
             },
           },
         })
+      })
 
-        return NextResponse.json({
-          data: result,
-          message: 'Framework created successfully with attributes',
-          status: STATUS_CODES.CREATED,
-        })
-      } catch (attributeError) {
-        // If attribute creation fails, clean up the framework
-        try {
-          await prisma.framework.delete({
-            where: { id: framework.id },
-          })
-        } catch (cleanupError) {
-          console.error('Failed to cleanup framework:', cleanupError)
-        }
-        throw attributeError
-      }
+      return NextResponse.json({
+        data: result,
+        message: 'Framework created successfully with attributes',
+        status: STATUS_CODES.CREATED,
+      })
     } catch (error) {
       console.error('Error processing file:', error)
       let errorMessage = 'Error processing file'

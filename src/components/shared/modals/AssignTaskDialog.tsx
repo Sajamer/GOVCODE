@@ -83,8 +83,6 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
     value: user.name,
   }))
 
-  console.log(auditDetailId, 'auditDetailId')
-
   const {
     values,
     errors,

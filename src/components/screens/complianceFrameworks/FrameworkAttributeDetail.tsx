@@ -674,11 +674,6 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       (detail) => detail.auditCycleId === selectedAuditCycleId,
     )
 
-    console.log(
-      `Getting existing audit detail for attribute ${attributeId}:`,
-      existingAuditDetail,
-    )
-
     return existingAuditDetail?.id
   }
 
