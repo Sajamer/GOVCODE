@@ -107,67 +107,68 @@ const ComplianceFrameworks: FC = () => {
         ) : frameworks.length > 0 ? (
           <div className={cn('w-full', isArabic ? 'pr-2' : 'pl-2')}>
             {frameworks.map((framework) => (
-              <Card
-                key={framework.id}
-                className="mt-5 flex flex-col space-y-4 border-none bg-transparent p-0 shadow-none"
-              >
-                <div className="flex items-center justify-start gap-5">
-                  <Button
-                    onClick={() => setSelectedAudit(null)}
-                    className={cn(
-                      !selectedAudit && 'bg-[#266a55]/60 hover:bg-[#266a55]/60',
-                    )}
-                  >
-                    <House className="size-5" />
-                    {framework.name}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      setOpenAuditDialog({
-                        open: true,
-                        frameworkId: framework.id,
-                        frameworkName: framework.name,
-                      })
-                    }
-                  >
-                    <span>Initiate Audit Cycle</span>
-                    <Plus className="size-4" />
-                  </Button>{' '}
-                  {framework.auditCycles &&
-                    framework.auditCycles.length > 0 &&
-                    framework.auditCycles.map((cycle) => (
-                      <Button
-                        key={cycle.id}
-                        onClick={() => setSelectedAudit(cycle)}
-                        className={cn(
-                          selectedAudit?.id === cycle?.id &&
-                            'bg-[#266a55]/60 hover:bg-[#266a55]/60',
-                        )}
-                      >
-                        Audit: {cycle.name.split('-').slice(0, 2).join('-')}
-                      </Button>
-                    ))}
-                  <Button
-                    onClick={() => {
-                      setView((prev) => (prev === 'map' ? 'list' : 'map'))
-                    }}
-                  >
-                    {view === 'map' ? 'List View' : 'Map View'}
-                  </Button>
+              <div key={framework.id} className="mt-5 flex flex-col space-y-4">
+                <Card className="border-none bg-transparent p-0 shadow-none">
+                  <div className="flex items-center justify-start gap-5">
+                    <Button
+                      onClick={() => setSelectedAudit(null)}
+                      className={cn(
+                        !selectedAudit &&
+                          'bg-[#266a55]/60 hover:bg-[#266a55]/60',
+                      )}
+                    >
+                      <House className="size-5" />
+                      {framework.name}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        setOpenAuditDialog({
+                          open: true,
+                          frameworkId: framework.id,
+                          frameworkName: framework.name,
+                        })
+                      }
+                    >
+                      <span>Initiate Audit Cycle</span>
+                      <Plus className="size-4" />
+                    </Button>{' '}
+                    {framework.auditCycles &&
+                      framework.auditCycles.length > 0 &&
+                      framework.auditCycles.map((cycle) => (
+                        <Button
+                          key={cycle.id}
+                          onClick={() => setSelectedAudit(cycle)}
+                          className={cn(
+                            selectedAudit?.id === cycle?.id &&
+                              'bg-[#266a55]/60 hover:bg-[#266a55]/60',
+                          )}
+                        >
+                          Audit: {cycle.name.split('-').slice(0, 2).join('-')}
+                        </Button>
+                      ))}
+                    <Button
+                      onClick={() => {
+                        setView((prev) => (prev === 'map' ? 'list' : 'map'))
+                      }}
+                    >
+                      {view === 'map' ? 'List View' : 'Map View'}
+                    </Button>
+                  </div>
+                </Card>
+
+                <div className="mt-6">
+                  {view === 'map' ? (
+                    <ComplianceMapView
+                      frameworks={[framework]}
+                      auditData={selectedAudit}
+                    />
+                  ) : (
+                    <ComplianceListView frameworks={[framework]} />
+                  )}
                 </div>
-              </Card>
+              </div>
             ))}
-            <div className="mt-6">
-              {view === 'map' ? (
-                <ComplianceMapView
-                  frameworks={frameworks}
-                  auditData={selectedAudit}
-                />
-              ) : (
-                <ComplianceListView frameworks={frameworks} />
-              )}
-            </div>
           </div>
         ) : (
           <NoResultFound label={t('no-frameworks-yet')} />
