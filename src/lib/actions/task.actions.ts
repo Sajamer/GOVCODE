@@ -4,6 +4,55 @@ import prisma from '@/lib/db_connection'
 import { ITaskManagementManipulator } from '@/schema/task.schema'
 import { sendError } from '../utils'
 
+export const getTasksByAuditDetailId = async (auditDetailId: string) => {
+  try {
+    const tasksData = await prisma.taskManagement.findMany({
+      where: {
+        auditDetailId,
+      },
+      include: {
+        assignees: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        status: {
+          select: {
+            name: true,
+            color: true,
+          },
+        },
+        allocator: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    if (!tasksData) {
+      return []
+    }
+
+    // Transform the results to match ITasksManagementResponse interface
+    const tasks = tasksData.map((task) => ({
+      ...task,
+      status: task.status.name, // Convert status object to string
+      type: task.taskType, // Map taskType to type
+    }))
+
+    return tasks
+  } catch (error) {
+    sendError(error)
+    throw new Error('Error while fetching tasks by audit detail ID.')
+  }
+}
+
 export const getAllTasks = async (
   searchParams?: Record<string, string>,
   userId?: string,
@@ -72,6 +121,8 @@ export const createTask = async (dto: ITaskManagementManipulator) => {
           statusId: dto.statusId,
           allocatorId: dto.allocatorId,
           kpiId: dto.kpiId,
+          taskType: dto.type,
+          auditDetailId: dto.auditDetailId,
           lastAssigneeId: dto.allocatorId,
           assignees: {
             connect: dto.assignees.map((id) => ({ id })),
@@ -129,9 +180,7 @@ export const updateTaskById = async (
       // Find new assignees that weren't previously assigned
       const newAssignees = dto.assignees.filter(
         (assigneeId) => !currentAssigneeIds.includes(assigneeId),
-      )
-
-      // Update the task
+      ) // Update the task
       const task = await tx.taskManagement.update({
         where: { id },
         data: {
@@ -149,6 +198,8 @@ export const updateTaskById = async (
           statusId: dto.statusId,
           allocatorId: dto.allocatorId,
           kpiId: dto.kpiId,
+          taskType: dto.type,
+          auditDetailId: dto.auditDetailId,
           lastAssigneeId: dto.assignees[dto.assignees.length - 1], // Update last assignee
           assignees: {
             set: dto.assignees.map((id) => ({ id })),

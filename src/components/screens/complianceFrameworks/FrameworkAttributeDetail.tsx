@@ -60,7 +60,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     ? Number(auditIdFromQuery)
     : null
   const [openAssignTask, setOpenAssignTask] = useState(false)
+
   const [selectedChildForTask, setSelectedChildForTask] = useState<
+    string | null
+  >(null)
+
+  const [openShowTasks, setOpenShowTasks] = useState(false)
+  const [selectedChildForViewTasks, setSelectedChildForViewTasks] = useState<
     string | null
   >(null)
 
@@ -650,11 +656,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     const user = organizationUsers?.find((u) => u.id === userId)
     return user?.fullName || user?.email || 'Unknown User'
   }
+
   // Function to get audit rules from framework status
   const getFrameworkAuditRules = () => {
     if (!currentFramework?.status?.auditRules) return []
     return currentFramework.status.auditRules
   }
+
   // Function to get existing audit detail ID or null if it doesn't exist
   const getExistingAuditDetailId = (
     attributeId: string,
@@ -665,6 +673,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     const existingAuditDetail = attribute?.auditDetails?.find(
       (detail) => detail.auditCycleId === selectedAuditCycleId,
     )
+
+    console.log(
+      `Getting existing audit detail for attribute ${attributeId}:`,
+      existingAuditDetail,
+    )
+
     return existingAuditDetail?.id
   }
 
@@ -688,6 +702,23 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       setSelectedChildForTask(attributeId)
       setOpenAssignTask(true)
     }
+  }
+
+  // Function to handle viewing tasks
+  const handleViewTasks = (attributeId: string) => {
+    const auditDetailId = getExistingAuditDetailId(attributeId)
+
+    if (auditDetailId) {
+      setSelectedChildForViewTasks(attributeId)
+      setOpenShowTasks(true)
+    }
+  }
+
+  // Function to check if an audit detail has tasks (you can implement a more efficient check if needed)
+  const hasTasksForAuditDetail = (attributeId: string): boolean => {
+    // For now, we'll assume that if an audit detail exists, it might have tasks
+    // In a real scenario, you might want to fetch task count or cache this information
+    return hasExistingAuditDetail(attributeId)
   }
 
   return (
@@ -755,14 +786,14 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
             })}{' '}
             {selectedAuditCycleId && (
               <>
-                <span className="w-32">{t('audit-status')}</span>
+                <span className="w-32">{t('audit-status')}</span>{' '}
                 <span className="w-32">{t('owner')}</span>
                 <span className="w-32">{t('auditor')}</span>
                 <span className="w-24">{t('attachment')}</span>
                 <span className="w-40">{t('comment')}</span>
                 <span className="w-60">{t('recommendations')}</span>
                 {hasAnyAuditDetails() && (
-                  <span className="w-40">{t('task-management')}</span>
+                  <span className="w-60">{t('task-management')}</span>
                 )}
               </>
             )}
@@ -1016,20 +1047,30 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         className="min-h-[40px] resize-none"
                         rows={1}
                       />
-                    </div>
-
+                    </div>{' '}
                     {/* Task Management - Only show if audit details exist and this row has audit details */}
                     {hasAnyAuditDetails() && (
-                      <div className="w-40">
+                      <div className="flex w-60 gap-2">
                         {hasExistingAuditDetail(child.id) ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleAssignTask(child.id)}
-                          >
-                            <Plus />
-                            {t('add-task')}
-                          </Button>
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAssignTask(child.id)}
+                            >
+                              <Plus className="size-4" />
+                              {t('add-task')}
+                            </Button>
+                            {hasTasksForAuditDetail(child.id) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewTasks(child.id)}
+                              >
+                                {t('view-tasks')}
+                              </Button>
+                            )}
+                          </>
                         ) : (
                           <span></span>
                         )}
@@ -1062,18 +1103,30 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
             : `Audit Cycle ID: ${auditData?.name.split('-').slice(0, 2).join('-')}` ||
               ''
         }
-        auditDetailId={
-          selectedChildForTask
-            ? getExistingAuditDetailId(selectedChildForTask)
-            : undefined
-        }
+        auditDetailId={getExistingAuditDetailId(selectedChildForTask || '')}
         onClose={() => {
           setOpenAssignTask(false)
           setSelectedChildForTask(null)
         }}
       />
 
-      <ShowAuditTasksDialog open={false} onClose={() => {}} />
+      <ShowAuditTasksDialog
+        open={openShowTasks}
+        onClose={() => {
+          setOpenShowTasks(false)
+          setSelectedChildForViewTasks(null)
+        }}
+        auditDetailId={
+          selectedChildForViewTasks
+            ? getExistingAuditDetailId(selectedChildForViewTasks)
+            : undefined
+        }
+        title={
+          selectedChildForViewTasks
+            ? `${getLastColumnValue(selectedChildForViewTasks)}`
+            : undefined
+        }
+      />
     </>
   )
 }
