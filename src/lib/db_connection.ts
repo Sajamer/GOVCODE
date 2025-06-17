@@ -15,6 +15,11 @@ if (process.env.NODE_ENV === 'production') {
         url: process.env.DATABASE_URL,
       },
     },
+    transactionOptions: {
+      maxWait: 5000, // default: 2000
+      timeout: 60000, // default: 5000
+      isolationLevel: 'ReadCommitted', // optional, default defined by database
+    },
   })
 } else {
   if (!global.prisma) {
@@ -24,6 +29,11 @@ if (process.env.NODE_ENV === 'production') {
         db: {
           url: process.env.DATABASE_URL,
         },
+      },
+      transactionOptions: {
+        maxWait: 5000, // default: 2000
+        timeout: 60000, // default: 5000
+        isolationLevel: 'ReadCommitted', // optional, default defined by database
       },
     })
   }
