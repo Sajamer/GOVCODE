@@ -69,7 +69,7 @@ export default function ComplianceFrameworkForm() {
         body: formData,
       })
 
-      if (!response) {
+      if (!response.ok) {
         throw new Error('Failed to create framework')
       }
 
@@ -82,13 +82,14 @@ export default function ComplianceFrameworkForm() {
       queryClient.invalidateQueries({
         queryKey: ['frameworks'],
       })
+
       closeSheet()
-    } catch (error) {
-      console.error('Error creating framework:', error)
-      // You might want to add an error toast or message here
+    } catch (error: AxiosErrorType) {
       toast({
         title: 'Creation Failed',
-        description: 'There was an error creating the compliance framework.',
+        description:
+          error?.message ||
+          'There was an error creating the compliance framework.',
         variant: 'destructive',
       })
     } finally {
