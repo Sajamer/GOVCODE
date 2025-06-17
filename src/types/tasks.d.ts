@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Priority } from '@prisma/client'
+import { Priority, TaskType } from '@prisma/client'
 
 export interface ITasksManagementResponse {
   id: number
   name: string
   description: string | null
   priority: Priority
+  type: TaskType
   note: string | null
   startDate: Date
   dueDate: Date
@@ -19,8 +20,8 @@ export interface ITasksManagementResponse {
   statusId: number
   allocatorId: string
   kpiId: number | null
+  auditDetailId: string | null
   lastAssigneeId: string | null
-  auditCycleCaseId: number | null
   status: string
   assignees: {
     id: string

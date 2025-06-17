@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db_connection'
 import { sendError } from '@/lib/utils'
-import { IStatusManipulator } from '@/schema/status.schema'
+import { IStatusManipulator } from '@/schema/kpi-dimensions/status.schema'
 
 export async function getAllStatuses() {
   try {
@@ -84,11 +84,6 @@ export async function updateStatusById(id: number, data: IStatusManipulator) {
 
 export async function deleteStatusById(id: number) {
   try {
-    // Delete related rules first (if cascade delete isn’t configured)
-    // await prisma.rule.deleteMany({
-    //   where: { statusId: id },
-    // })
-
     // Delete the status
     return await prisma.status.delete({
       where: { id },

@@ -27,6 +27,7 @@ import NoResultFound from '../../NoResultFound'
 import SheetComponent from '../../sheets/SheetComponent'
 import TableComponent from '../TableComponent'
 import TaskActionButtons from './TaskActionButtons'
+import { TaskType } from '@prisma/client'
 
 export type FilterType = 'my-tasks' | 'assigned-tasks' | 'archived-tasks'
 
@@ -38,6 +39,7 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
   sheetName: SheetNames
   data: T[]
   isLoading?: boolean
+  taskType: TaskType
   columns: Array<{
     key: keyof T | 'actions'
     isSortable: boolean
@@ -53,6 +55,7 @@ const TasksTable = <T extends Record<string, unknown>>({
   sheetName,
   columns,
   isLoading,
+  taskType,
   data,
 }: IGenericTableProps<T>): JSX.Element => {
   const queryClient = useQueryClient()
@@ -238,6 +241,7 @@ const TasksTable = <T extends Record<string, unknown>>({
           >
             {sheetToOpen === 'tasks-management' ? (
               <TaskManagementForm
+                taskType={taskType}
                 data={singleEntityData as unknown as ITasksManagementResponse}
               />
             ) : null}

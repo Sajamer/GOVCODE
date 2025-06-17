@@ -5,7 +5,11 @@ model Framework {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  attributes FrameworkAttribute[]
+  statusId Int         @default(1)
+  status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  attributes  FrameworkAttribute[]
+  auditCycles AuditCycle[]
 }
 
 model FrameworkAttribute {
@@ -26,6 +30,102 @@ model FrameworkAttribute {
   rowIndex Int @default(0)
   colIndex Int @default(0)
 
+  auditDetails AuditDetails[]
+
   @@index([frameworkId])
   @@index([parentId])
+}
+
+model AuditDetails {
+  id             String  @id @default(cuid())
+  comment        String? @db.Text
+  recommendation String? @db.Text
+
+  frameworkAttributeId String
+  frameworkAttribute   FrameworkAttribute @relation(fields: [frameworkAttributeId], references: [id], onDelete: Cascade)
+
+  auditCycleId Int
+  auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
+
+  auditBy     String
+  auditor     User       @relation(fields: [auditBy], references: [id])
+  ownedBy     String?
+  owner       User?      @relation(fields: [ownedBy], references: [id], name: "AuditOwner")
+  auditRuleId Int
+  auditRule   auditRules @relation(fields: [auditRuleId], references: [id])
+
+  attachments Attachment[]
+  tasks       TaskManagement[] // Related tasks for this audit detail
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([frameworkAttributeId, auditCycleId]) // Ensure one audit detail per attribute per cycle
+  @@index([frameworkAttributeId])
+  @@index([auditCycleId])
+  @@index([auditBy])
+  @@index([ownedBy])
+}
+
+model AuditCycle {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  comment     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditBy String
+  user    User   @relation(fields: [auditBy], references: [id])
+
+  frameworkId String?
+  framework   Framework? @relation(fields: [frameworkId], references: [id], onDelete: SetNull)
+
+  auditDetails AuditDetails[]
+
+  @@index([frameworkId])
+}
+
+model auditStatus {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditRules auditRules[]
+  frameworks Framework[]
+}
+
+model auditRules {
+  id    Int    @id @default(autoincrement())
+  label String
+  color String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  statusId Int
+  status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  auditDetails AuditDetails[]
+}
+
+model Attachment {
+  id   String  @id @default(cuid())
+  name String
+  url  String  @db.Text
+  size Int?
+  type String?
+
+  auditDetailId String
+  auditDetail   AuditDetails @relation(fields: [auditDetailId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([auditDetailId])
 }

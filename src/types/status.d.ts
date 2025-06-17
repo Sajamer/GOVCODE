@@ -13,3 +13,17 @@ interface IStatusResponse {
 
   [key: string]: any
 }
+
+// Audit Status Interface
+interface IAuditRules {
+  label: string
+  color: string
+}
+
+interface IAuditStatusResponse {
+  id: number
+  name: string
+  auditRules: IAuditRules[]
+
+  [key: string]: any
+}

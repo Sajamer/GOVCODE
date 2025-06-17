@@ -5,7 +5,10 @@ import {
   createStatus,
   updateStatusById,
 } from '@/lib/actions/kpi-dimensions/status.actions'
-import { IStatusManipulator, statusSchema } from '@/schema/status.schema'
+import {
+  IStatusManipulator,
+  statusSchema,
+} from '@/schema/kpi-dimensions/status.schema'
 import { useSheetStore } from '@/stores/sheet-store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { getIn, useFormik } from 'formik'

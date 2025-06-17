@@ -41,7 +41,7 @@ const ConfirmationDialog: FC<IConfirmationDialogProps> = ({
       case 'warning':
         return (
           <div className="flex size-12 items-center justify-center rounded-full bg-amber-400">
-            <Info className="text-amber-600" />
+            <Info className="text-white" />
           </div>
         )
       case 'success':

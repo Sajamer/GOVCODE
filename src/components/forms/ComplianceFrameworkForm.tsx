@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -8,37 +10,56 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { toast } from '@/hooks/use-toast'
+import { getAllAuditStatuses } from '@/lib/actions/kpi-dimensions/audit-status.actions'
+import {
+  complianceFrameworkSchema,
+  IComplianceFrameworkManipulator,
+} from '@/schema/compliance-framework.schema'
+import { useSheetStore } from '@/stores/sheet-store'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Framework name must be at least 2 characters.',
-  }),
-  file: z.instanceof(File, {
-    message: 'Please upload an Excel file',
-  }),
-})
 
 export default function ComplianceFrameworkForm() {
   const t = useTranslations('general')
+  const queryClient = useQueryClient()
+  const { actions } = useSheetStore((store) => store)
+  const { closeSheet } = actions
+
   const [isLoading, setIsLoading] = useState(false)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+
+  const { data } = useQuery({
+    queryKey: ['audit-status'],
+    queryFn: async () => await getAllAuditStatuses(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const auditStatusOptions =
+    data?.map((status) => ({
+      id: status.id,
+      label: status.name,
+      value: status.name,
+    })) || []
+
+  const form = useForm<IComplianceFrameworkManipulator>({
+    resolver: zodResolver(complianceFrameworkSchema),
     defaultValues: {
       name: '',
+      statusId: undefined,
       file: undefined,
     },
   })
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: IComplianceFrameworkManipulator) {
     try {
       setIsLoading(true)
       const formData = new FormData()
       formData.append('name', values.name)
+      if (values.statusId) {
+        formData.append('statusId', values.statusId.toString())
+      }
       if (values.file) {
         formData.append('file', values.file)
       }
@@ -52,11 +73,24 @@ export default function ComplianceFrameworkForm() {
         throw new Error('Failed to create framework')
       }
 
-      // form.reset()
-      // You might want to add a success toast or message here
+      toast({
+        title: 'Framework Created',
+        variant: 'success',
+        description: 'The compliance framework has been created successfully.',
+      })
+
+      queryClient.invalidateQueries({
+        queryKey: ['frameworks'],
+      })
+      closeSheet()
     } catch (error) {
       console.error('Error creating framework:', error)
       // You might want to add an error toast or message here
+      toast({
+        title: 'Creation Failed',
+        description: 'There was an error creating the compliance framework.',
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -81,6 +115,33 @@ export default function ComplianceFrameworkForm() {
             </FormItem>
           )}
         />{' '}
+        <FormField
+          control={form.control}
+          name="statusId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('audit-status')}</FormLabel>
+              <FormControl>
+                <select
+                  value={field.value || ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    field.onChange(value ? Number(value) : undefined)
+                  }}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">{t('select-status')}</option>
+                  {auditStatusOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="file"

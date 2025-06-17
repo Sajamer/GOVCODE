@@ -17,14 +17,14 @@ model User {
   Invitation   Invitation[]
   screenShots  Screenshot[]
 
-  assignedTasks     TaskManagement[] @relation(name: "AssignedTask")
-  allocatedTasks    TaskManagement[] @relation(name: "AllocatedTask")
-  lastAssignedTasks TaskManagement[] @relation(name: "LastAssignee")
-
-  assignedHistories  TaskHistory[] @relation(name: "TaskAssignedTo") // Tracks tasks the user was assigned to
-  allocatedHistories TaskHistory[] @relation(name: "TaskAssignedBy") // Tracks tasks the user assigned
-
-  audits AuditCycle[]
+  assignedTasks      TaskManagement[] @relation(name: "AssignedTask")
+  allocatedTasks     TaskManagement[] @relation(name: "AllocatedTask")
+  lastAssignedTasks  TaskManagement[] @relation(name: "LastAssignee")
+  assignedHistories  TaskHistory[]    @relation(name: "TaskAssignedTo") // Tracks tasks the user was assigned to
+  allocatedHistories TaskHistory[]    @relation(name: "TaskAssignedBy") // Tracks tasks the user assigned
+  audits             AuditCycle[]
+  auditDetails       AuditDetails[]
+  ownedAudits        AuditDetails[]   @relation(name: "AuditOwner")
 }
 
 model Account {

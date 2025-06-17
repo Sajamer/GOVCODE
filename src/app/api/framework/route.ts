@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
     const name = formData.get('name') as string
+    const statusId = formData.get('statusId') as string
     const file = formData.get('file') as File | null
 
     if (!name) {
@@ -14,6 +15,17 @@ export async function POST(req: NextRequest) {
         {
           data: {},
           message: 'Framework name is required',
+          status: STATUS_CODES.BAD_REQUEST,
+        },
+        { status: STATUS_CODES.BAD_REQUEST },
+      )
+    }
+
+    if (!statusId) {
+      return NextResponse.json(
+        {
+          data: {},
+          message: 'Status ID is required',
           status: STATUS_CODES.BAD_REQUEST,
         },
         { status: STATUS_CODES.BAD_REQUEST },
@@ -141,7 +153,10 @@ export async function POST(req: NextRequest) {
       } // Create framework with its attributes in a transaction with parent-child relationships
       const result = await prisma.$transaction(async (tx) => {
         const framework = await tx.framework.create({
-          data: { name },
+          data: {
+            name,
+            statusId: parseInt(statusId),
+          },
         })
 
         // Group attributes by row for hierarchical structure
