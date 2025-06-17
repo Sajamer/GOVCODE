@@ -1,7 +1,9 @@
 'use client'
 
 import NoResultFound from '@/components/shared/NoResultFound'
+import AssignTaskDialog from '@/components/shared/modals/AssignTaskDialog'
 import ConfirmationDialog from '@/components/shared/modals/ConfirmationDialog'
+import ShowAuditTasksDialog from '@/components/shared/modals/ShowAuditTasksDialog'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -13,13 +15,13 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import {
-  IAuditDetailsManipulator,
-  saveMultipleAuditDetails,
-} from '@/lib/actions/audit-details.actions'
-import {
   createAttachment,
   deleteAttachment,
 } from '@/lib/actions/attachment.actions'
+import {
+  IAuditDetailsManipulator,
+  saveMultipleAuditDetails,
+} from '@/lib/actions/audit-details.actions'
 import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
@@ -57,6 +59,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
   const selectedAuditCycleId = auditIdFromQuery
     ? Number(auditIdFromQuery)
     : null
+  const [openAssignTask, setOpenAssignTask] = useState(false)
+  const [selectedChildForTask, setSelectedChildForTask] = useState<
+    string | null
+  >(null)
 
   // State for audit details
   const [auditDetailsData, setAuditDetailsData] = useState<
@@ -553,12 +559,48 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
     return relatedAttributes
   }
-
   // Get remaining columns (include column 2 and up)
   const remainingColumns = Object.keys(attributesByColumn)
     .map(Number)
     .filter((colIndex) => colIndex >= 2) // Changed to include column 2
     .sort((a, b) => a - b)
+
+  // Function to get the value from the last column for a specific child
+  const getLastColumnValue = (childId: string): string => {
+    if (remainingColumns.length === 0) return ''
+
+    const lastColumnIndex = remainingColumns[remainingColumns.length - 1]
+    const child = directChildren.find((c) => c.id === childId)
+    if (!child) return ''
+
+    // Find the current child's index in the framework attributes
+    const currentChildIndex = currentFramework.attributes.findIndex(
+      (attr) => attr.id === child.id,
+    )
+
+    if (currentChildIndex !== -1) {
+      // Look for the next attribute in the last column after this child
+      for (
+        let i = currentChildIndex + 1;
+        i < currentFramework.attributes.length;
+        i++
+      ) {
+        const attr = currentFramework.attributes[i]
+
+        // If we hit a colIndex 0 or 1, we're in a new main section
+        if (attr.colIndex <= 1) {
+          break
+        }
+
+        // Return the first attribute that matches the last column
+        if (attr.colIndex === lastColumnIndex) {
+          return attr.value || ''
+        }
+      }
+    }
+
+    return ''
+  }
 
   // Function to get audit detail value from existing data or current state
   const getAuditDetailValue = (
@@ -608,11 +650,44 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     const user = organizationUsers?.find((u) => u.id === userId)
     return user?.fullName || user?.email || 'Unknown User'
   }
-
   // Function to get audit rules from framework status
   const getFrameworkAuditRules = () => {
     if (!currentFramework?.status?.auditRules) return []
     return currentFramework.status.auditRules
+  }
+  // Function to get existing audit detail ID or null if it doesn't exist
+  const getExistingAuditDetailId = (
+    attributeId: string,
+  ): string | undefined => {
+    const attribute = currentFramework?.attributes.find(
+      (attr) => attr.id === attributeId,
+    )
+    const existingAuditDetail = attribute?.auditDetails?.find(
+      (detail) => detail.auditCycleId === selectedAuditCycleId,
+    )
+    return existingAuditDetail?.id
+  }
+
+  // Function to check if audit detail exists for an attribute
+  const hasExistingAuditDetail = (attributeId: string): boolean => {
+    return !!getExistingAuditDetailId(attributeId)
+  }
+
+  // Function to check if any audit details exist for the current audit cycle
+  const hasAnyAuditDetails = (): boolean => {
+    if (!selectedAuditCycleId || !currentFramework) return false
+
+    return directChildren.some((child) => hasExistingAuditDetail(child.id))
+  }
+
+  // Function to handle task assignment
+  const handleAssignTask = (attributeId: string) => {
+    const auditDetailId = getExistingAuditDetailId(attributeId)
+
+    if (auditDetailId) {
+      setSelectedChildForTask(attributeId)
+      setOpenAssignTask(true)
+    }
   }
 
   return (
@@ -677,7 +752,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   {relatedAttributes?.[0]?.name}
                 </span>
               )
-            })}
+            })}{' '}
             {selectedAuditCycleId && (
               <>
                 <span className="w-32">{t('audit-status')}</span>
@@ -685,7 +760,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                 <span className="w-32">{t('auditor')}</span>
                 <span className="w-24">{t('attachment')}</span>
                 <span className="w-40">{t('comment')}</span>
-                <span className="w-80">{t('recommendations')}</span>
+                <span className="w-60">{t('recommendations')}</span>
+                {hasAnyAuditDetails() && (
+                  <span className="w-40">{t('task-management')}</span>
+                )}
               </>
             )}
           </div>
@@ -792,7 +870,6 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
-
                     {/* Owner */}
                     <div className="w-32">
                       <Select
@@ -818,7 +895,6 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
-
                     {/* Auditor */}
                     <div className="w-32">
                       <span className="text-sm text-gray-700">
@@ -832,7 +908,6 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                           : '-'}
                       </span>
                     </div>
-
                     {/* Attachment */}
                     <div className="w-24">
                       <input
@@ -904,7 +979,6 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </Button>
                       </div>
                     </div>
-
                     {/* Comment */}
                     <div className="w-40">
                       <Textarea
@@ -922,9 +996,8 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         rows={1}
                       />
                     </div>
-
                     {/* Recommendation */}
-                    <div className="w-80">
+                    <div className="w-60">
                       <Textarea
                         placeholder="Add recommendation..."
                         value={
@@ -944,6 +1017,24 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         rows={1}
                       />
                     </div>
+
+                    {/* Task Management - Only show if audit details exist and this row has audit details */}
+                    {hasAnyAuditDetails() && (
+                      <div className="w-40">
+                        {hasExistingAuditDetail(child.id) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAssignTask(child.id)}
+                          >
+                            <Plus />
+                            {t('add-task')}
+                          </Button>
+                        ) : (
+                          <span></span>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -961,6 +1052,28 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         subTitle="You have unsaved changes. Are you sure you want to leave this page? Your changes will be lost."
         type="warning"
       />
+
+      <AssignTaskDialog
+        open={openAssignTask}
+        taskType="AUDIT_RELATED"
+        title={
+          selectedChildForTask
+            ? `Audit Cycle ID: ${auditData?.name.split('-').slice(0, 2).join('-')} - ${getLastColumnValue(selectedChildForTask)}`
+            : `Audit Cycle ID: ${auditData?.name.split('-').slice(0, 2).join('-')}` ||
+              ''
+        }
+        auditDetailId={
+          selectedChildForTask
+            ? getExistingAuditDetailId(selectedChildForTask)
+            : undefined
+        }
+        onClose={() => {
+          setOpenAssignTask(false)
+          setSelectedChildForTask(null)
+        }}
+      />
+
+      <ShowAuditTasksDialog open={false} onClose={() => {}} />
     </>
   )
 }

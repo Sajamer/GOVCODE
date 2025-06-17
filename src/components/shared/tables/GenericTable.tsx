@@ -434,6 +434,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
               <KPIForm data={singleEntityData as unknown as IKpiResponse} />
             ) : sheetToOpen === 'tasks-management' ? (
               <TaskManagementForm
+                taskType="KPI_RELATED"
                 data={singleEntityData as unknown as ITasksManagementResponse}
               />
             ) : null}
@@ -709,6 +710,7 @@ const GenericComponent = <T extends Record<string, unknown>>({
       <AssignTaskDialog
         open={openAssignTask}
         kpiId={Number(selectedId)}
+        taskType="KPI_RELATED"
         onClose={() => setOpenAssignTask(false)}
       />
     </>

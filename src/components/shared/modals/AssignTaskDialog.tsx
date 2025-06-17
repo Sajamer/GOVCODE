@@ -13,9 +13,10 @@ import { getAllStatusByOrganizationId } from '@/lib/actions/status.actions'
 import { createTask } from '@/lib/actions/task.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
+import { cn } from '@/lib/utils'
 import { ITaskManagementManipulator, taskSchema } from '@/schema/task.schema'
 import { useGlobalStore } from '@/stores/global-store'
-import { Priority } from '@prisma/client'
+import { Priority, TaskType } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import moment from 'moment'
@@ -29,14 +30,20 @@ import LabeledInput from '../inputs/LabeledInput'
 import LabeledTextArea from '../textArea/LabeledTextArea'
 
 interface IAssignTaskDialogProps {
-  kpiId: number
+  kpiId?: number
+  taskType: TaskType
   open: boolean
+  auditDetailId?: string
+  title?: string
   onClose: () => void
 }
 
 const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
   onClose,
   open,
+  taskType,
+  auditDetailId,
+  title,
   kpiId,
 }) => {
   const t = useTranslations('general')
@@ -70,7 +77,6 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
     staleTime: 30 * 60 * 1000,
     enabled: !!organizationId,
   })
-
   const statusOptions = taskStatusData?.map((user) => ({
     id: String(user.id),
     label: user.name,
@@ -89,6 +95,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
     initialValues: {
       name: '',
       description: '',
+      type: taskType,
       priority: Priority.LOW,
       note: '',
       startDate: new Date(),
@@ -98,9 +105,10 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
       percentDone: 0,
       reason: '',
       comment: '',
-      statusId: 0,
+      statusId: statusOptions?.length ? Number(statusOptions[0].id) : 0,
       allocatorId: user?.id ?? '',
-      kpiId: 0,
+      kpiId: kpiId ? Number(kpiId) : null,
+      auditDetailId: auditDetailId || undefined,
       assignees: [],
     },
     enableReinitialize: false,
@@ -111,8 +119,20 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
   })
 
   useEffect(() => {
-    setFieldValue('kpiId', Number(kpiId))
+    // Handle kpiId - only set if it's provided and valid
+    if (kpiId !== undefined && kpiId !== null) {
+      setFieldValue('kpiId', Number(kpiId))
+    } else {
+      setFieldValue('kpiId', null)
+    }
   }, [kpiId, setFieldValue])
+
+  useEffect(() => {
+    // Handle auditDetailId for audit tasks
+    if (auditDetailId) {
+      setFieldValue('auditDetailId', auditDetailId)
+    }
+  }, [auditDetailId, setFieldValue])
 
   const { mutate: addMutation, isPending: addLoading } = useMutation({
     mutationFn: async () => await createTask(values),
@@ -146,8 +166,13 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
         className="flex h-fit w-full max-w-[95%] flex-col items-center justify-center gap-[1.875rem] !rounded-[1.875rem] border-none bg-zinc-50 p-4 sm:h-fit sm:max-w-[50%] sm:p-[1.875rem]"
       >
         <div className="flex w-full flex-col items-start justify-center gap-2 text-center">
-          <DialogTitle className="sr-only w-full text-2xl font-medium leading-[1.8rem] text-zinc-900">
-            Select Users to assign task
+          <DialogTitle
+            className={cn(
+              'w-full text-2xl font-medium leading-[1.8rem] text-zinc-900',
+              !title && 'sr-only',
+            )}
+          >
+            {title}
           </DialogTitle>
           <DialogDescription className="sr-only w-full text-sm text-zinc-500"></DialogDescription>
         </div>
@@ -289,6 +314,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
               {t('cancel')}
             </Button>
             <Button
+              type="submit"
               disabled={addLoading}
               isLoading={addLoading}
               className="w-full max-w-36 sm:max-w-[10.25rem]"

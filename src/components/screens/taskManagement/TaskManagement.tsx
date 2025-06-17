@@ -28,6 +28,7 @@ const TaskManagement: FC = () => {
     <TasksTable<ITasksManagementResponse>
       title="tasks"
       description="taskDescription"
+      taskType="KPI_RELATED"
       entityKey="id"
       sheetName={'tasks-management'}
       data={tasksData}

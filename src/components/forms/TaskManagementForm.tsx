@@ -10,7 +10,7 @@ import { ITaskManagementManipulator, taskSchema } from '@/schema/task.schema'
 import { useGlobalStore } from '@/stores/global-store'
 import { useSheetStore } from '@/stores/sheet-store'
 import { ITasksManagementResponse } from '@/types/tasks'
-import { Priority } from '@prisma/client'
+import { Priority, TaskType } from '@prisma/client'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import moment from 'moment'
@@ -26,10 +26,12 @@ import { Button } from '../ui/button'
 
 interface ITaskManagementFormProps {
   data?: ITasksManagementResponse
+  taskType: TaskType
 }
 
 const TaskManagementForm: FC<ITaskManagementFormProps> = ({
   data: tasksData,
+  taskType = TaskType.KPI_RELATED,
 }) => {
   const isEdit = !!tasksData
   const queryClient = useQueryClient()
@@ -83,12 +85,13 @@ const TaskManagementForm: FC<ITaskManagementFormProps> = ({
     percentDone: tasksData?.percentDone ?? 0,
     reason: tasksData?.reason ?? '',
     comment: tasksData?.comment ?? '',
+    type: tasksData?.type || taskType,
     statusId:
       tasksData?.statusId ||
       (statusOptions?.length ? Number(statusOptions[0].id) : 0),
     allocatorId: tasksData?.allocatorId || user?.id || '',
     kpiId: tasksData?.kpiId || null,
-    auditCycleCaseId: tasksData?.auditCycleCaseId || null,
+    auditDetailId: tasksData?.auditDetailId || undefined,
     assignees: tasksData?.assignees?.map((a) => a.id) || [],
   }
 

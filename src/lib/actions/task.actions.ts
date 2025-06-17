@@ -19,14 +19,6 @@ export const getAllTasks = async (
     const skip = (page - 1) * limit
 
     const tasksData = await prisma.taskManagement.findMany({
-      // where: {
-      //   isArchived: false,
-      //   assignees: {
-      //     some: {
-      //       id: userId, // Filter tasks assigned to the current user
-      //     },
-      //   },
-      // },
       skip,
       take: limit,
       include: {
@@ -45,12 +37,11 @@ export const getAllTasks = async (
 
     if (!tasksData) {
       return []
-    }
-
-    // Transform the results to have status as a string
+    } // Transform the results to match ITasksManagementResponse interface
     const tasks = tasksData.map((task) => ({
       ...task,
       status: task.status.name, // Convert status object to string
+      type: task.taskType, // Map taskType to type
     }))
 
     return tasks
