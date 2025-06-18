@@ -244,7 +244,7 @@ const KpiAnalysisComponent: FC<IKpiAnalysisProps> = () => {
                 key={index}
                 className="hover:bg-gray-50 dark:hover:bg-gray-400"
               >
-                <td className="border border-gray-300 p-2.5 dark:border-gray-800">
+                <td className="border border-gray-300 p-2.5 dark:border-gray-800 whitespace-nowrap">
                   {kpi.code}
                 </td>
                 <td className="border border-gray-300 p-2.5 dark:border-gray-800">

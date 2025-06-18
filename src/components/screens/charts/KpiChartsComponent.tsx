@@ -4,12 +4,14 @@ import BarChartComponent from '@/components/shared/charts/BarChartComponent'
 import BasicDropdown from '@/components/shared/dropdowns/BasicDropdown'
 import { Month, periodsByFrequency } from '@/constants/kpi-constants'
 import { getKPIByIdAndYearFilter } from '@/lib/actions/kpiActions'
+import { convertToArabicNumerals } from '@/lib/utils'
 import {
   IChartData,
   IKpiWithTargetsAndActuals,
   IMultipleChartData,
 } from '@/types/kpi'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, useEffect, useState } from 'react'
 
 interface IKpiChartsComponentProps {
@@ -18,6 +20,7 @@ interface IKpiChartsComponentProps {
 
 const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
   const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
   const currentYear = new Date().getFullYear()
 
   const [chartData, setChartData] = useState<IChartData[]>([])
@@ -154,18 +157,18 @@ const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
   const chartConfig = {
     target: {
       label: 'Target',
-      color: 'hsl(var(--primary))',
+      color: 'var(--primary)',
     },
   }
 
   const multipleChartConfig = {
     actual: {
       label: 'Actual',
-      color: 'hsl(var(--primary))',
+      color: 'var(--primary)',
     },
     target: {
       label: 'Target',
-      color: 'hsl(var(--secondary))',
+      color: 'var(--secondary)',
     },
   }
 
@@ -175,7 +178,7 @@ const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
   }, [data])
 
   return (
-    <div className="flex w-full flex-col gap-10">
+    <div className="flex w-full flex-col gap-10" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="flex w-full items-center justify-end">
         <BasicDropdown
           data={localizedYearOptions ?? []}
@@ -190,8 +193,8 @@ const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
       </div>
       <div className="flex w-full items-start justify-start gap-5">
         <BarChartComponent
-          title="Current Actuals"
-          description={`Showing Actuals for year ${selectedYear}`}
+          title={t('current-actuals')}
+          description={`${t('showing-actuals-for-year')} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
           year={selectedYear}
           chartData={chartData}
           chartConfig={chartConfig}
@@ -200,8 +203,8 @@ const KpiChartsComponent: FC<IKpiChartsComponentProps> = ({ data }) => {
       </div>
       <div className="flex w-full items-start justify-start gap-5">
         <BarChartComponent
-          title="Actuals vs Targets"
-          description={`Showing differences between actuals and targets for year ${selectedYear}`}
+          title={t('actuals-vs-targets')}
+          description={`${t('dashboard-text')} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
           year={selectedYear}
           chartData={multipleChartData}
           chartConfig={multipleChartConfig}
