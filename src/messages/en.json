@@ -468,6 +468,7 @@
     "filter-by-frequency": "Filter by Frequency",
     "actuals-vs-targets": "Actuals vs Targets",
     "showing-actuals-for-year": "Showing Actuals for year",
-    "current-actuals": "Current Actuals"
+    "current-actuals": "Current Actuals",
+    "current-year": "Current Year"
   }
 }
