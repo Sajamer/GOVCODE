@@ -7,12 +7,14 @@ import { frequencyMapping } from '@/constants/global-constants'
 import { periodsByFrequency } from '@/constants/kpi-constants'
 import { toast } from '@/hooks/use-toast'
 import { saveKPITargets } from '@/lib/actions/kpiActions'
-import { cn } from '@/lib/utils'
+import { cn, convertToArabicNumerals } from '@/lib/utils'
 import { kpiTargetSchema } from '@/schema/kpi-target.schema'
 import { useGlobalStore } from '@/stores/global-store'
 import { IKpiTargetManipulator, IKpiTargetResponse } from '@/types/kpi'
 import { useMutation } from '@tanstack/react-query'
 import { useFormik } from 'formik'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 
@@ -22,6 +24,8 @@ interface IKpiTargetComponentProps {
 
 const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
   const { hasPermission } = useGlobalStore((store) => store)
+  const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
 
   const { id, code, name, frequency, unit, KPITarget } = data
   const currentYear = new Date().getFullYear()
@@ -114,27 +118,33 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
   ).sort((a, b) => a - b) // Sort years in ascending order
 
   return (
-    <div className="w-full">
+    <div className="w-full" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-start gap-7">
         <div className="flex items-end justify-center gap-2">
-          <h1 className="text-xl font-semibold text-secondary">Kpi Code:</h1>
+          <h1 className="text-xl font-semibold text-secondary">
+            {t('kpi-code')}:
+          </h1>
           <p className="font-medium text-black">{code}</p>
         </div>
         <div className="flex items-end justify-center gap-2">
-          <h1 className="text-xl font-semibold text-secondary">Kpi Name:</h1>
+          <h1 className="text-xl font-semibold text-secondary">
+            {t('kpi-name')}:
+          </h1>
           <p className="font-medium text-black">{name}</p>
         </div>
         <div className="flex items-end justify-center gap-2">
-          <h1 className="text-xl font-semibold text-secondary">Unit:</h1>
+          <h1 className="text-xl font-semibold text-secondary">{t('Unit')}:</h1>
           <p className="font-medium capitalize text-black">
-            {unit?.toLowerCase()}
+            {t(unit?.toLowerCase())}
           </p>
         </div>
         <div className="flex items-end justify-center gap-2">
-          <h1 className="text-xl font-semibold text-secondary">Frequency:</h1>
-          <p className="font-medium capitalize text-black">{frequencyKey}</p>
+          <h1 className="text-xl font-semibold text-secondary">
+            {t('frequency')}:
+          </h1>
+          <p className="font-medium capitalize text-black">{t(frequencyKey)}</p>
         </div>
-      </div>{' '}
+      </div>
       {hasPermission && (
         <div className="flex w-full items-center justify-end gap-5">
           <Button
@@ -143,7 +153,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
             className="w-40"
             onClick={handleAddPreviousYear}
           >
-            Add previous Target
+            {t('add-previous-target')}
           </Button>
           <Button
             variant={'secondary'}
@@ -151,7 +161,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
             className="w-40"
             onClick={handleAddYear}
           >
-            Add Target
+            {t('add-target')}
           </Button>
         </div>
       )}
@@ -174,8 +184,9 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
                   currentYear === year && 'text-primary',
                 )}
               >
-                <span className="font-bold">Year:</span> {year}
-                {currentYear === year && ' (Current Year)'}
+                <span className="font-bold">{t('year')}:</span>{' '}
+                {isArabic ? convertToArabicNumerals(year) : year}
+                {currentYear === year && ` (${t('current-year')})`}
               </h3>
               <div className="flex flex-wrap gap-2.5 ">
                 {periodsByFrequency[frequencyKey].map((period) => (
@@ -183,7 +194,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
                     key={period}
                     className="flex flex-col items-start justify-center gap-2"
                   >
-                    <Label>{period}</Label>
+                    <Label>{t(period)}</Label>
                     <Input
                       id={`${year}-${period}`}
                       type="number"
@@ -214,9 +225,8 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
             </div>
           ))
         ) : (
-          <p className="mt-5 text-center text-xl font-semibold text-secondary">
-            Start adding Targets for your kpi <br />
-            by clicking the add target button.
+          <p className="flex h-[calc(100vh-300px)] max-w-sm items-center justify-center text-center text-xl font-semibold text-secondary">
+            {t('no-targets-text')}
           </p>
         )}
 
@@ -227,7 +237,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
               className="w-40"
               disabled={isPending || !dirty}
             >
-              Save Targets
+              {t('save-targets')}
             </Button>
           )}
         </div>
