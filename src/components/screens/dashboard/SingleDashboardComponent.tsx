@@ -20,6 +20,7 @@ import {
 } from '@/lib/actions/dashboard.actions'
 import { CustomUser } from '@/lib/auth'
 import { uploadFiles } from '@/lib/uploadthing'
+import { convertToArabicNumerals } from '@/lib/utils'
 import {
   IDashboardKPIs,
   IDashboardKPIWithKPIs,
@@ -33,6 +34,7 @@ import html2canvas from 'html2canvas-pro'
 import { Loader2, Scan } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, useRef, useState } from 'react'
 
 interface ISingleDashboardComponentProps {
@@ -43,6 +45,8 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
   dashboardId,
 }) => {
   const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
+
   const currentYear = new Date().getFullYear()
   const { data: session } = useSession()
   const userData = session?.user as CustomUser | undefined
@@ -150,11 +154,11 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
   const multipleChartConfig = {
     actual: {
       label: 'Actual',
-      color: 'hsl(var(--primary))',
+      color: 'var(--primary)',
     },
     target: {
       label: 'Target',
-      color: 'hsl(var(--secondary))',
+      color: 'var(--secondary)',
     },
   }
 
@@ -225,6 +229,8 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     }
   }
 
+  const dashboardDescription = t('dashboard-text')
+
   const chartToShow = (
     chartType: ChartTypes,
     kpiItem: IDashboardKPIWithKPIs,
@@ -235,7 +241,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return (
           <RadarLinesOnlyChartComponent
             title={kpiItem.kpi.name}
-            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            description={`${dashboardDescription} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
             year={selectedYear}
             chartData={singleChartData}
             chartConfig={multipleChartConfig}
@@ -245,7 +251,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return (
           <PieChartComponent
             title={kpiItem.kpi.name}
-            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            description={`${dashboardDescription} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
             year={selectedYear}
             chartData={singleChartData}
             config={multipleChartConfig}
@@ -255,7 +261,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return (
           <LineChartComponent
             title={kpiItem.kpi.name}
-            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            description={`${dashboardDescription} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
             year={selectedYear}
             chartData={singleChartData}
             chartConfig={multipleChartConfig}
@@ -265,7 +271,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return (
           <AreaChartComponent
             title={kpiItem.kpi.name}
-            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            description={`${dashboardDescription} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
             year={selectedYear}
             chartData={singleChartData}
             chartConfig={multipleChartConfig}
@@ -275,7 +281,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return (
           <StackedBarChartComponent
             title={kpiItem.kpi.name}
-            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            description={`${dashboardDescription} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
             year={selectedYear}
             chartData={singleChartData}
             chartConfig={multipleChartConfig}
@@ -285,7 +291,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return (
           <BarChartComponent
             title={kpiItem.kpi.name}
-            description={`Showing differences between actuals and targets for year ${selectedYear}`}
+            description={`${dashboardDescription} ${isArabic ? convertToArabicNumerals(parseInt(selectedYear)) : selectedYear}`}
             year={selectedYear}
             chartData={singleChartData}
             chartConfig={multipleChartConfig}
@@ -295,10 +301,10 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
   }
 
   return (
-    <div className="flex w-full flex-col gap-10">
+    <div className="flex w-full flex-col gap-10" dir={isArabic ? 'rtl' : 'ltr'}>
       <div className="flex w-full items-center justify-end gap-5">
         <BasicDropdown
-          placeholder={'Filter by Frequency'}
+          placeholder={t('filter-by-frequency')}
           data={frequencyOptions ?? []}
           triggerStyle="h-11"
           defaultValue={frequencyOptions?.find(

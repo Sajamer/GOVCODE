@@ -136,7 +136,7 @@ const BasicDropdown = React.memo<IBasicDropdownProps>(function BasicDropdown({
 
         <PopoverContent
           className={cn(
-            'm-0 overflow-hidden rounded-[1.25rem] p-0 backdrop-blur-[2.5rem] shadow-dropdown bg-white',
+            'm-0 overflow-hidden rounded-[1.25rem] p-0 backdrop-blur-[2.5rem] shadow-dropdown bg-white dark:bg-white',
             wrapperStyle,
           )}
           align={align}
@@ -192,7 +192,7 @@ const MenuList = React.memo(function MenuList({
   }
 
   return (
-    <Command className={cn('bg-white dark:bg-neutral-100', className)}>
+    <Command className={cn('bg-white dark:bg-neutral-1000', className)}>
       {header && (
         <div className="border-b border-neutral-200 px-3.5 py-3">
           {searchable ? (

@@ -30,7 +30,7 @@ const BarChartComponent = <T,>({
   chartConfig,
 }: IBarChartComponentProps<T>) => {
   return (
-    <Card className="w-full max-w-2xl">
+    <Card className="w-full max-w-2xl dark:bg-white dark:text-black">
       <CustomCardHeader title={title} description={description} />
       {chartData && chartData.length > 0 ? (
         <CardContent>

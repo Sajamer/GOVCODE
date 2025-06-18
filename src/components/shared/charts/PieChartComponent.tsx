@@ -49,7 +49,7 @@ const PieChartComponent = <T,>({
   }))
 
   return (
-    <Card className="flex w-full flex-col">
+    <Card className="flex w-full flex-col dark:bg-white dark:text-black">
       <CustomCardHeader title={title} description={description} />
       {updatedChartData && updatedChartData.length > 0 ? (
         <CardContent>
