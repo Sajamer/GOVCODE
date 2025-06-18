@@ -6,6 +6,7 @@ import {
   IFrameworkAttribute,
   IFrameWorkAuditCycle,
 } from '@/types/framework'
+import { useTranslations } from 'next-intl'
 import { usePathname, useRouter } from 'next/navigation'
 import { FC } from 'react'
 
@@ -20,6 +21,8 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
 }) => {
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
 
   const handleAttributeClick = (frameworkId: string, attributeId: string) => {
     const currentPath = pathname.split('/').slice(0, -1).join('/')
@@ -72,7 +75,7 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
   }
 
   return (
-    <div>
+    <div dir={isArabic ? 'rtl' : 'ltr'}>
       {frameworks.map((framework) => (
         <div
           key={framework.id}
@@ -158,14 +161,15 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                         {auditData && (
                           <div className="flex flex-col gap-1">
                             <span>
-                              <b>Audit:</b>{' '}
+                              <b>{t('audit')}:</b>{' '}
                               {auditData?.name.split('-').slice(0, 2).join('-')}
                             </span>
                             <span>
-                              <b>Initiated By:</b> {auditData?.user?.fullName}
+                              <b>{t('initiate-by')}:</b>{' '}
+                              {auditData?.user?.fullName}
                             </span>
                             <span>
-                              <b>Initiated date:</b> <br />
+                              <b>{t('initiated-date')}:</b> <br />
                               {auditData?.startDate
                                 ? new Date(
                                     auditData.startDate,

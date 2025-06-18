@@ -22,6 +22,7 @@ import { useFormik } from 'formik'
 import moment from 'moment'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, useEffect } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import BasicDropdown from '../dropdowns/BasicDropdown'
@@ -47,6 +48,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
   kpiId,
 }) => {
   const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
   const queryClient = useQueryClient()
 
   const { organizationId, departmentId } = useGlobalStore((store) => store)
@@ -168,7 +170,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
         <div className="flex w-full flex-col items-start justify-center gap-2 text-center">
           <DialogTitle
             className={cn(
-              'w-full text-2xl font-medium leading-[1.8rem] text-zinc-900',
+              'w-full text-xl font-medium leading-[1.8rem] text-zinc-900',
               !title && 'sr-only',
             )}
           >
@@ -177,21 +179,22 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
           <DialogDescription className="sr-only w-full text-sm text-zinc-500"></DialogDescription>
         </div>
         <form
+          dir={isArabic ? 'rtl' : 'ltr'}
           onSubmit={handleSubmit}
           className="styleScrollbar flex size-full max-h-full flex-col justify-between overflow-y-auto"
         >
           <div className="flex w-full flex-col items-center gap-5">
             <div className="flex w-full items-center justify-center gap-5">
               <LabeledInput
-                label={'Task Name'}
-                placeholder={'Enter task name'}
+                label={t('task-name')}
+                placeholder={t('task-name-placeholder')}
                 {...getFieldProps('name')}
                 error={touched.name && errors.name ? errors.name : ''}
               />
               <MultiSelect
                 instanceId={'users'}
-                label={'Assign task to'}
-                placeholder={'Select users'}
+                label={t('assign-task-to')}
+                placeholder={t('select-users')}
                 data={userOptions ?? []}
                 hasArrow
                 isMulti
@@ -218,8 +221,8 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
               />
             </div>
             <LabeledTextArea
-              label={'Task Description'}
-              placeholder={'Enter task description here'}
+              label={t('task-description')}
+              placeholder={t('task-description-placeholder')}
               className="resize-none"
               {...getFieldProps('description')}
               error={
@@ -231,9 +234,9 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
             <div className="flex w-full items-center justify-center gap-5">
               <BasicDropdown
                 data={priorityOptions ?? []}
-                label={'Priority'}
+                label={t('priority')}
                 triggerStyle="h-11"
-                placeholder={'Select Priority'}
+                placeholder={t('priority-placeholder')}
                 defaultValue={priorityOptions?.find(
                   (option) => option.id === values.priority,
                 )}
@@ -245,9 +248,9 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
               />
               <BasicDropdown
                 data={statusOptions ?? []}
-                label={'Task Status'}
+                label={t('task-status')}
                 triggerStyle="h-11"
-                placeholder={'Select Status'}
+                placeholder={t('task-status-placeholder')}
                 defaultValue={statusOptions?.find(
                   (option) => +option.id === values.statusId,
                 )}
@@ -260,8 +263,8 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
             </div>
             <div className="flex w-full items-center justify-center gap-5">
               <LabeledInput
-                label={'Start Date'}
-                placeholder={'Enter start date'}
+                label={t('start-date')}
+                placeholder={t('start-date-placeholder')}
                 type="date"
                 value={
                   values.startDate
@@ -278,8 +281,8 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
                 }
               />
               <LabeledInput
-                label={'Due Date'}
-                placeholder={'Enter due date'}
+                label={t('due-date')}
+                placeholder={t('due-date-placeholder')}
                 type="date"
                 value={
                   values.dueDate
@@ -297,8 +300,8 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
               />
             </div>
             <LabeledTextArea
-              label={'Comment'}
-              placeholder={'Enter comment here'}
+              label={t('comment')}
+              placeholder={t('comment-placeholder')}
               className="resize-none"
               {...getFieldProps('comment')}
               error={touched.comment && errors.comment ? errors.comment : ''}

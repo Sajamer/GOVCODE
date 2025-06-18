@@ -130,7 +130,7 @@ const ComplianceFrameworks: FC = () => {
                         })
                       }
                     >
-                      <span>Initiate Audit Cycle</span>
+                      <span>{t('initiate-audit-cycle')}</span>
                       <Plus className="size-4" />
                     </Button>{' '}
                     {framework.auditCycles &&
@@ -144,7 +144,8 @@ const ComplianceFrameworks: FC = () => {
                               'bg-[#266a55]/60 hover:bg-[#266a55]/60',
                           )}
                         >
-                          Audit: {cycle.name.split('-').slice(0, 2).join('-')}
+                          {t('audit')}:{' '}
+                          {cycle.name.split('-').slice(0, 2).join('-')}
                         </Button>
                       ))}
                     <Button
@@ -152,7 +153,7 @@ const ComplianceFrameworks: FC = () => {
                         setView((prev) => (prev === 'map' ? 'list' : 'map'))
                       }}
                     >
-                      {view === 'map' ? 'List View' : 'Map View'}
+                      {view === 'map' ? t('list-view') : t('map-view')}
                     </Button>
                   </div>
                 </Card>

@@ -735,13 +735,14 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-5">
               <span>
-                <b>Audit:</b> {auditData?.name.split('-').slice(0, 2).join('-')}
+                <b>{t('audit')}:</b>{' '}
+                {auditData?.name.split('-').slice(0, 2).join('-')}
               </span>
               <span>
-                <b>Initiated By:</b> {auditData?.user?.fullName}
+                <b>{t('initiate-by')}:</b> {auditData?.user?.fullName}
               </span>
               <span>
-                <b>Initiated date:</b>
+                <b>{t('initiated-date')}:</b>
                 {auditData?.startDate
                   ? new Date(auditData.startDate).toLocaleDateString('en-GB', {
                       day: '2-digit',
@@ -788,7 +789,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                 <span className="w-40">{t('comment')}</span>
                 <span className="w-60">{t('recommendations')}</span>
                 {hasAnyAuditDetails() && (
-                  <span className="w-60">{t('task-management')}</span>
+                  <span className="w-40">{t('task-management')}</span>
                 )}
               </>
             )}
@@ -1042,12 +1043,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         className="min-h-[40px] resize-none"
                         rows={1}
                       />
-                    </div>{' '}
+                    </div>
                     {/* Task Management - Only show if audit details exist and this row has audit details */}
                     {hasAnyAuditDetails() && (
-                      <div className="flex w-60 gap-2">
+                      <div className="flex w-40 gap-2">
                         {hasExistingAuditDetail(child.id) ? (
-                          <>
+                          <div className="flex flex-col items-center justify-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
@@ -1065,7 +1066,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                                 {t('view-tasks')}
                               </Button>
                             )}
-                          </>
+                          </div>
                         ) : (
                           <span></span>
                         )}
@@ -1094,8 +1095,8 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         taskType="AUDIT_RELATED"
         title={
           selectedChildForTask
-            ? `Audit Cycle ID: ${auditData?.name.split('-').slice(0, 2).join('-')} - ${getLastColumnValue(selectedChildForTask)}`
-            : `Audit Cycle ID: ${auditData?.name.split('-').slice(0, 2).join('-')}` ||
+            ? `${t('audit-cycle-id')}: ${auditData?.name.split('-').slice(0, 2).join('-')} - ${getLastColumnValue(selectedChildForTask)}`
+            : `${t('audit-cycle-id')}: ${auditData?.name.split('-').slice(0, 2).join('-')}` ||
               ''
         }
         auditDetailId={getExistingAuditDetailId(selectedChildForTask || '')}
