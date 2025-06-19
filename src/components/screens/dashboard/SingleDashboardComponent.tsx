@@ -351,7 +351,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
       </div>
       <div className="flex w-full items-center justify-end gap-5">
         <Tooltips
-          content={'Take screenshot'}
+          content={t('take-screenshot')}
           variant="bold"
           position="left"
           asChild
@@ -372,7 +372,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         </Tooltips>
         {screenShots && screenShots?.length > 0 && (
           <Button size="lg" onClick={() => setIsModalOpen(true)}>
-            Show Screenshots
+            {t('show-screenshots')}
           </Button>
         )}
       </div>
