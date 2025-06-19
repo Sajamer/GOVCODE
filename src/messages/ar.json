@@ -465,6 +465,8 @@
     "filter-by-frequency": "تصفية حسب التكرار",
     "actuals-vs-targets": "القيم الفعلية مقابل الأهداف",
     "showing-actuals-for-year": "عرض القيم الفعلية للسنة",
-    "current-actuals": "القيم الفعلية الحالية"
+    "current-actuals": "القيم الفعلية الحالية",
+    "show-screenshots": "إظهار لقطات الشاشة",
+    "take-screenshot": "التقط لقطة شاشة"
   }
 }
