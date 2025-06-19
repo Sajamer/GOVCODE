@@ -39,7 +39,6 @@ const AuditStatusForm: FC<IAuditStatusFormProps> = ({
     auditStatusData?.auditRules && auditStatusData.auditRules.length > 0
       ? auditStatusData.auditRules
       : [{ label: '', color: '#000000' }]
-
   // Format dates for initial values
   const initialValues = {
     name: auditStatusData?.name ?? '',
@@ -48,9 +47,23 @@ const AuditStatusForm: FC<IAuditStatusFormProps> = ({
 
   const formik = useFormik<IAuditStatusManipulator>({
     initialValues,
-    enableReinitialize: false, // Change to false to prevent re-initialization
+    enableReinitialize: false,
     validationSchema: toFormikValidationSchema(auditStatusSchema),
-    onSubmit: () => {
+    onSubmit: (values) => {
+      // Additional validation
+      const validRules = values.auditRules.filter(
+        (rule) => rule.label.trim() !== '' && rule.color.trim() !== '',
+      )
+
+      if (validRules.length === 0) {
+        toast({
+          variant: 'destructive',
+          title: 'Validation Error',
+          description: 'At least one valid audit rule is required',
+        })
+        return
+      }
+
       if (isEdit && auditStatusData) {
         editMutation(auditStatusData.id)
       } else {
@@ -93,9 +106,10 @@ const AuditStatusForm: FC<IAuditStatusFormProps> = ({
       })
     },
   })
-
   const { mutate: editMutation, isPending: editLoading } = useMutation({
-    mutationFn: async (id: number) => await updateAuditStatusById(id, values),
+    mutationFn: async (id: number) => {
+      return await updateAuditStatusById(id, values)
+    },
     onSuccess: (updatedData, id) => {
       queryClient.setQueryData(
         ['audit-status'],
@@ -122,10 +136,11 @@ const AuditStatusForm: FC<IAuditStatusFormProps> = ({
       closeSheet()
     },
     onError: (error: AxiosErrorType) => {
+      console.error('Update error:', error)
       toast({
         variant: 'destructive',
-        title: 'Resend Failed',
-        description: error?.message,
+        title: 'Update Failed',
+        description: error?.message || 'An error occurred while updating',
       })
     },
   })
@@ -143,7 +158,7 @@ const AuditStatusForm: FC<IAuditStatusFormProps> = ({
   // Handler to remove a rule row by index
   const handleRemoveRule = (index: number) => {
     const updatedRules = values.auditRules.filter((_, i) => i !== index)
-    setFieldValue('rules', updatedRules)
+    setFieldValue('auditRules', updatedRules)
   }
 
   // Handler for individual rule change
