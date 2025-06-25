@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["prismaSchemaFolder"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -89,4 +88,507 @@ enum Calibration {
 enum Provider {
   credential
   google
+}
+
+// User Management Models
+model User {
+  id    String   @id @default(cuid())
+  email String   @unique
+  role  userRole @default(userDepartment)
+
+  fullName      String?   @db.VarChar(64)
+  phone         String?   @db.VarChar(64)
+  photo         String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  departmentId Int?
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  accounts     Account[]
+  sessions     Session[]
+  Invitation   Invitation[]
+  screenShots  Screenshot[]
+
+  assignedTasks      TaskManagement[] @relation(name: "AssignedTask")
+  allocatedTasks     TaskManagement[] @relation(name: "AllocatedTask")
+  lastAssignedTasks  TaskManagement[] @relation(name: "LastAssignee")
+  assignedHistories  TaskHistory[]    @relation(name: "TaskAssignedTo") // Tracks tasks the user was assigned to
+  allocatedHistories TaskHistory[]    @relation(name: "TaskAssignedBy") // Tracks tasks the user assigned
+  audits             AuditCycle[]
+  auditDetails       AuditDetails[]
+  ownedAudits        AuditDetails[]   @relation(name: "AuditOwner")
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String  @map("user_id")
+  type                     String
+  provider                 String
+  providerAccountId        String  @map("provider_account_id")
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Password {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  hash      String
+  salt      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("passwords")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  expires      DateTime
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String   @map("email")
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Invitation {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  fullName     String
+  role         userRole @default(userDepartment)
+  departmentId Int?
+  token        String   @unique // Secure token for invitation link
+  status       String   @default("pending") // pending, accepted, or revoked
+  expiresAt    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invitedByUserId String? // Reference to the user who invited
+  invitedBy       User?   @relation(fields: [invitedByUserId], references: [id], onDelete: SetNull)
+}
+
+// KPI Models
+model KPI {
+  id                     Int     @id @default(autoincrement())
+  name                   String
+  code                   String
+  description            String  @db.VarChar(1024)
+  owner                  String
+  measurementNumerator   String? @db.VarChar(512)
+  measurementDenominator String? @db.VarChar(512)
+  measurementNumber      String? @db.VarChar(512)
+  resources              String?
+  isArchived             Boolean @default(false)
+  statusType             String  @default("default")
+
+  unit        Units
+  frequency   Frequency
+  type        KPIType
+  calibration Calibration
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  statusId Int?
+  status   Status? @relation(fields: [statusId], references: [id])
+
+  KPIObjective  KPIObjective[]
+  KPICompliance KPICompliance[]
+  KPIProcess    KPIProcess[]
+  KPITarget     KPITarget[]
+  KPIActual     KPIActual[]
+  DashboardKPI  DashboardKPI[]
+  tasks         TaskManagement[]
+}
+
+model KPITarget {
+  id          Int      @id @default(autoincrement())
+  year        Int
+  period      String
+  targetValue Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  kpiId Int
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  @@unique([kpiId, year, period])
+}
+
+model KPIActual {
+  id          Int      @id @default(autoincrement())
+  year        Int
+  period      String
+  targetValue Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  kpiId Int
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  @@unique([kpiId, year, period])
+}
+
+model Dashboard {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  chartType ChartTypes @default(bar)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  dashboardKPIs DashboardKPI[] // Relationship with selected KPIs
+  screenshots   Screenshot[]
+}
+
+model Objective {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  KPIObjective KPIObjective[]
+}
+
+model Compliance {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  KPICompliance KPICompliance[]
+}
+
+model Process {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  KPIProcess KPIProcess[]
+}
+
+model Status {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Each Status can have many associated rules
+  rules Rule[]
+  kpis  KPI[]
+}
+
+model Rule {
+  id    Int    @id @default(autoincrement())
+  min   Float
+  max   Float
+  label String
+  color String
+
+  statusId Int
+  status   Status @relation(fields: [statusId], references: [id], onDelete: Cascade)
+}
+
+model KPIObjective {
+  kpiId Int
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  objectiveId Int
+  objective   Objective @relation(fields: [objectiveId], references: [id])
+
+  @@id([kpiId, objectiveId])
+}
+
+model KPICompliance {
+  kpiId Int
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  complianceId Int
+  compliance   Compliance @relation(fields: [complianceId], references: [id])
+
+  @@id([kpiId, complianceId])
+}
+
+model KPIProcess {
+  kpiId Int
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  processId Int
+  process   Process @relation(fields: [processId], references: [id])
+
+  @@id([kpiId, processId])
+}
+
+model DashboardKPI {
+  id Int @id @default(autoincrement())
+
+  dashboardId Int // Foreign key to Dashboard
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  kpiId Int // Foreign key to KPI
+  kpi   KPI @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dashboardId, kpiId]) // Prevent duplicate KPI selections for the same dashboard
+}
+
+model Screenshot {
+  id Int @id @default(autoincrement())
+
+  image String
+  hash  String @unique
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dashboardId Int // Foreign key to Dashboard
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Task Management Models
+model TaskManagement {
+  id            Int       @id @default(autoincrement())
+  name          String
+  description   String?
+  priority      Priority  @default(LOW)
+  taskType      TaskType  @default(KPI_RELATED)
+  note          String?
+  startDate     DateTime
+  dueDate       DateTime
+  actualEndDate DateTime?
+  isArchived    Boolean   @default(false)
+  percentDone   Int       @default(0)
+
+  reason  String?
+  comment String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignees      User[]        @relation("AssignedTask")
+  taskHistory    TaskHistory[]
+  statusId       Int
+  status         TaskStatus    @relation(fields: [statusId], references: [id])
+  allocatorId    String
+  allocator      User          @relation(fields: [allocatorId], references: [id], name: "AllocatedTask")
+  kpiId          Int?
+  KPI            KPI?          @relation(fields: [kpiId], references: [id])
+  lastAssigneeId String? // Tracks the most recent assignee
+  lastAssignee   User?         @relation(fields: [lastAssigneeId], references: [id], name: "LastAssignee")
+  auditDetailId  String? // Optional relation to audit details
+  auditDetail    AuditDetails? @relation(fields: [auditDetailId], references: [id])
+}
+
+model TaskHistory {
+  id           Int      @id @default(autoincrement())
+  taskId       Int
+  assignedById String // Who assigned the task
+  assignedToId String // To whom it was assigned
+  assignedAt   DateTime @default(now())
+
+  task       TaskManagement @relation(fields: [taskId], references: [id])
+  assignedBy User           @relation(fields: [assignedById], references: [id], name: "TaskAssignedBy")
+  assignedTo User           @relation(fields: [assignedToId], references: [id], name: "TaskAssignedTo")
+}
+
+model TaskStatus {
+  id             Int              @id @default(autoincrement())
+  name           String
+  color          String
+  tasks          TaskManagement[]
+  organizationId Int
+  organization   Organization     @relation(fields: [organizationId], references: [id])
+}
+
+// Framework Models
+model Framework {
+  id   String @id @default(cuid())
+  name String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  statusId Int         @default(1)
+  status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  attributes  FrameworkAttribute[]
+  auditCycles AuditCycle[]
+}
+
+model FrameworkAttribute {
+  id    String  @id @default(cuid())
+  name  String
+  value String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  frameworkId String
+  framework   Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   FrameworkAttribute?  @relation("AttributeHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children FrameworkAttribute[] @relation("AttributeHierarchy")
+
+  rowIndex Int @default(0)
+  colIndex Int @default(0)
+
+  auditDetails AuditDetails[]
+
+  @@index([frameworkId])
+  @@index([parentId])
+}
+
+model AuditDetails {
+  id             String  @id @default(cuid())
+  comment        String? @db.Text
+  recommendation String? @db.Text
+
+  frameworkAttributeId String
+  frameworkAttribute   FrameworkAttribute @relation(fields: [frameworkAttributeId], references: [id], onDelete: Cascade)
+
+  auditCycleId Int
+  auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
+
+  auditBy     String
+  auditor     User       @relation(fields: [auditBy], references: [id])
+  ownedBy     String?
+  owner       User?      @relation(fields: [ownedBy], references: [id], name: "AuditOwner")
+  auditRuleId Int
+  auditRule   auditRules @relation(fields: [auditRuleId], references: [id])
+
+  attachments Attachment[]
+  tasks       TaskManagement[] // Related tasks for this audit detail
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([frameworkAttributeId, auditCycleId]) // Ensure one audit detail per attribute per cycle
+  @@index([frameworkAttributeId])
+  @@index([auditCycleId])
+  @@index([auditBy])
+  @@index([ownedBy])
+}
+
+model AuditCycle {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  comment     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditBy String
+  user    User   @relation(fields: [auditBy], references: [id])
+
+  frameworkId String?
+  framework   Framework? @relation(fields: [frameworkId], references: [id], onDelete: SetNull)
+
+  auditDetails AuditDetails[]
+
+  @@index([frameworkId])
+}
+
+model auditStatus {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditRules auditRules[]
+  frameworks Framework[]
+}
+
+model auditRules {
+  id    Int    @id @default(autoincrement())
+  label String
+  color String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  statusId Int
+  status   auditStatus @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  auditDetails AuditDetails[]
+}
+
+model Attachment {
+  id   String  @id @default(cuid())
+  name String
+  url  String  @db.Text
+  size Int?
+  type String?
+
+  auditDetailId String
+  auditDetail   AuditDetails @relation(fields: [auditDetailId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([auditDetailId])
+}
+
+// Additional Enums
+enum ChartTypes {
+  bar
+  line
+  pie
+  radar
+  area
+  barStacked
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskType {
+  KPI_RELATED // Tasks for KPI tracking, measurement, data collection
+  AUDIT_RELATED // Tasks for audit findings, remediation, compliance
 }
