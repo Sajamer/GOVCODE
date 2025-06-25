@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 /* eslint-disable @typescript-eslint/naming-convention */
 import prisma from '@/lib/db_connection'
-import '@auth/core/jwt'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import NextAuth, {
   Session as NextAuthSession,

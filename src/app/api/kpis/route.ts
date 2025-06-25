@@ -88,9 +88,8 @@ async function getStatusId(name: string) {
 export async function POST(req: NextRequest) {
   try {
     const arrayBuffer = await req.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer) as Buffer
     const workbook = new ExcelJS.Workbook()
-    await workbook.xlsx.load(buffer)
+    await workbook.xlsx.load(arrayBuffer)
 
     const worksheet = workbook.worksheets[0]
     if (!worksheet) {

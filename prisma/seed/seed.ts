@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { pbkdf2Sync, randomBytes } from 'crypto'
-import { organization } from './utils/OrganizationSeed' // Array of organizations to seed
 import { seedAttributeTypes } from './attributeTypes.seed'
+import { organization } from './utils/OrganizationSeed' // Array of organizations to seed
 
 const prisma = new PrismaClient()
 
@@ -42,30 +42,6 @@ async function main() {
       return
     }
 
-    // // Seed objectives
-    // console.log('Seeding objectives...')
-    // for (const objective of objectives) {
-    //   await prisma.objective.create({
-    //     data: objective,
-    //   })
-    // }
-
-    // // Seed processes
-    // console.log('Seeding processes...')
-    // for (const process of Processes) {
-    //   await prisma.process.create({
-    //     data: process,
-    //   })
-    // }
-
-    // // Seed compliances
-    // console.log('Seeding compliances...')
-    // for (const compliance of compliances) {
-    //   await prisma.compliance.create({
-    //     data: compliance,
-    //   })
-    // }
-
     console.log('Seeding users!')
     const email = 'moustafa.a.tlais@gmail.com'
     const password = 'pass123123'
@@ -100,13 +76,17 @@ async function main() {
     console.log('✅ Database seeded successfully')
   } catch (error) {
     console.error('❌ Error seeding database:', error)
+    await prisma.$disconnect()
     process.exit(1)
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect()
+  .then(() => {
+    console.log('Seed process completed successfully')
+    process.exit(0)
   })
   .catch(async (e) => {
     console.error('Error during seeding:', e)

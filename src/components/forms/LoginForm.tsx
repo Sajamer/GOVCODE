@@ -77,6 +77,8 @@ const LoginForm = () => {
                     <Input
                       placeholder="Enter your email"
                       className="shad-input"
+                      type="email"
+                      autoComplete="email"
                       {...field}
                     />
                   </FormControl>
@@ -100,6 +102,7 @@ const LoginForm = () => {
                       placeholder="Enter your password"
                       className="shad-input"
                       type="password"
+                      autoComplete="current-password"
                       {...field}
                     />
                   </FormControl>
