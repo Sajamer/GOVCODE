@@ -772,25 +772,25 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
         <div className="flex w-full flex-col items-center justify-center gap-0.5">
           {/* Table Header */}
-          <div className="flex w-full items-center gap-6 rounded-t-lg border-b bg-primary p-4 text-white">
+          <div className="flex w-full items-center gap-3 rounded-t-lg border-b bg-primary p-4 text-white">
             <span className="w-10 shrink-0">#</span>
             {remainingColumns.map((columnIndex) => {
               const relatedAttributes =
                 getRelatedAttributesFromColumn(columnIndex)
               return (
-                <span key={columnIndex} className="flex-1">
+                <span key={columnIndex} className="w-full max-w-20">
                   {relatedAttributes?.[0]?.name}
                 </span>
               )
             })}{' '}
             {selectedAuditCycleId && (
               <>
-                <span className="w-32">{t('audit-status')}</span>{' '}
+                <span className="w-full max-w-28">{t('audit-status')}</span>{' '}
                 <span className="w-32">{t('owner')}</span>
                 <span className="w-32">{t('auditor')}</span>
                 <span className="w-24">{t('attachment')}</span>
                 <span className="w-40">{t('comment')}</span>
-                <span className="w-60">{t('recommendations')}</span>
+                <span className="min-w-40 flex-1">{t('recommendations')}</span>
                 {hasAnyAuditDetails() && (
                   <span className="w-40">{t('task-management')}</span>
                 )}
@@ -835,7 +835,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
             return (
               <div
                 key={child.id}
-                className="flex w-full items-center gap-6 border-b p-4 hover:bg-[#266a55]/10"
+                className="flex w-full items-center gap-3 border-b p-4 hover:bg-[#266a55]/10"
               >
                 <span className="w-10 shrink-0 font-medium">
                   {childIndex + 1}
@@ -847,7 +847,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   return (
                     <span
                       key={`${child.id}-${columnIndex}`}
-                      className="flex-1 text-sm"
+                      className="w-full max-w-20 text-sm"
                     >
                       {currentAttribute ? currentAttribute.value : '-'}
                     </span>
@@ -858,7 +858,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   <>
                     {/* Audit Status */}
                     <div
-                      className="w-32 rounded p-1"
+                      className="w-full max-w-28 rounded p-1"
                       style={{
                         backgroundColor:
                           getFrameworkAuditRules()?.find(
@@ -900,6 +900,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
+
                     {/* Owner */}
                     <div className="w-32">
                       <Select
@@ -1027,7 +1028,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       />
                     </div>
                     {/* Recommendation */}
-                    <div className="w-60">
+                    <div className="min-w-40 flex-1">
                       <Textarea
                         placeholder={t('add-recommendation')}
                         value={

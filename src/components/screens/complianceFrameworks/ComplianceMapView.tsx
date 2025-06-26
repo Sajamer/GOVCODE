@@ -1,5 +1,6 @@
 'use client'
 
+import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import {
   IFramework,
@@ -143,197 +144,201 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
 
             return (
               <div className="flex flex-col gap-4">
-                <div className="flex items-end gap-2">
-                  <div
-                    className={cn(
-                      'flex flex-col items-start justify-between h-full w-full max-w-28',
-                      !auditData && 'justify-end',
-                    )}
-                  >
-                    {auditData && (
-                      <div className="flex flex-col gap-1">
-                        <span>
-                          <b>{t('audit')}:</b>{' '}
-                          {auditData?.name.split('-').slice(0, 2).join('-')}
-                        </span>
-                        <span>
-                          <b>{t('initiate-by')}:</b> {auditData?.user?.fullName}
-                        </span>
-                        <span>
-                          <b>{t('initiated-date')}:</b> <br />
-                          {auditData?.startDate
-                            ? new Date(auditData.startDate).toLocaleDateString(
-                                'en-GB',
-                                {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
-                                },
-                              )
-                            : ''}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex flex-col items-start justify-end text-center text-white">
-                      <div className="w-full border-b-2 bg-primary p-2.5 text-sm">
-                        {firstColumnName}
-                      </div>
-                      <div className="w-full bg-[#266a55]/60 p-2 text-sm text-white">
-                        {secondColumnName}
-                      </div>
+                <div className="flex items-center">
+                  {auditData && (
+                    <div className="flex gap-3">
+                      <span>
+                        <b>{t('audit')}:</b>{' '}
+                        {auditData?.name.split('-').slice(0, 2).join('-')}
+                      </span>
+                      <span>
+                        <b>{t('initiate-by')}:</b> {auditData?.user?.fullName}
+                      </span>
+                      <span>
+                        <b>{t('initiated-date')}:</b>{' '}
+                        {auditData?.startDate
+                          ? new Date(auditData.startDate).toLocaleDateString(
+                              'en-GB',
+                              {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              },
+                            )
+                          : ''}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-5">
+                  {firstColumnAttributes
+                    .sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0))
+                    .map((parent) => {
+                      return (
+                        <div key={parent.id} className="border bg-white">
+                          <div className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white">
+                            {parent.value}
+                          </div>
+                          <div className="flex flex-wrap gap-1 p-2 text-center">
+                            {(childrenByParent[parent.id] || []).map(
+                              (child) => {
+                                const childHeatmapData = getHeatmapDataByValue(
+                                  child.value || '',
+                                  framework,
+                                )
+                                return (
+                                  <div key={child.id} className="flex flex-col">
+                                    <div
+                                      onClick={() =>
+                                        handleAttributeClick(
+                                          framework.id,
+                                          child.id,
+                                        )
+                                      }
+                                      className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                    >
+                                      {child.value}
+                                    </div>
+                                    {/* Individual heatmap for this child */}
+                                    {auditData &&
+                                      framework?.status?.auditRules && (
+                                        <div className="mt-1 flex gap-1">
+                                          {framework.status.auditRules.map(
+                                            (rule) => {
+                                              const count =
+                                                childHeatmapData[rule.id] || 0
+                                              return (
+                                                <div
+                                                  key={rule.id}
+                                                  className="flex h-6 flex-1 items-center justify-center rounded text-xs font-bold text-white"
+                                                  style={{
+                                                    backgroundColor:
+                                                      rule.color || '#ccc',
+                                                  }}
+                                                  title={`${rule.label}: ${count > 0 ? 'Applied' : 'Not Applied'}`}
+                                                >
+                                                  {count}
+                                                </div>
+                                              )
+                                            },
+                                          )}
+                                        </div>
+                                      )}
+                                  </div>
+                                )
+                              },
+                            )}
+                            {/* Fallback: Also check if any children reference this parent by value */}
+                            {secondColumnAttributes
+                              .filter((attr) => {
+                                // Find parent in all first column attributes that matches current parent value
+                                const matchingParent =
+                                  allFirstColumnAttributes.find(
+                                    (p) =>
+                                      p.value === parent.value &&
+                                      p.id === attr.parentId,
+                                  )
+                                return (
+                                  matchingParent &&
+                                  !childrenByParent[parent.id]?.some(
+                                    (c) => c.id === attr.id,
+                                  )
+                                )
+                              })
+                              .map((child) => {
+                                const childHeatmapData = getHeatmapDataByValue(
+                                  child.value || '',
+                                  framework,
+                                )
+                                return (
+                                  <div
+                                    key={`fallback-${child.id}`}
+                                    className="flex flex-col"
+                                  >
+                                    <div
+                                      onClick={() =>
+                                        handleAttributeClick(
+                                          framework.id,
+                                          child.id,
+                                        )
+                                      }
+                                      className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                    >
+                                      {child.value}
+                                    </div>
+                                    {/* Individual heatmap for this child */}
+                                    {auditData &&
+                                      framework?.status?.auditRules && (
+                                        <div className="mt-1 flex gap-1">
+                                          {framework.status.auditRules.map(
+                                            (rule) => {
+                                              const count =
+                                                childHeatmapData[rule.id] || 0
+                                              return (
+                                                <div
+                                                  key={rule.id}
+                                                  className="flex h-6 flex-1 items-center justify-center rounded text-xs font-bold text-white"
+                                                  style={{
+                                                    backgroundColor:
+                                                      rule.color || '#ccc',
+                                                  }}
+                                                  title={`${rule.label}: ${count > 0 ? 'Applied' : 'Not Applied'}`}
+                                                >
+                                                  {count}
+                                                </div>
+                                              )
+                                            },
+                                          )}
+                                        </div>
+                                      )}
+                                  </div>
+                                )
+                              })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
+                <div className="mt-4 flex w-full items-center justify-start gap-5">
+                  <div className="flex items-center justify-center text-center text-white">
+                    <div
+                      className={cn(
+                        'bg-primary py-2 px-5',
+                        isArabic ? 'border-l-2' : 'border-r-2',
+                      )}
+                    >
+                      {firstColumnName}
+                    </div>
+                    <div className="bg-[#266a55]/60 px-5 py-2">
+                      {secondColumnName}
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-5">
-                    {firstColumnAttributes
-                      .sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0))
-                      .map((parent) => {
-                        return (
-                          <div key={parent.id} className="border bg-white">
-                            <div className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white">
-                              {parent.value}
-                            </div>
-                            <div className="flex flex-wrap gap-1 p-1">
-                              {' '}
-                              {(childrenByParent[parent.id] || []).map(
-                                (child) => {
-                                  const childHeatmapData =
-                                    getHeatmapDataByValue(
-                                      child.value || '',
-                                      framework,
-                                    )
-                                  return (
-                                    <div
-                                      key={child.id}
-                                      className="flex flex-col"
-                                    >
-                                      <div
-                                        onClick={() =>
-                                          handleAttributeClick(
-                                            framework.id,
-                                            child.id,
-                                          )
-                                        }
-                                        className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
-                                      >
-                                        {child.value}
-                                      </div>
-                                      {/* Individual heatmap for this child */}
-                                      {auditData &&
-                                        framework?.status?.auditRules && (
-                                          <div className="mt-1 flex gap-1">
-                                            {framework.status.auditRules.map(
-                                              (rule) => {
-                                                const count =
-                                                  childHeatmapData[rule.id] || 0
-                                                return (
-                                                  <div
-                                                    key={rule.id}
-                                                    className="flex h-6 flex-1 items-center justify-center rounded text-xs font-bold text-white"
-                                                    style={{
-                                                      backgroundColor:
-                                                        rule.color || '#ccc',
-                                                    }}
-                                                    title={`${rule.label}: ${count > 0 ? 'Applied' : 'Not Applied'}`}
-                                                  >
-                                                    {count}
-                                                  </div>
-                                                )
-                                              },
-                                            )}
-                                          </div>
-                                        )}
-                                    </div>
-                                  )
-                                },
-                              )}{' '}
-                              {/* Fallback: Also check if any children reference this parent by value */}
-                              {secondColumnAttributes
-                                .filter((attr) => {
-                                  // Find parent in all first column attributes that matches current parent value
-                                  const matchingParent =
-                                    allFirstColumnAttributes.find(
-                                      (p) =>
-                                        p.value === parent.value &&
-                                        p.id === attr.parentId,
-                                    )
-                                  return (
-                                    matchingParent &&
-                                    !childrenByParent[parent.id]?.some(
-                                      (c) => c.id === attr.id,
-                                    )
-                                  )
-                                })
-                                .map((child) => {
-                                  const childHeatmapData =
-                                    getHeatmapDataByValue(
-                                      child.value || '',
-                                      framework,
-                                    )
-                                  return (
-                                    <div
-                                      key={`fallback-${child.id}`}
-                                      className="flex flex-col"
-                                    >
-                                      <div
-                                        onClick={() =>
-                                          handleAttributeClick(
-                                            framework.id,
-                                            child.id,
-                                          )
-                                        }
-                                        className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
-                                      >
-                                        {child.value}
-                                      </div>
-                                      {/* Individual heatmap for this child */}
-                                      {auditData &&
-                                        framework?.status?.auditRules && (
-                                          <div className="mt-1 flex gap-1">
-                                            {framework.status.auditRules.map(
-                                              (rule) => {
-                                                const count =
-                                                  childHeatmapData[rule.id] || 0
-                                                return (
-                                                  <div
-                                                    key={rule.id}
-                                                    className="flex h-6 flex-1 items-center justify-center rounded text-xs font-bold text-white"
-                                                    style={{
-                                                      backgroundColor:
-                                                        rule.color || '#ccc',
-                                                    }}
-                                                    title={`${rule.label}: ${count > 0 ? 'Applied' : 'Not Applied'}`}
-                                                  >
-                                                    {count}
-                                                  </div>
-                                                )
-                                              },
-                                            )}
-                                          </div>
-                                        )}
-                                    </div>
-                                  )
-                                })}
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                </div>
-                <div className="flex items-center justify-start gap-1">
-                  {auditData &&
-                    framework?.status?.auditRules?.map((rule) => (
-                      <div
-                        key={rule.id}
-                        className="flex h-8 w-fit min-w-40 items-center justify-center rounded-sm"
-                        style={{
-                          backgroundColor: rule.color || '#ccc',
-                        }}
-                      >
-                        <span className="p-2 text-sm font-semibold text-white">
-                          {rule.label}
-                        </span>
-                      </div>
-                    ))}
+                  {auditData && (
+                    <Separator
+                      orientation="vertical"
+                      className="bg-neutral-400"
+                    />
+                  )}
+                  {auditData && (
+                    <div className="flex items-center justify-start gap-1">
+                      <span className="font-semibold">
+                        {t('audit-status')}:{' '}
+                      </span>
+                      {framework?.status?.auditRules?.map((rule) => (
+                        <div
+                          key={rule.id}
+                          className="flex h-8 w-fit min-w-40 items-center justify-center rounded-sm"
+                          style={{
+                            backgroundColor: rule.color || '#ccc',
+                          }}
+                        >
+                          <span className="p-2 text-sm font-semibold text-white">
+                            {rule.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )
