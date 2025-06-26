@@ -1,7 +1,7 @@
 import StatusForm from '@/components/forms/StatusForm'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
-import { deleteStatusById } from '@/lib/actions/kpi-dimensions/status.actions'
+import { deleteStatusById } from '@/lib/actions/dimension-definition/status.actions'
 import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'

@@ -1,8 +1,8 @@
 'use client'
 
-import AuditStatusCard from '@/components/screens/kpi-dimensions/AuditStatusCard'
-import KpiDimensionCard from '@/components/screens/kpi-dimensions/KpiDimensionCard'
-import StatusCard from '@/components/screens/kpi-dimensions/StatusCard'
+import AuditStatusCard from '@/components/screens/dimension-definition/AuditStatusCard'
+import KpiDimensionCard from '@/components/screens/dimension-definition/KpiDimensionCard'
+import StatusCard from '@/components/screens/dimension-definition/StatusCard'
 import { useTab } from '@/hooks/useTab'
 import { FC } from 'react'
 

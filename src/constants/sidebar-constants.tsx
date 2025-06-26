@@ -30,30 +30,30 @@ export const SidebarItems = () => {
       href: '/kpi-status',
     },
     {
-      title: t('kpi-dimensions'),
+      title: t('dimension-definition'),
       icon: <ListCollapse className="size-4 min-w-4" />,
       permissions: ['superAdmin', 'moderator', 'contributor'],
-      href: '/kpi-dimensions',
+      href: '/dimension-definition',
       submenu: [
         {
           title: 'status-description',
-          href: '/kpi-dimensions/status',
+          href: '/dimension-definition/status',
         },
         {
           title: 'audit-status',
-          href: '/kpi-dimensions/audit-status',
+          href: '/dimension-definition/audit-status',
         },
         {
           title: 'processes',
-          href: '/kpi-dimensions/processes',
+          href: '/dimension-definition/processes',
         },
         {
           title: 'compliances',
-          href: '/kpi-dimensions/compliances',
+          href: '/dimension-definition/compliances',
         },
         {
           title: 'objectives',
-          href: '/kpi-dimensions/objectives',
+          href: '/dimension-definition/objectives',
         },
       ],
     },

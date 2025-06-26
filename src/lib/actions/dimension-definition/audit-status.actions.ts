@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db_connection'
 import { sendError } from '@/lib/utils'
-import { IAuditStatusManipulator } from '@/schema/kpi-dimensions/audit-status.schema'
+import { IAuditStatusManipulator } from '@/schema/dimension-definition/audit-status.schema'
 
 export async function getAllAuditStatuses() {
   try {

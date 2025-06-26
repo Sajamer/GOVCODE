@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db_connection'
 import { sendError } from '@/lib/utils'
-import { IKpiDimensionManipulator } from '@/schema/kpi-dimensions/kpi-dimensions.schema'
+import { IKpiDimensionManipulator } from '@/schema/dimension-definition/kpi-dimensions.schema'
 
 export async function getAllProcesses() {
   try {

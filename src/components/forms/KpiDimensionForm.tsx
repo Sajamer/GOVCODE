@@ -5,19 +5,19 @@ import { useTab } from '@/hooks/useTab'
 import {
   createCompliance,
   updateComplianceById,
-} from '@/lib/actions/kpi-dimensions/compliance.actions'
+} from '@/lib/actions/dimension-definition/compliance.actions'
 import {
   createObjective,
   updateObjectiveById,
-} from '@/lib/actions/kpi-dimensions/objective.actions'
+} from '@/lib/actions/dimension-definition/objective.actions'
 import {
   createProcess,
   updateProcessById,
-} from '@/lib/actions/kpi-dimensions/process.actions'
+} from '@/lib/actions/dimension-definition/process.actions'
 import {
   IKpiDimensionManipulator,
   kpiDimensionSchema,
-} from '@/schema/kpi-dimensions/kpi-dimensions.schema'
+} from '@/schema/dimension-definition/kpi-dimensions.schema'
 import { useSheetStore } from '@/stores/sheet-store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'

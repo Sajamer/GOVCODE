@@ -2,9 +2,9 @@
 
 import KpiDimensionTable from '@/components/shared/tables/kpiDimensions/KpiDimensionTable'
 import { useTab } from '@/hooks/useTab'
-import { getAllCompliances } from '@/lib/actions/kpi-dimensions/compliance.actions'
-import { getAllObjectives } from '@/lib/actions/kpi-dimensions/objective.actions'
-import { getAllProcesses } from '@/lib/actions/kpi-dimensions/process.actions'
+import { getAllCompliances } from '@/lib/actions/dimension-definition/compliance.actions'
+import { getAllObjectives } from '@/lib/actions/dimension-definition/objective.actions'
+import { getAllProcesses } from '@/lib/actions/dimension-definition/process.actions'
 import { useQuery } from '@tanstack/react-query'
 import { LayoutList } from 'lucide-react'
 import { FC } from 'react'
