@@ -468,6 +468,9 @@
     "current-actuals": "القيم الفعلية الحالية",
     "show-screenshots": "إظهار لقطات الشاشة",
     "take-screenshot": "التقط لقطة شاشة",
-    "dimension-definition": "تعريف الأبعاد"
+    "dimension-definition": "تعريف الأبعاد",
+    "add-comment": "إضافة تعليق",
+    "add-recommendation": "إضافة توصية",
+    "tasks-for": "المهام لـ"
   }
 }

@@ -472,6 +472,9 @@
     "current-year": "Current Year",
     "show-screenshots": "Show screenshots",
     "take-screenshot": "Take Screenshot",
-    "dimension-definition": "Dimension Definition"
+    "dimension-definition": "Dimension Definition",
+    "add-comment": "Add Comment",
+    "add-recommendation": "Add recommendation",
+    "tasks-for": "Tasks for"
   }
 }

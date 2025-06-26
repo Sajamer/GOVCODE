@@ -177,6 +177,9 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     onSuccess: async () => {
       // Invalidate and refetch framework data to get updated attachments
       await queryClient.invalidateQueries({ queryKey: ['frameworks'] })
+      await queryClient.invalidateQueries({
+        queryKey: ['single-framework', frameworkId],
+      })
       setHasUnsavedChanges(false) // Reset unsaved changes after successful save
 
       toast({
@@ -1009,7 +1012,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                     {/* Comment */}
                     <div className="w-40">
                       <Textarea
-                        placeholder="Add comment..."
+                        placeholder={t('add-comment')}
                         value={
                           getAuditDetailValue(
                             child.id,
@@ -1026,7 +1029,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                     {/* Recommendation */}
                     <div className="w-60">
                       <Textarea
-                        placeholder="Add recommendation..."
+                        placeholder={t('add-recommendation')}
                         value={
                           getAuditDetailValue(
                             child.id,

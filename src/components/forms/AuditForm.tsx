@@ -95,6 +95,29 @@ const AuditForm: FC<IAuditFormProps> = ({
         },
       )
 
+      queryClient.setQueryData(
+        ['single-framework', frameworkId],
+        (oldData: IFramework | undefined) => {
+          if (!oldData) return oldData
+
+          const updatedFramework = {
+            ...oldData,
+            auditCycles: [
+              ...(oldData.auditCycles || []),
+              {
+                ...newData,
+                user: {
+                  id: userData?.id || '',
+                  fullName: userData?.fullName || '',
+                },
+              },
+            ],
+          }
+
+          return updatedFramework
+        },
+      )
+
       toast({
         variant: 'success',
         title: 'Success',

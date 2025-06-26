@@ -149,3 +149,67 @@ export const getAllFrameworks = async () => {
     throw error
   }
 }
+
+export const getFrameworkById = async (id: string) => {
+  try {
+    const framework = await prisma.framework.findUnique({
+      where: { id },
+      include: {
+        status: {
+          include: {
+            auditRules: true,
+          },
+        },
+        attributes: {
+          include: {
+            children: true,
+            auditDetails: {
+              include: {
+                auditor: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                  },
+                },
+                owner: {
+                  select: {
+                    id: true,
+                    fullName: true,
+                  },
+                },
+                auditRule: {
+                  include: {
+                    status: true,
+                  },
+                },
+                attachments: {
+                  orderBy: {
+                    createdAt: 'desc',
+                  },
+                },
+              },
+            },
+          },
+          orderBy: [{ rowIndex: 'asc' }, { colIndex: 'asc' }],
+        },
+        auditCycles: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!framework) return null
+
+    return framework
+  } catch (error) {
+    console.error('Error fetching Framework by ID:', error)
+    throw error
+  }
+}
