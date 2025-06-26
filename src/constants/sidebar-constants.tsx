@@ -73,11 +73,11 @@ export const SidebarItems = () => {
       icon: <LayoutList className="size-4 min-w-4" />,
       href: '/task-management',
     },
-    {
-      title: t('frameworks'),
-      icon: <BadgeCheck className="size-4 min-w-4" />,
-      href: '/indicators',
-    },
+    // {
+    //   title: t('frameworks'),
+    //   icon: <BadgeCheck className="size-4 min-w-4" />,
+    //   href: '/indicators',
+    // },
     {
       title: t('compliance-frameworks'),
       icon: <BadgeCheck className="size-4 min-w-4" />,
