@@ -170,16 +170,19 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-5">
+                <div className="flex flex-wrap gap-x-2 gap-y-5">
                   {firstColumnAttributes
                     .sort((a, b) => (a.rowIndex || 0) - (b.rowIndex || 0))
                     .map((parent) => {
                       return (
-                        <div key={parent.id} className="border bg-white">
+                        <div
+                          key={parent.id}
+                          className="min-w-[280px] flex-1 border bg-white"
+                        >
                           <div className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white">
                             {parent.value}
                           </div>
-                          <div className="flex flex-wrap gap-1 p-2 text-center">
+                          <div className="flex gap-1 p-2 text-center">
                             {(childrenByParent[parent.id] || []).map(
                               (child) => {
                                 const childHeatmapData = getHeatmapDataByValue(
