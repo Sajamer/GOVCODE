@@ -146,7 +146,7 @@ const KpiTargetComponent: FC<IKpiTargetComponentProps> = ({ data }) => {
         </div>
       </div>
       {hasPermission && (
-        <div className="flex w-full items-center justify-end gap-5">
+        <div className="mt-4 flex w-full items-center justify-end gap-5">
           <Button
             variant={'secondary'}
             type="button"
