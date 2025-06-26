@@ -26,6 +26,7 @@ import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
 import { uploadFiles } from '@/lib/uploadthing'
+import { cn } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { IFrameworkAttribute } from '@/types/framework'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -778,11 +779,16 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
               const relatedAttributes =
                 getRelatedAttributesFromColumn(columnIndex)
               return (
-                <span key={columnIndex} className="w-full max-w-20">
+                <span
+                  key={columnIndex}
+                  className={cn(
+                    selectedAuditCycleId ? 'w-full max-w-20' : 'flex-1 w-full',
+                  )}
+                >
                   {relatedAttributes?.[0]?.name}
                 </span>
               )
-            })}{' '}
+            })}
             {selectedAuditCycleId && (
               <>
                 <span className="w-full max-w-28">{t('audit-status')}</span>{' '}
@@ -847,7 +853,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   return (
                     <span
                       key={`${child.id}-${columnIndex}`}
-                      className="w-full max-w-20 text-sm"
+                      className={cn(
+                        'text-sm',
+                        selectedAuditCycleId
+                          ? 'w-full max-w-20'
+                          : 'flex-1 w-full',
+                      )}
                     >
                       {currentAttribute ? currentAttribute.value : '-'}
                     </span>
