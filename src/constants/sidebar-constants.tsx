@@ -55,6 +55,10 @@ export const SidebarItems = () => {
           title: 'objectives',
           href: '/dimension-definition/objectives',
         },
+        {
+          title: 'task-status',
+          href: '/dimension-definition/task-status',
+        },
       ],
     },
     {

@@ -471,6 +471,9 @@
     "dimension-definition": "تعريف الأبعاد",
     "add-comment": "إضافة تعليق",
     "add-recommendation": "إضافة توصية",
-    "tasks-for": "المهام لـ"
+    "tasks-for": "المهام لـ",
+    "taskStatusDescription": "إدارة جميع حالات المهام المتاحة على المنصة.",
+    "Color": "اللون",
+    "update": "تحديث"
   }
 }

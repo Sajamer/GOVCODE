@@ -1,5 +1,6 @@
 type CellType =
   | 'string'
+  | 'color'
   | 'icon'
   | 'number'
   | 'boolean'

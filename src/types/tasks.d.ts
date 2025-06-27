@@ -34,4 +34,6 @@ export interface ITaskStatus {
   name: string
   color: string
   organizationId: number
+
+  [key: string]: any
 }

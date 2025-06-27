@@ -475,6 +475,8 @@
     "dimension-definition": "Dimension Definition",
     "add-comment": "Add Comment",
     "add-recommendation": "Add recommendation",
-    "tasks-for": "Tasks for"
+    "tasks-for": "Tasks for",
+    "taskStatusDescription": "Manage all the task status available on the platform.",
+    "Color": "Color"
   }
 }
