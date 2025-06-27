@@ -11,6 +11,16 @@ const organizationDepartmentsSchema = z.object({
     .trim(),
 })
 
+const organizationTaskStatusSchema = z.object({
+  name: string({ required_error: 'This field is required.' })
+    .min(3, {
+      message: 'Be at least 3 characters long',
+    })
+    .max(128, { message: 'must be at most 128 characters' })
+    .trim(),
+  color: string({ required_error: 'This field is required.' }),
+})
+
 export const organizationSchema = object({
   name: string().min(3),
   email: string().email(),
@@ -29,6 +39,11 @@ export const organizationSchema = object({
     required_error: 'This field is required.',
   }).min(1, {
     message: 'At least one department is required',
+  }),
+  taskStatus: array(organizationTaskStatusSchema, {
+    required_error: 'This field is required.',
+  }).min(1, {
+    message: 'At least one field is required',
   }),
 })
 

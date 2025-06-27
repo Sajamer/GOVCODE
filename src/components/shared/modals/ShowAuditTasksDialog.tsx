@@ -64,8 +64,6 @@ const ShowAuditTasksDialog: FC<IShowAuditTasksDialogProps> = ({
 
   const { headers, values } = generateTableData(entityData, columns)
 
-  console.log(title, 'title')
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent

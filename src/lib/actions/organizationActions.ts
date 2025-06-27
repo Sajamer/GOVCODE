@@ -34,6 +34,7 @@ export const getOrganizationById = async (id: number) => {
       },
       include: {
         departments: true,
+        taskStatus: true,
       },
     })
 
@@ -77,6 +78,22 @@ export const updateOrganizationById = async (
               })),
             }
           : undefined,
+        // If `taskStatus` exists, update them as well
+        taskStatus: dto.taskStatus
+          ? {
+              upsert: dto.taskStatus.map((status) => ({
+                where: { id: status.id || 0 }, // Use the status ID if it exists
+                update: {
+                  name: status.name,
+                  color: status.color,
+                },
+                create: {
+                  name: status.name,
+                  color: status.color,
+                },
+              })),
+            }
+          : undefined,
       },
       include: {
         departments: true,
@@ -92,7 +109,7 @@ export const updateOrganizationById = async (
 
 export const createOrganization = async (dto: IOrganizationManipulator) => {
   try {
-    const { departments, ...organizationData } = dto
+    const { departments, taskStatus, ...organizationData } = dto
 
     const organization = await prisma.organization.create({
       data: {
@@ -100,9 +117,13 @@ export const createOrganization = async (dto: IOrganizationManipulator) => {
         departments: {
           create: departments || [],
         },
+        taskStatus: {
+          create: taskStatus || [],
+        },
       },
       include: {
         departments: true,
+        taskStatus: true,
       },
     })
 
