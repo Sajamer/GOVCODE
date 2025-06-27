@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { updateMultipleTaskStatuses } from '@/lib/actions/status.actions'
+import { convertToArabicNumerals } from '@/lib/utils'
 import {
   ITaskStatusBulkUpdate,
   taskStatusBulkUpdateSchema,
@@ -16,6 +17,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { Plus, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 
@@ -30,6 +32,7 @@ const TaskStatusForm: FC<ITaskStatusFormProps> = ({
 }) => {
   const queryClient = useQueryClient()
   const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
 
   const { actions } = useSheetStore((store) => store)
   const { closeSheet } = actions
@@ -113,7 +116,9 @@ const TaskStatusForm: FC<ITaskStatusFormProps> = ({
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">
-                  {!status.id ? 'New Status' : `Status ${index + 1}`}
+                  {!status.id
+                    ? t('new-status')
+                    : `${t('status')} ${isArabic ? convertToArabicNumerals(index + 1) : index + 1}`}
                 </CardTitle>
                 {values.length > 1 && (
                   <Button
@@ -139,7 +144,7 @@ const TaskStatusForm: FC<ITaskStatusFormProps> = ({
                     onChange={(e) =>
                       setFieldValue(`[${index}].name`, e.target.value)
                     }
-                    placeholder="Enter status name"
+                    placeholder={t('task-status-name-placeholder')}
                     className={
                       errors[index]?.name && touched[index]?.name
                         ? 'border-red-500'
@@ -154,7 +159,9 @@ const TaskStatusForm: FC<ITaskStatusFormProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor={`status-color-${index}`}>Color *</Label>
+                  <Label htmlFor={`status-color-${index}`}>
+                    {t('color')} *
+                  </Label>
                   <div className="flex items-center space-x-2">
                     <Input
                       id={`status-color-${index}`}
@@ -189,12 +196,12 @@ const TaskStatusForm: FC<ITaskStatusFormProps> = ({
 
               {/* Preview */}
               <div className="flex items-center space-x-2 pt-2">
-                <span className="text-sm text-gray-600">Preview:</span>
+                <span className="text-sm text-gray-600">{t('preview')}:</span>
                 <div
                   className="rounded-full bg-current px-3 py-1 text-sm font-medium text-white"
                   style={{ backgroundColor: status.color }}
                 >
-                  {status.name || 'Status Name'}
+                  {status.name || t('status-name')}
                 </div>
               </div>
             </CardContent>
@@ -216,14 +223,14 @@ const TaskStatusForm: FC<ITaskStatusFormProps> = ({
       </div>
 
       {/* Submit Buttons */}
-      <div className="flex justify-end space-x-3 border-t pt-6">
+      <div className="flex justify-end gap-4 border-t pt-6">
         <Button
           type="button"
           variant="outline"
           onClick={closeSheet}
           disabled={isLoading}
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" disabled={isLoading} isLoading={isLoading}>
           {t('update')}

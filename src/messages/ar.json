@@ -117,7 +117,7 @@
     "name-placeholder": "أدخل الاسم",
     "task-name-placeholder": "أدخل اسم المهمة",
     "status-name-placeholder": "أدخل اسم الحالة",
-    "task-status": "الحالة",
+    "task-status": "حالة المهمة",
     "task-status-placeholder": "اختر الحالة",
     "priority": "الأولوية",
     "priority-placeholder": "اختر الأولوية",
@@ -474,6 +474,10 @@
     "tasks-for": "المهام لـ",
     "taskStatusDescription": "إدارة جميع حالات المهام المتاحة على المنصة.",
     "Color": "اللون",
-    "update": "تحديث"
+    "update": "تحديث",
+    "new-status": "حالة جديدة",
+    "preview": "معاينة",
+    "status-name": "اسم الحالة",
+    "task-status-name-placeholder": "أدخل اسم حالة المهمة"
   }
 }

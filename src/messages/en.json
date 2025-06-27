@@ -477,6 +477,10 @@
     "add-recommendation": "Add recommendation",
     "tasks-for": "Tasks for",
     "taskStatusDescription": "Manage all the task status available on the platform.",
-    "Color": "Color"
+    "Color": "Color",
+    "new-status": "New Status",
+    "preview": "Preview",
+    "status-name": "Status Name",
+    "task-status-name-placeholder": "Enter Status Name"
   }
 }
