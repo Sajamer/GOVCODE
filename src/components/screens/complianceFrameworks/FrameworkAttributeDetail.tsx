@@ -1,10 +1,19 @@
 'use client'
 
-import NoResultFound from '@/components/shared/NoResultFound'
+import LinkedFrameworksDisplay from '@/components/shared/LinkedFrameworksDisplay'
 import AssignTaskDialog from '@/components/shared/modals/AssignTaskDialog'
 import ConfirmationDialog from '@/components/shared/modals/ConfirmationDialog'
+import FrameworkLinkDialog from '@/components/shared/modals/FrameworkLinkDialog'
 import ShowAuditTasksDialog from '@/components/shared/modals/ShowAuditTasksDialog'
+import NoResultFound from '@/components/shared/NoResultFound'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -30,7 +39,7 @@ import { cn } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { IFrameworkAttribute } from '@/types/framework'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { House, Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import { House, Link2, Loader2, Plus, Save, Trash2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -68,6 +77,16 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
   const [openShowTasks, setOpenShowTasks] = useState(false)
   const [selectedChildForViewTasks, setSelectedChildForViewTasks] = useState<
+    string | null
+  >(null)
+
+  // State for framework linking
+  const [openFrameworkLink, setOpenFrameworkLink] = useState(false)
+  const [selectedChildForLink, setSelectedChildForLink] = useState<
+    string | null
+  >(null)
+  const [openLinkedFrameworks, setOpenLinkedFrameworks] = useState(false)
+  const [selectedChildForViewLinks, setSelectedChildForViewLinks] = useState<
     string | null
   >(null)
 
@@ -720,6 +739,18 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     return hasExistingAuditDetail(attributeId)
   }
 
+  // Function to handle framework linking
+  const handleLinkFramework = (attributeId: string) => {
+    setSelectedChildForLink(attributeId)
+    setOpenFrameworkLink(true)
+  }
+
+  // Function to handle viewing framework links
+  const handleViewFrameworkLinks = (attributeId: string) => {
+    setSelectedChildForViewLinks(attributeId)
+    setOpenLinkedFrameworks(true)
+  }
+
   return (
     <>
       <div
@@ -789,7 +820,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                 </span>
               )
             })}
-            {selectedAuditCycleId && (
+            {selectedAuditCycleId ? (
               <>
                 <span className="w-full max-w-28">{t('audit-status')}</span>{' '}
                 <span className="w-32">{t('owner')}</span>
@@ -801,6 +832,8 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   <span className="w-40">{t('task-management')}</span>
                 )}
               </>
+            ) : (
+              <span className="w-40">{t('link')}</span>
             )}
           </div>
 
@@ -865,7 +898,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   )
                 })}
 
-                {selectedAuditCycleId && (
+                {selectedAuditCycleId ? (
                   <>
                     {/* Audit Status */}
                     <div
@@ -937,6 +970,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
+
                     {/* Auditor */}
                     <div className="w-32">
                       <span className="text-sm text-gray-700">
@@ -950,6 +984,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                           : '-'}
                       </span>
                     </div>
+
                     {/* Attachment */}
                     <div className="w-24">
                       <input
@@ -1021,6 +1056,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         </Button>
                       </div>
                     </div>
+
                     {/* Comment */}
                     <div className="w-40">
                       <Textarea
@@ -1038,6 +1074,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         rows={1}
                       />
                     </div>
+
                     {/* Recommendation */}
                     <div className="min-w-40 flex-1">
                       <Textarea
@@ -1059,6 +1096,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         rows={1}
                       />
                     </div>
+
                     {/* Task Management - Only show if audit details exist and this row has audit details */}
                     {hasAnyAuditDetails() && (
                       <div className="flex w-40 gap-2">
@@ -1088,6 +1126,26 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       </div>
                     )}
                   </>
+                ) : (
+                  <div className="flex w-40 gap-2">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleLinkFramework(child.id)}
+                      >
+                        <Link2 className="size-4" />
+                        {t('link')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewFrameworkLinks(child.id)}
+                      >
+                        {t('show-links')}
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             )
@@ -1138,6 +1196,54 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
             : undefined
         }
       />
+
+      {/* Framework Link Dialog */}
+      <FrameworkLinkDialog
+        open={openFrameworkLink}
+        onClose={() => {
+          setOpenFrameworkLink(false)
+          setSelectedChildForLink(null)
+        }}
+        sourceFrameworkId={frameworkId}
+        sourceAttributeId={selectedChildForLink || ''}
+        sourceAttributeName={
+          selectedChildForLink
+            ? getLastColumnValue(selectedChildForLink)
+            : undefined
+        }
+        onSuccess={() => {
+          // Optionally refresh data or show success message
+          toast({
+            title: t('success'),
+            description: t('framework-linked-successfully'),
+          })
+        }}
+      />
+
+      {/* Linked Frameworks Display Dialog */}
+      {selectedChildForViewLinks && (
+        <Dialog
+          open={openLinkedFrameworks}
+          onOpenChange={setOpenLinkedFrameworks}
+        >
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{t('linked-frameworks')}</DialogTitle>
+              <DialogDescription>
+                {t('viewing-links-for')}:{' '}
+                {getLastColumnValue(selectedChildForViewLinks)}
+              </DialogDescription>
+            </DialogHeader>
+            <LinkedFrameworksDisplay
+              attributeId={selectedChildForViewLinks}
+              onEditLink={(linkId) => {
+                // Optionally implement edit functionality
+                console.log('Edit link:', linkId)
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   )
 }

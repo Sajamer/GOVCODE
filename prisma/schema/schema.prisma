@@ -110,14 +110,15 @@ model User {
   Invitation   Invitation[]
   screenShots  Screenshot[]
 
-  assignedTasks      TaskManagement[] @relation(name: "AssignedTask")
-  allocatedTasks     TaskManagement[] @relation(name: "AllocatedTask")
-  lastAssignedTasks  TaskManagement[] @relation(name: "LastAssignee")
-  assignedHistories  TaskHistory[]    @relation(name: "TaskAssignedTo") // Tracks tasks the user was assigned to
-  allocatedHistories TaskHistory[]    @relation(name: "TaskAssignedBy") // Tracks tasks the user assigned
-  audits             AuditCycle[]
-  auditDetails       AuditDetails[]
-  ownedAudits        AuditDetails[]   @relation(name: "AuditOwner")
+  assignedTasks         TaskManagement[] @relation(name: "AssignedTask")
+  allocatedTasks        TaskManagement[] @relation(name: "AllocatedTask")
+  lastAssignedTasks     TaskManagement[] @relation(name: "LastAssignee")
+  assignedHistories     TaskHistory[]    @relation(name: "TaskAssignedTo") // Tracks tasks the user was assigned to
+  allocatedHistories    TaskHistory[]    @relation(name: "TaskAssignedBy") // Tracks tasks the user assigned
+  audits                AuditCycle[]
+  auditDetails          AuditDetails[]
+  ownedAudits           AuditDetails[]   @relation(name: "AuditOwner")
+  createdFrameworkLinks FrameworkLink[] // Framework links created by this user
 }
 
 model Account {
@@ -452,6 +453,10 @@ model Framework {
 
   attributes  FrameworkAttribute[]
   auditCycles AuditCycle[]
+
+  // Framework linking relations
+  sourceFrameworkLinks FrameworkLink[]     @relation("SourceFrameworkLinks")
+  targetFrameworkLinks FrameworkLinkItem[] @relation("TargetFrameworkLinks")
 }
 
 model FrameworkAttribute {
@@ -473,6 +478,10 @@ model FrameworkAttribute {
   colIndex Int @default(0)
 
   auditDetails AuditDetails[]
+
+  // Framework linking relations
+  sourceAttributeLinks FrameworkLink[]     @relation("SourceAttributeLinks")
+  targetAttributeLinks FrameworkLinkItem[] @relation("TargetAttributeLinks")
 
   @@index([frameworkId])
   @@index([parentId])
@@ -570,6 +579,56 @@ model Attachment {
   updatedAt DateTime @updatedAt
 
   @@index([auditDetailId])
+}
+
+// Framework Linking Models
+model FrameworkLink {
+  id          String  @id @default(cuid())
+  name        String? // Optional name for the link group
+  description String? @db.Text
+
+  sourceFrameworkId String
+  sourceFramework   Framework @relation("SourceFrameworkLinks", fields: [sourceFrameworkId], references: [id], onDelete: Cascade)
+
+  sourceAttributeId String
+  sourceAttribute   FrameworkAttribute @relation("SourceAttributeLinks", fields: [sourceAttributeId], references: [id], onDelete: Cascade)
+
+  createdBy String
+  creator   User   @relation(fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Related nested frameworks in this link
+  linkedFrameworks FrameworkLinkItem[]
+
+  @@index([sourceFrameworkId])
+  @@index([sourceAttributeId])
+  @@index([createdBy])
+}
+
+model FrameworkLinkItem {
+  id    String @id @default(cuid())
+  level Int    @default(1) // Nesting level (1, 2, 3, etc.)
+  order Int    @default(1) // Order within the same level
+
+  frameworkLinkId String
+  frameworkLink   FrameworkLink @relation(fields: [frameworkLinkId], references: [id], onDelete: Cascade)
+
+  targetFrameworkId String
+  targetFramework   Framework @relation("TargetFrameworkLinks", fields: [targetFrameworkId], references: [id], onDelete: Cascade)
+
+  // Optional: Link to specific attribute in target framework
+  targetAttributeId String?
+  targetAttribute   FrameworkAttribute? @relation("TargetAttributeLinks", fields: [targetAttributeId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([frameworkLinkId, level, order]) // Ensure unique ordering within each link
+  @@index([frameworkLinkId])
+  @@index([targetFrameworkId])
+  @@index([targetAttributeId])
 }
 
 // Additional Enums

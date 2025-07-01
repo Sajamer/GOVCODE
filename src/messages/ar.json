@@ -478,6 +478,8 @@
     "new-status": "حالة جديدة",
     "preview": "معاينة",
     "status-name": "اسم الحالة",
-    "task-status-name-placeholder": "أدخل اسم حالة المهمة"
+    "task-status-name-placeholder": "أدخل اسم حالة المهمة",
+    "link": "رابط",
+    "show-links": "إظهار الروابط"
   }
 }

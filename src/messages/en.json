@@ -481,6 +481,8 @@
     "new-status": "New Status",
     "preview": "Preview",
     "status-name": "Status Name",
-    "task-status-name-placeholder": "Enter Status Name"
+    "task-status-name-placeholder": "Enter Status Name",
+    "link": "Link",
+    "show-links": "Show Links"
   }
 }
