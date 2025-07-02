@@ -554,81 +554,145 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
   // Get all attributes that have the selected attribute as parent (direct children)
   const directChildren = currentFramework.attributes.filter(
-    (attr) => attr.value === selectedAttribute.value,
+    (attr) => attr.parentId === selectedAttribute.id,
   )
 
-  const getRelatedAttributesFromColumn = (columnIndex: number) => {
-    const relatedAttributes: IFrameworkAttribute[] = []
+  // Fallback for legacy data that might not have proper parentId relationships
+  const directChildrenFallback =
+    directChildren.length === 0
+      ? currentFramework.attributes.filter(
+          (attr) => attr.value === selectedAttribute.value,
+        )
+      : directChildren
 
-    // Find the index of selected attribute
-    const selectedIndex = currentFramework.attributes.findIndex(
-      (attr) => attr.id === selectedAttribute.id,
+  // Helper function to get all descendants of an attribute
+  const getAllDescendants = (parentId: string): IFrameworkAttribute[] => {
+    const children = currentFramework.attributes.filter(
+      (attr) => attr.parentId === parentId,
     )
 
-    if (selectedIndex !== -1) {
-      // Get all records after selectedAttribute
-      for (
-        let i = selectedIndex + 1;
-        i < currentFramework.attributes.length;
-        i++
-      ) {
-        const attr = currentFramework.attributes[i]
-
-        // If we hit a colIndex 0 or 1, we're in a new main section
-        if (attr.colIndex <= 1) {
-          continue
-        }
-
-        // Add all records that match the target column
-        if (attr.colIndex === columnIndex) {
-          relatedAttributes.push(attr)
-        }
-      }
+    const allDescendants: IFrameworkAttribute[] = []
+    for (const child of children) {
+      allDescendants.push(child)
+      // Recursively get descendants of this child
+      allDescendants.push(...getAllDescendants(child.id))
     }
 
-    return relatedAttributes
+    return allDescendants
   }
-  // Get remaining columns (include column 2 and up)
+
+  // Get remaining columns (include column 2 and up) - moved here so it can be used in createExpandedChildren
   const remainingColumns = Object.keys(attributesByColumn)
     .map(Number)
     .filter((colIndex) => colIndex >= 2) // Changed to include column 2
     .sort((a, b) => a - b)
 
-  // Function to get the value from the last column for a specific child
-  const getLastColumnValue = (childId: string): string => {
-    if (remainingColumns.length === 0) return ''
+  // Create expanded children list where each parent appears once for each of its deepest descendants
+  const createExpandedChildren = () => {
+    const expandedChildren: Array<{
+      parent: IFrameworkAttribute
+      descendant: IFrameworkAttribute | null
+      uniqueKey: string
+      auditId: string // Unique ID for audit operations
+      lastColumnAttributeId: string // ID of the attribute from the last column
+    }> = []
 
-    const lastColumnIndex = remainingColumns[remainingColumns.length - 1]
-    const child = directChildren.find((c) => c.id === childId)
-    if (!child) return ''
+    directChildrenFallback.forEach((parent) => {
+      const descendants = getAllDescendants(parent.id)
 
-    // Find the current child's index in the framework attributes
-    const currentChildIndex = currentFramework.attributes.findIndex(
-      (attr) => attr.id === child.id,
-    )
+      // Get the deepest level descendants (those that have no children)
+      const deepestDescendants = descendants.filter(
+        (desc) =>
+          !currentFramework.attributes.some(
+            (attr) => attr.parentId === desc.id,
+          ),
+      )
 
-    if (currentChildIndex !== -1) {
-      // Look for the next attribute in the last column after this child
-      for (
-        let i = currentChildIndex + 1;
-        i < currentFramework.attributes.length;
-        i++
-      ) {
-        const attr = currentFramework.attributes[i]
+      if (deepestDescendants.length > 0) {
+        // Add one entry for each deepest descendant
+        deepestDescendants.forEach((descendant, index) => {
+          // Find the attribute from the last column for this descendant
+          const lastColumnIndex =
+            remainingColumns[remainingColumns.length - 1] || 0
+          let lastColumnAttributeId = descendant.id
 
-        // If we hit a colIndex 0 or 1, we're in a new main section
-        if (attr.colIndex <= 1) {
-          break
-        }
+          // If descendant is not in the last column, find the related attribute in the last column
+          if (descendant.colIndex !== lastColumnIndex) {
+            const descendantTree = getAllDescendants(descendant.id)
+            const lastColumnAttr = descendantTree.find(
+              (attr) => attr.colIndex === lastColumnIndex,
+            )
+            if (lastColumnAttr) {
+              lastColumnAttributeId = lastColumnAttr.id
+            }
+          }
 
-        // Return the first attribute that matches the last column
-        if (attr.colIndex === lastColumnIndex) {
-          return attr.value || ''
-        }
+          expandedChildren.push({
+            parent,
+            descendant,
+            uniqueKey: `${parent.id}-${descendant.id}-${index}`,
+            auditId: descendant.id, // Use descendant ID for audit operations
+            lastColumnAttributeId, // ID of the attribute from the last column
+          })
+        })
+      } else {
+        // If no descendants, just add the parent once
+        expandedChildren.push({
+          parent,
+          descendant: null,
+          uniqueKey: `${parent.id}-standalone`,
+          auditId: parent.id, // Use parent ID for audit operations
+          lastColumnAttributeId: parent.id, // Use parent ID as last column attribute
+        })
       }
+    })
+
+    return expandedChildren
+  }
+
+  const finalDirectChildren = createExpandedChildren()
+
+  // Helper function to get related attributes from a specific column using parentId hierarchy
+  // This replaces the legacy index-based approach with proper parent-child relationships
+  const getRelatedAttributesFromColumn = (columnIndex: number) => {
+    // Helper function to get all descendants of an attribute
+    const getAllDescendants = (parentId: string): IFrameworkAttribute[] => {
+      const children = currentFramework.attributes.filter(
+        (attr) => attr.parentId === parentId,
+      )
+
+      const allDescendants: IFrameworkAttribute[] = []
+      for (const child of children) {
+        allDescendants.push(child)
+        // Recursively get descendants of this child
+        allDescendants.push(...getAllDescendants(child.id))
+      }
+
+      return allDescendants
     }
 
-    return ''
+    // Get all descendants of the selected attribute
+    const allDescendants = getAllDescendants(selectedAttribute.id)
+
+    // Filter to only include attributes from the specified column
+    return allDescendants.filter((attr) => attr.colIndex === columnIndex)
+  }
+
+  // Function to get the value from the last column for a specific child
+  const getLastColumnValue = (lastColumnAttributeId: string): string => {
+    if (remainingColumns.length === 0) return ''
+
+    const childEntry = finalDirectChildren.find(
+      (c) => c.lastColumnAttributeId === lastColumnAttributeId,
+    )
+    if (!childEntry) return ''
+
+    // Find the actual attribute by its ID
+    const lastColumnAttribute = currentFramework.attributes.find(
+      (attr) => attr.id === lastColumnAttributeId,
+    )
+
+    return lastColumnAttribute?.value || childEntry.parent.value || ''
   }
 
   // Function to get audit detail value from existing data or current state
@@ -709,7 +773,9 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
   const hasAnyAuditDetails = (): boolean => {
     if (!selectedAuditCycleId || !currentFramework) return false
 
-    return directChildren.some((child) => hasExistingAuditDetail(child.id))
+    return finalDirectChildren.some((child) =>
+      hasExistingAuditDetail(child.lastColumnAttributeId),
+    )
   }
 
   // Function to handle task assignment
@@ -838,54 +904,27 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
           </div>
 
           {/* Table Body */}
-          {directChildren.map((child, childIndex) => {
-            // Get the specific related attribute for this child in the given column
-            const getChildSpecificAttribute = (columnIndex: number) => {
-              // Find the current child's index in the framework attributes
-              const currentChildIndex = currentFramework.attributes.findIndex(
-                (attr) => attr.id === child.id,
-              )
-
-              if (currentChildIndex !== -1) {
-                // Look for the next attribute in the specified column after this child
-                for (
-                  let i = currentChildIndex + 1;
-                  i < currentFramework.attributes.length;
-                  i++
-                ) {
-                  const attr = currentFramework.attributes[i]
-
-                  // Stop if we hit a new section (colIndex <= child.colIndex)
-                  if (attr.colIndex <= child.colIndex) {
-                    break
-                  }
-
-                  // Return the first attribute that matches the target column
-                  if (attr.colIndex === columnIndex) {
-                    return attr
-                  }
-                }
-              }
-
-              return null
-            }
-
+          {finalDirectChildren.map((child, childIndex) => {
             // Create one row per child
             return (
               <div
-                key={child.id}
+                key={child.uniqueKey}
                 className="flex w-full items-center gap-3 border-b p-4 hover:bg-[#266a55]/10"
               >
                 <span className="w-10 shrink-0 font-medium">
                   {childIndex + 1}
                 </span>
                 {remainingColumns.map((columnIndex) => {
-                  const currentAttribute =
-                    getChildSpecificAttribute(columnIndex)
+                  // Display the descendant value for this column if it exists, otherwise the parent value
+                  const displayValue =
+                    child.descendant &&
+                    child.descendant.colIndex === columnIndex
+                      ? child.descendant.value
+                      : child.parent.value
 
                   return (
                     <span
-                      key={`${child.id}-${columnIndex}`}
+                      key={`${child.uniqueKey}-${columnIndex}`}
                       className={cn(
                         'text-sm',
                         selectedAuditCycleId
@@ -893,7 +932,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                           : 'flex-1 w-full',
                       )}
                     >
-                      {currentAttribute ? currentAttribute.value : '-'}
+                      {displayValue || '-'}
                     </span>
                   )
                 })}
@@ -909,7 +948,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                             (rule) =>
                               rule.id ===
                               Number(
-                                getAuditDetailValue(child.id, 'auditRuleId'),
+                                getAuditDetailValue(
+                                  child.lastColumnAttributeId,
+                                  'auditRuleId',
+                                ),
                               ),
                           )?.color || 'transparent',
                       }}
@@ -917,13 +959,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       <Select
                         value={
                           getAuditDetailValue(
-                            child.id,
+                            child.lastColumnAttributeId,
                             'auditRuleId',
                           )?.toString() || ''
                         }
                         onValueChange={(value) =>
                           updateAuditDetail(
-                            child.id,
+                            child.lastColumnAttributeId,
                             'auditRuleId',
                             Number(value),
                           )
@@ -950,12 +992,16 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       <Select
                         value={
                           getAuditDetailValue(
-                            child.id,
+                            child.lastColumnAttributeId,
                             'ownedBy',
                           )?.toString() || ''
                         }
                         onValueChange={(value) =>
-                          updateAuditDetail(child.id, 'ownedBy', value)
+                          updateAuditDetail(
+                            child.lastColumnAttributeId,
+                            'ownedBy',
+                            value,
+                          )
                         }
                       >
                         <SelectTrigger className="w-full">
@@ -974,10 +1020,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                     {/* Auditor */}
                     <div className="w-32">
                       <span className="text-sm text-gray-700">
-                        {getAuditDetailValue(child.id, 'auditBy')
+                        {getAuditDetailValue(
+                          child.lastColumnAttributeId,
+                          'auditBy',
+                        )
                           ? getUserDisplayName(
                               getAuditDetailValue(
-                                child.id,
+                                child.lastColumnAttributeId,
                                 'auditBy',
                               ) as string,
                             )
@@ -990,16 +1039,21 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       <input
                         type="file"
                         ref={(el) => {
-                          fileInputRefs.current[child.id] = el
+                          fileInputRefs.current[child.lastColumnAttributeId] =
+                            el
                         }}
                         style={{ display: 'none' }}
                         accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.xls,.xlsx"
-                        onChange={(e) => handleFileInputChange(child.id, e)}
+                        onChange={(e) =>
+                          handleFileInputChange(child.lastColumnAttributeId, e)
+                        }
                       />
 
                       {/* Render multiple attachments */}
                       <div className="flex flex-col gap-1">
-                        {attachmentsByAttribute[child.id]?.map((attachment) => (
+                        {attachmentsByAttribute[
+                          child.lastColumnAttributeId
+                        ]?.map((attachment) => (
                           <div
                             key={attachment.id}
                             className="flex items-center gap-1"
@@ -1025,7 +1079,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                               size="sm"
                               className="p-1 text-red-500 hover:text-red-700"
                               onClick={() =>
-                                handleDeleteAttachment(child.id, attachment.id)
+                                handleDeleteAttachment(
+                                  child.lastColumnAttributeId,
+                                  attachment.id,
+                                )
                               }
                               disabled={deletingAttachments.has(attachment.id)}
                               title="Delete attachment"
@@ -1044,11 +1101,15 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                           variant="outline"
                           size="sm"
                           className="w-full"
-                          onClick={() => triggerFileInput(child.id)}
-                          disabled={uploadingFiles.has(child.id)}
+                          onClick={() =>
+                            triggerFileInput(child.lastColumnAttributeId)
+                          }
+                          disabled={uploadingFiles.has(
+                            child.lastColumnAttributeId,
+                          )}
                           title="Add attachment"
                         >
-                          {uploadingFiles.has(child.id) ? (
+                          {uploadingFiles.has(child.lastColumnAttributeId) ? (
                             <Loader2 className="size-4 animate-spin" />
                           ) : (
                             <Plus className="size-4" />
@@ -1063,12 +1124,16 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         placeholder={t('add-comment')}
                         value={
                           getAuditDetailValue(
-                            child.id,
+                            child.lastColumnAttributeId,
                             'comment',
                           )?.toString() || ''
                         }
                         onChange={(e) =>
-                          updateAuditDetail(child.id, 'comment', e.target.value)
+                          updateAuditDetail(
+                            child.lastColumnAttributeId,
+                            'comment',
+                            e.target.value,
+                          )
                         }
                         className="min-h-[40px] resize-none"
                         rows={1}
@@ -1081,13 +1146,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                         placeholder={t('add-recommendation')}
                         value={
                           getAuditDetailValue(
-                            child.id,
+                            child.lastColumnAttributeId,
                             'recommendation',
                           )?.toString() || ''
                         }
                         onChange={(e) =>
                           updateAuditDetail(
-                            child.id,
+                            child.lastColumnAttributeId,
                             'recommendation',
                             e.target.value,
                           )
@@ -1100,21 +1165,27 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                     {/* Task Management - Only show if audit details exist and this row has audit details */}
                     {hasAnyAuditDetails() && (
                       <div className="flex w-40 gap-2">
-                        {hasExistingAuditDetail(child.id) ? (
+                        {hasExistingAuditDetail(child.lastColumnAttributeId) ? (
                           <div className="flex flex-col items-center justify-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleAssignTask(child.id)}
+                              onClick={() =>
+                                handleAssignTask(child.lastColumnAttributeId)
+                              }
                             >
                               <Plus className="size-4" />
                               {t('add-task')}
                             </Button>
-                            {hasTasksForAuditDetail(child.id) && (
+                            {hasTasksForAuditDetail(
+                              child.lastColumnAttributeId,
+                            ) && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewTasks(child.id)}
+                                onClick={() =>
+                                  handleViewTasks(child.lastColumnAttributeId)
+                                }
                               >
                                 {t('view-tasks')}
                               </Button>
@@ -1132,7 +1203,9 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleLinkFramework(child.id)}
+                        onClick={() =>
+                          handleLinkFramework(child.lastColumnAttributeId)
+                        }
                       >
                         <Link2 className="size-4" />
                         {t('link')}
@@ -1140,7 +1213,9 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleViewFrameworkLinks(child.id)}
+                        onClick={() =>
+                          handleViewFrameworkLinks(child.lastColumnAttributeId)
+                        }
                       >
                         {t('show-links')}
                       </Button>

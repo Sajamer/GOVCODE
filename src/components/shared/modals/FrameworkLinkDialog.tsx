@@ -19,6 +19,11 @@ import {
   type CreateFrameworkLinkData,
 } from '@/lib/actions/framework-link.actions'
 import { CustomUser } from '@/lib/auth'
+import {
+  createUINestedStructure,
+  getUIAttributeDisplayValue,
+  hasChildren,
+} from '@/lib/ui-framework-utils'
 import { cn } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -53,6 +58,9 @@ interface NestedAttribute {
   id: string
   name?: string
   value?: string | null
+  colIndex?: number
+  rowIndex?: number
+  parentId?: string | null
   children?: NestedAttribute[] | null
 }
 
@@ -95,163 +103,6 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
   })
 
   const availableFrameworks = frameworksData?.frameworks || []
-
-  // Helper functions for framework structure processing
-  const getFrameworkStructure = (framework: {
-    attributes: Array<{
-      id: string
-      name?: string
-      value?: string | null
-      colIndex?: number
-      rowIndex?: number
-    }>
-  }) => {
-    // Group attributes by column index
-    const attributesByColumn: Record<
-      number,
-      Array<{
-        id: string
-        name?: string
-        value?: string | null
-        colIndex?: number
-        rowIndex?: number
-      }>
-    > = {}
-    framework.attributes.forEach((attr) => {
-      const colIndex = attr.colIndex || 0
-      if (!attributesByColumn[colIndex]) {
-        attributesByColumn[colIndex] = []
-      }
-      attributesByColumn[colIndex].push(attr)
-    })
-
-    // Get sorted column indices
-    const sortedColumns = Object.keys(attributesByColumn)
-      .map(Number)
-      .sort((a, b) => a - b)
-
-    return { attributesByColumn, sortedColumns }
-  }
-
-  // Create nested structure from framework attributes
-  const createNestedStructure = (framework: {
-    attributes: Array<{
-      id: string
-      name?: string
-      value?: string | null
-      colIndex?: number
-      rowIndex?: number
-    }>
-  }) => {
-    const { attributesByColumn, sortedColumns } =
-      getFrameworkStructure(framework)
-
-    // Start with first column attributes as root nodes
-    const firstColumnAttributes = attributesByColumn[0] || []
-    const uniqueFirstColumn = firstColumnAttributes.filter(
-      (attr, index, array) =>
-        array.findIndex(
-          (a) => (a.value || a.name) === (attr.value || attr.name),
-        ) === index,
-    )
-
-    const nestedStructure = uniqueFirstColumn.map((parent) => {
-      const buildChildren = (
-        parentAttr: {
-          id: string
-          name?: string
-          value?: string | null
-          colIndex?: number
-          rowIndex?: number
-        },
-        currentColIndex: number,
-      ): NestedAttribute[] | null => {
-        if (currentColIndex >= sortedColumns.length - 1) return null
-
-        const nextColIndex = sortedColumns[currentColIndex + 1]
-        if (!nextColIndex) return null
-
-        // Find children in the next column that belong to this parent
-        const children = getChildAttributesForParent(
-          framework,
-          parentAttr,
-          nextColIndex,
-        )
-
-        if (children.length === 0) return null
-
-        return children.map((child) => ({
-          ...child,
-          children: buildChildren(child, currentColIndex + 1),
-        }))
-      }
-
-      return {
-        ...parent,
-        children: buildChildren(
-          parent,
-          sortedColumns.findIndex((col) => col === parent.colIndex),
-        ),
-      }
-    })
-
-    return nestedStructure
-  }
-
-  // Get child attributes for a specific parent
-  const getChildAttributesForParent = (
-    framework: {
-      attributes: Array<{
-        id: string
-        name?: string
-        value?: string | null
-        colIndex?: number
-        rowIndex?: number
-      }>
-    },
-    parentAttr: {
-      id: string
-      name?: string
-      value?: string | null
-      colIndex?: number
-      rowIndex?: number
-    },
-    targetColIndex: number,
-  ) => {
-    const parentIndex = framework.attributes.findIndex(
-      (attr) => attr.id === parentAttr.id,
-    )
-
-    if (parentIndex === -1) return []
-
-    const children = []
-    // Look for attributes in the target column that come after this parent
-    for (let i = parentIndex + 1; i < framework.attributes.length; i++) {
-      const attr = framework.attributes[i]
-
-      // Stop if we hit a new main section (colIndex <= parent.colIndex)
-      if (
-        attr.colIndex &&
-        parentAttr.colIndex &&
-        attr.colIndex <= parentAttr.colIndex
-      ) {
-        break
-      }
-
-      // Add attributes that match the target column
-      if (attr.colIndex === targetColIndex) {
-        children.push(attr)
-      }
-    }
-
-    // Remove duplicates
-    return children.filter(
-      (attr, index, array) =>
-        array.findIndex(
-          (a) => (a.value || a.name) === (attr.value || attr.name),
-        ) === index,
-    )
-  }
 
   // Toggle framework expansion
   const toggleFrameworkExpansion = (frameworkId: string) => {
@@ -298,7 +149,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
     level = 0,
   ): JSX.Element[] => {
     return attributes.map((attr) => {
-      const hasChildren = attr.children && attr.children.length > 0
+      const attributeHasChildren = hasChildren(attr)
       const isExpanded = expandedAttributes.has(attr.id)
       const isLinked = linkedAttributes.has(attr.id)
 
@@ -313,7 +164,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
           >
             <div className="flex flex-1 items-center gap-2">
               {/* Expand/Collapse button for parent nodes */}
-              {hasChildren ? (
+              {attributeHasChildren ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -339,17 +190,19 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
               <span
                 className={cn(
                   'text-sm flex-1 cursor-pointer',
-                  hasChildren ? 'font-medium' : 'font-normal',
+                  attributeHasChildren ? 'font-medium' : 'font-normal',
                   isLinked && 'text-primary font-medium',
                 )}
-                onClick={() => hasChildren && toggleAttributeExpansion(attr.id)}
+                onClick={() =>
+                  attributeHasChildren && toggleAttributeExpansion(attr.id)
+                }
               >
-                {attr.value || attr.name}
+                {getUIAttributeDisplayValue(attr)}
               </span>
             </div>
 
             {/* Link button for leaf nodes only */}
-            {!hasChildren && (
+            {!attributeHasChildren && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -367,9 +220,9 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
           </div>
 
           {/* Render children recursively when expanded */}
-          {hasChildren && isExpanded && (
+          {attributeHasChildren && isExpanded && attr.children && (
             <div className="space-y-1">
-              {renderNestedAttributes(attr.children!, level + 1)}
+              {renderNestedAttributes(attr.children, level + 1)}
             </div>
           )}
         </div>
@@ -665,7 +518,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                             <div className="mt-3 space-y-2">
                               {(() => {
                                 const nestedStructure =
-                                  createNestedStructure(framework)
+                                  createUINestedStructure(framework)
                                 return renderNestedAttributes(nestedStructure)
                               })()}
                             </div>

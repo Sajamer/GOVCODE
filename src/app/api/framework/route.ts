@@ -1,5 +1,10 @@
 import { STATUS_CODES } from '@/constants/status-codes'
 import prisma from '@/lib/db_connection'
+import {
+  createIdMapping,
+  getParentId,
+  prepareFrameworkDataForInsertion,
+} from '@/lib/framework-hierarchy-processor'
 import ExcelJS from 'exceljs'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -152,7 +157,23 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // Create framework with its attributes in a transaction with parent-child relationships
+      // Process hierarchy to ensure proper parent-child relationships
+      const hierarchyResult = prepareFrameworkDataForInsertion(attributes)
+
+      if (!hierarchyResult.success) {
+        return NextResponse.json(
+          {
+            data: {},
+            message: `Data processing errors: ${hierarchyResult.errors?.join(', ')}`,
+            status: STATUS_CODES.BAD_REQUEST,
+          },
+          { status: STATUS_CODES.BAD_REQUEST },
+        )
+      }
+
+      const { hierarchy, attributesForInsertion } = hierarchyResult.data!
+
+      // Create framework with its attributes in a transaction with proper parent-child relationships
       const result = await prisma.$transaction(async (tx) => {
         const framework = await tx.framework.create({
           data: {
@@ -161,52 +182,57 @@ export async function POST(req: NextRequest) {
           },
         })
 
-        // Group attributes by row for hierarchical structure
-        const attributesByRow: Record<number, (typeof attributes)[0][]> = {}
+        // First pass: Create all unique attributes without parent relationships
+        const createdAttributes: Array<{
+          id: string
+          name: string
+          value: string
+          colIndex: number
+        }> = []
 
-        // Group attributes by row
-        attributes.forEach((attr) => {
-          if (!attributesByRow[attr.rowIndex]) {
-            attributesByRow[attr.rowIndex] = []
-          }
-          attributesByRow[attr.rowIndex].push(attr)
-        })
+        for (const attr of attributesForInsertion) {
+          const createdAttr = await tx.frameworkAttribute.create({
+            data: {
+              name: attr.name,
+              value: attr.value,
+              frameworkId: framework.id,
+              rowIndex: attr.rowIndex,
+              colIndex: attr.colIndex,
+              // parentId will be set in the second pass
+            },
+          })
 
-        // Store created attribute IDs for relationship building
-        const createdAttributeIds: Record<number, Record<number, string>> = {}
+          createdAttributes.push({
+            id: createdAttr.id,
+            name: createdAttr.name,
+            value: createdAttr.value || '',
+            colIndex: createdAttr.colIndex,
+          })
+        }
 
-        // Process each row of attributes
-        for (const rowIndex in attributesByRow) {
-          const rowIdx = parseInt(rowIndex)
-          createdAttributeIds[rowIdx] = {}
+        // Create ID mapping for parent-child relationships
+        const idMapping = createIdMapping(
+          attributesForInsertion,
+          createdAttributes,
+        )
 
-          // Sort by column index to ensure proper hierarchy (left to right)
-          const rowAttributes = attributesByRow[rowIdx].sort(
-            (a, b) => a.colIndex - b.colIndex,
-          )
+        // Second pass: Update parent relationships
+        for (const attr of attributesForInsertion) {
+          const parentId = getParentId(attr, hierarchy, idMapping)
 
-          // Create attributes for this row with parent-child relationships
-          let previousAttributeId: string | null = null
+          if (parentId) {
+            const attributeKey = `col_${attr.colIndex}_${attr.value.toLowerCase().trim()}`
+            const currentId = idMapping.get(attributeKey)
 
-          for (const attr of rowAttributes) {
-            // Create the attribute with parent reference if not the first column
-            const createdAttr: { id: string } =
-              await tx.frameworkAttribute.create({
-                data: {
-                  name: attr.name,
-                  value: attr.value,
-                  frameworkId: framework.id,
-                  rowIndex: rowIdx,
-                  colIndex: attr.colIndex,
-                  parentId: previousAttributeId, // Link to previous column in same row
-                },
+            if (currentId) {
+              await tx.frameworkAttribute.update({
+                where: { id: currentId },
+                data: { parentId },
               })
-
-            // Store the created ID for next attribute's parent reference
-            createdAttributeIds[rowIdx][attr.colIndex] = createdAttr.id
-            previousAttributeId = createdAttr.id
+            }
           }
         }
+
         return await tx.framework.findUnique({
           where: { id: framework.id },
           include: {
