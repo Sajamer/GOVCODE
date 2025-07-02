@@ -121,7 +121,7 @@ const SingleComplianceFramework: FC = () => {
                 ) : view === 'list' ? (
                   <ComplianceListView framework={frameworkData} />
                 ) : (
-                  <ComplianceDashboard />
+                  <ComplianceDashboard framework={frameworkData} />
                 )}
               </div>
             </div>

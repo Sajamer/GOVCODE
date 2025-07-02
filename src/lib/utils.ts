@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 // import { Prisma } from '@prisma/client'
+import { ordinals } from '@/constants/global-constants'
+import { IFrameworkAttribute } from '@/types/framework'
 import { Calibration, Prisma, Units } from '@prisma/client'
 import { type ClassValue, clsx } from 'clsx'
 import { createHash, pbkdf2Sync, randomBytes } from 'crypto'
@@ -426,4 +428,76 @@ export const getNestedError = (errors: NestedErrors, path: string): string => {
   }
 
   return typeof current === 'string' ? current : ''
+}
+
+// Helper function to convert number to ordinal text
+export const getOrdinalText = (num: number): string => {
+  if (num >= 1 && num <= ordinals.length) {
+    return ordinals[num - 1]
+  }
+
+  // For numbers beyond our predefined list, use numeric with suffix
+  const lastDigit = num % 10
+  const lastTwoDigits = num % 100
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+    return `${num}th`
+  }
+
+  switch (lastDigit) {
+    case 1:
+      return `${num}st`
+    case 2:
+      return `${num}nd`
+    case 3:
+      return `${num}rd`
+    default:
+      return `${num}th`
+  }
+}
+
+const getAllAttributes = (
+  attributes: IFrameworkAttribute[],
+): IFrameworkAttribute[] => {
+  if (!attributes || attributes.length === 0) return []
+
+  let allAttributes: IFrameworkAttribute[] = [...attributes]
+
+  for (const attribute of attributes) {
+    if (attribute.children && attribute.children.length > 0) {
+      allAttributes = [
+        ...allAttributes,
+        ...getAllAttributes(attribute.children),
+      ]
+    }
+  }
+
+  return allAttributes
+}
+
+// Helper function to count rows per column using colIndex
+export const getColumnRowCounts = (
+  attributes: IFrameworkAttribute[],
+): { name: string; total: number }[] => {
+  const allAttributes = getAllAttributes(attributes)
+
+  // Group attributes by colIndex
+  const columnGroups: { [key: number]: IFrameworkAttribute[] } = {}
+
+  allAttributes.forEach((attr) => {
+    if (attr.colIndex !== undefined && attr.colIndex !== null) {
+      if (!columnGroups[attr.colIndex]) {
+        columnGroups[attr.colIndex] = []
+      }
+      columnGroups[attr.colIndex].push(attr)
+    }
+  })
+
+  // Convert to array of objects with column name and row count
+  return Object.entries(columnGroups)
+    .sort(([a], [b]) => parseInt(a) - parseInt(b)) // Sort by column index
+    .map(([colIndex, attrs]) => ({
+      name: `Sum of the ${getOrdinalText(parseInt(colIndex) + 1)} level`,
+      total: attrs.length,
+    }))
 }
