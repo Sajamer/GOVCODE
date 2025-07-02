@@ -524,6 +524,7 @@
     "opening-framework": "Opening {name}",
     "linking-attribute": "Linking Attribute",
     "with": "With",
-    "delete-framework-link": "Delete Framework Link"
+    "delete-framework-link": "Delete Framework Link",
+    "back-to-audit-cycle": "Back to Audit Cycle"
   }
 }

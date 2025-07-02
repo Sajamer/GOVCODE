@@ -521,6 +521,7 @@
     "opening-framework": "فتح {name}",
     "linking-attribute": "الخاصية المرتبطة",
     "with": "مع",
-    "delete-framework-link": "حذف رابط الإطار"
+    "delete-framework-link": "حذف رابط الإطار",
+    "back-to-audit-cycle": "العودة إلى دورة التدقيق"
   }
 }

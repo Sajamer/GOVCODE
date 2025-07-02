@@ -13,6 +13,7 @@ import { House, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { FC, useState } from 'react'
+import ComplianceDashboard from './ComplianceDashboard'
 import ComplianceListView from './ComplianceListView'
 import ComplianceMapView from './ComplianceMapView'
 
@@ -22,7 +23,7 @@ const SingleComplianceFramework: FC = () => {
   const frameworkId = pathname.split('/').pop() || ''
   const isArabic = pathname.includes('/ar')
 
-  const [view, setView] = useState('map')
+  const [view, setView] = useState<'map' | 'list' | 'dashboard'>('map')
   const [selectedAudit, setSelectedAudit] =
     useState<IFrameWorkAuditCycle | null>(null)
   const [openAuditDialog, setOpenAuditDialog] = useState(false)
@@ -66,35 +67,48 @@ const SingleComplianceFramework: FC = () => {
                     <House className="size-5" />
                     {frameworkData.name}
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setOpenAuditDialog(true)}
-                  >
-                    <span>{t('initiate-audit-cycle')}</span>
-                    <Plus className="size-4" />
-                  </Button>{' '}
-                  {frameworkData.auditCycles &&
-                    frameworkData.auditCycles.length > 0 &&
-                    frameworkData.auditCycles.map((cycle) => (
+                  {view !== 'dashboard' && (
+                    <>
                       <Button
-                        key={cycle.id}
-                        onClick={() => setSelectedAudit(cycle)}
-                        className={cn(
-                          selectedAudit?.id === cycle?.id &&
-                            'bg-[#266a55]/60 hover:bg-[#266a55]/60',
-                        )}
+                        type="button"
+                        onClick={() => setOpenAuditDialog(true)}
                       >
-                        {t('audit')}:{' '}
-                        {cycle.name.split('-').slice(0, 2).join('-')}
+                        <span>{t('initiate-audit-cycle')}</span>
+                        <Plus className="size-4" />
+                      </Button>{' '}
+                      {frameworkData.auditCycles &&
+                        frameworkData.auditCycles.length > 0 &&
+                        frameworkData.auditCycles.map((cycle) => (
+                          <Button
+                            key={cycle.id}
+                            onClick={() => setSelectedAudit(cycle)}
+                            className={cn(
+                              selectedAudit?.id === cycle?.id &&
+                                'bg-[#266a55]/60 hover:bg-[#266a55]/60',
+                            )}
+                          >
+                            {t('audit')}:{' '}
+                            {cycle.name.split('-').slice(0, 2).join('-')}
+                          </Button>
+                        ))}
+                      <Button
+                        onClick={() => {
+                          setView((prev) => (prev === 'map' ? 'list' : 'map'))
+                        }}
+                      >
+                        {view === 'map' ? t('list-view') : t('map-view')}
                       </Button>
-                    ))}
-                  <Button
-                    onClick={() => {
-                      setView((prev) => (prev === 'map' ? 'list' : 'map'))
-                    }}
-                  >
-                    {view === 'map' ? t('list-view') : t('map-view')}
-                  </Button>
+                    </>
+                  )}
+                  {view === 'dashboard' ? (
+                    <Button onClick={() => setView('map')}>
+                      {t('back-to-audit-cycle')}
+                    </Button>
+                  ) : (
+                    <Button onClick={() => setView('dashboard')}>
+                      {t('dashboard')}
+                    </Button>
+                  )}
                 </div>
               </Card>
 
@@ -104,8 +118,10 @@ const SingleComplianceFramework: FC = () => {
                     framework={frameworkData}
                     auditData={selectedAudit}
                   />
-                ) : (
+                ) : view === 'list' ? (
                   <ComplianceListView framework={frameworkData} />
+                ) : (
+                  <ComplianceDashboard />
                 )}
               </div>
             </div>
