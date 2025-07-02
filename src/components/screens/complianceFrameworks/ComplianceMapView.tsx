@@ -48,28 +48,68 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
       heatmapData[rule.id] = 0
     })
 
-    // Find all attributes with the same value
+    // Helper function to get all descendants of an attribute
+    const getAllDescendants = (parentId: string): IFrameworkAttribute[] => {
+      const children = framework.attributes.filter(
+        (attr) => attr.parentId === parentId,
+      )
+
+      const allDescendants: IFrameworkAttribute[] = []
+      for (const child of children) {
+        allDescendants.push(child)
+        // Recursively get descendants of this child
+        allDescendants.push(...getAllDescendants(child.id))
+      }
+
+      return allDescendants
+    }
+
+    // Get all columns to find the last one
+    const columnIndices = [
+      ...new Set(framework.attributes.map((attr) => attr.colIndex || 0)),
+    ].sort((a, b) => a - b)
+    const lastColumnIndex = columnIndices[columnIndices.length - 1] || 0
+
+    // Find all attributes with the same value (these are second column attributes)
     const attributesWithSameValue = framework.attributes.filter(
       (attr) => attr.value === attributeValue,
     )
 
-    // Count audit rules across all attributes with the same value
+    // For each attribute with the same value, find its deepest descendants (last column attributes)
     attributesWithSameValue.forEach((attribute) => {
-      if (!attribute?.auditDetails) return
+      const descendants = getAllDescendants(attribute.id)
 
-      const auditDetail = attribute.auditDetails.find(
-        (detail) => detail.auditCycleId === auditData.id,
-      )
+      // Get the deepest level descendants (those that have no children) OR those in the last column
+      const lastColumnDescendants = descendants.filter((desc) => {
+        const hasNoChildren = !framework.attributes.some(
+          (attr) => attr.parentId === desc.id,
+        )
+        const isInLastColumn = desc.colIndex === lastColumnIndex
+        return hasNoChildren || isInLastColumn
+      })
 
-      if (auditDetail?.auditRuleId) {
-        const auditRule = framework?.status?.auditRules?.find(
-          (rule) => rule.id === auditDetail.auditRuleId,
+      // If no descendants found, use the attribute itself
+      const targetAttributes =
+        lastColumnDescendants.length > 0 ? lastColumnDescendants : [attribute]
+
+      // Count audit rules for each target attribute
+      targetAttributes.forEach((targetAttr) => {
+        if (!targetAttr?.auditDetails) return
+
+        const auditDetail = targetAttr.auditDetails.find(
+          (detail) => detail.auditCycleId === auditData.id,
         )
 
-        if (auditRule) {
-          heatmapData[auditRule.id] = (heatmapData[auditRule.id] || 0) + 1
+        if (auditDetail?.auditRuleId) {
+          const auditRule = framework?.status?.auditRules?.find(
+            (rule) => rule.id === auditDetail.auditRuleId,
+          )
+
+          if (auditRule) {
+            heatmapData[auditRule.id] = (heatmapData[auditRule.id] || 0) + 1
+          }
         }
-      }
+      })
     })
 
     return heatmapData
@@ -83,9 +123,6 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
       {framework.attributes.length > 0 && (
         <div className="grid w-full grid-cols-1 gap-4">
           {(() => {
-            // Use proper parent-child relationships based on parentId
-            // This works with the new hierarchy system where parent IDs are correctly assigned
-
             // Get root attributes (those without parents AND from first column only)
             const rootAttributes = framework.attributes.filter(
               (attr) =>
