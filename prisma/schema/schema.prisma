@@ -618,9 +618,8 @@ model FrameworkLinkItem {
   targetFrameworkId String
   targetFramework   Framework @relation("TargetFrameworkLinks", fields: [targetFrameworkId], references: [id], onDelete: Cascade)
 
-  // Optional: Link to specific attribute in target framework
-  targetAttributeId String?
-  targetAttribute   FrameworkAttribute? @relation("TargetAttributeLinks", fields: [targetAttributeId], references: [id], onDelete: SetNull)
+  targetAttributeId String
+  targetAttribute   FrameworkAttribute @relation("TargetAttributeLinks", fields: [targetAttributeId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

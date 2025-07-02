@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -1301,21 +1302,21 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
           open={openLinkedFrameworks}
           onOpenChange={setOpenLinkedFrameworks}
         >
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>{t('linked-frameworks')}</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="max-w-4xl overflow-hidden">
+            <DialogHeader className="mt-2">
+              <DialogTitle className={cn(isArabic && 'text-right')}>
+                {t('linked-frameworks')}
+              </DialogTitle>
+              <DialogDescription className={cn(isArabic && 'text-right')}>
                 {t('viewing-links-for')}:{' '}
                 {getLastColumnValue(selectedChildForViewLinks)}
               </DialogDescription>
             </DialogHeader>
-            <LinkedFrameworksDisplay
-              attributeId={selectedChildForViewLinks}
-              onEditLink={(linkId) => {
-                // Optionally implement edit functionality
-                console.log('Edit link:', linkId)
-              }}
-            />
+            <ScrollArea className="max-h-[70vh] rounded-lg">
+              <LinkedFrameworksDisplay
+                attributeId={selectedChildForViewLinks}
+              />
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       )}

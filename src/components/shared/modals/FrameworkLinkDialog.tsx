@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, useCallback, useEffect, useState } from 'react'
 
 interface FrameworkLinkDialogProps {
@@ -52,6 +53,7 @@ interface SelectedFramework {
   name: string
   level: number
   order: number
+  targetAttributeId?: string // The specific attribute to link to
 }
 
 interface NestedAttribute {
@@ -76,6 +78,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
   const { data: session } = useSession()
   const userData = session?.user as CustomUser | undefined
   const queryClient = useQueryClient()
+  const isArabic = usePathname().includes('/ar')
 
   // Form state
   const [linkName, setLinkName] = useState('')
@@ -91,9 +94,9 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
   const [expandedAttributes, setExpandedAttributes] = useState<Set<string>>(
     new Set(),
   )
-  const [linkedAttributes, setLinkedAttributes] = useState<Set<string>>(
-    new Set(),
-  )
+  const [linkedAttributes, setLinkedAttributes] = useState<Map<string, string>>(
+    new Map(),
+  ) // Maps frameworkId to selected attributeId
 
   // Fetch available frameworks
   const { data: frameworksData, isLoading: isLoadingFrameworks } = useQuery({
@@ -130,28 +133,31 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
     })
   }
 
-  // Toggle attribute linking
-  const toggleAttributeLink = (attributeId: string) => {
+  // Toggle attribute linking for a specific framework
+  const toggleAttributeLink = (frameworkId: string, attributeId: string) => {
     setLinkedAttributes((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(attributeId)) {
-        newSet.delete(attributeId)
+      const newMap = new Map(prev)
+      if (newMap.get(frameworkId) === attributeId) {
+        // If this attribute is already selected for this framework, remove it
+        newMap.delete(frameworkId)
       } else {
-        newSet.add(attributeId)
+        // Set this attribute as the selected one for this framework
+        newMap.set(frameworkId, attributeId)
       }
-      return newSet
+      return newMap
     })
   }
 
   // Render nested attribute structure
   const renderNestedAttributes = (
     attributes: NestedAttribute[],
+    frameworkId: string,
     level = 0,
   ): JSX.Element[] => {
     return attributes.map((attr) => {
       const attributeHasChildren = hasChildren(attr)
       const isExpanded = expandedAttributes.has(attr.id)
-      const isLinked = linkedAttributes.has(attr.id)
+      const isLinked = linkedAttributes.get(frameworkId) === attr.id
 
       return (
         <div key={attr.id} className="space-y-1">
@@ -160,7 +166,11 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
               'group flex items-center justify-between rounded px-2 py-1 hover:bg-muted/50 transition-colors border-l-2 border-transparent',
               level > 0 && 'border-l-muted-foreground/20',
             )}
-            style={{ marginLeft: `${level * 20}px` }}
+            style={
+              isArabic
+                ? { marginRight: `${level * 20}px` }
+                : { marginLeft: `${level * 20}px` }
+            }
           >
             <div className="flex flex-1 items-center gap-2">
               {/* Expand/Collapse button for parent nodes */}
@@ -174,7 +184,12 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                   {isExpanded ? (
                     <ChevronDown className="size-3 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="size-3 text-muted-foreground" />
+                    <ChevronRight
+                      className={cn(
+                        'size-3 text-muted-foreground',
+                        isArabic && 'rotate-180',
+                      )}
+                    />
                   )}
                 </Button>
               ) : (
@@ -212,7 +227,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                     ? 'opacity-100 text-primary hover:text-primary/80'
                     : 'opacity-0 group-hover:opacity-100 hover:text-primary',
                 )}
-                onClick={() => toggleAttributeLink(attr.id)}
+                onClick={() => toggleAttributeLink(frameworkId, attr.id)}
               >
                 <Link2 className="size-3" />
               </Button>
@@ -222,7 +237,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
           {/* Render children recursively when expanded */}
           {attributeHasChildren && isExpanded && attr.children && (
             <div className="space-y-1">
-              {renderNestedAttributes(attr.children, level + 1)}
+              {renderNestedAttributes(attr.children, frameworkId, level + 1)}
             </div>
           )}
         </div>
@@ -243,7 +258,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
       toast({
         variant: 'success',
         title: t('success'),
-        description: 'Framework link created successfully',
+        description: t('framework-link-created-successfully'),
       })
 
       // Invalidate queries to refresh data
@@ -264,7 +279,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
         description:
           error instanceof Error
             ? error.message
-            : 'Failed to create framework link',
+            : t('failed-to-create-framework-link'),
       })
     },
   })
@@ -310,6 +325,13 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
         level: index + 1,
       }))
     })
+
+    // Also remove the linked attribute for this framework
+    setLinkedAttributes((prev) => {
+      const newMap = new Map(prev)
+      newMap.delete(frameworkId)
+      return newMap
+    })
   }, [])
 
   // Handle form submission
@@ -318,7 +340,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
       toast({
         variant: 'destructive',
         title: t('error'),
-        description: 'User not authenticated',
+        description: t('user-not-authenticated'),
       })
       return
     }
@@ -327,7 +349,21 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
       toast({
         variant: 'destructive',
         title: t('error'),
-        description: 'Please select at least one framework to link',
+        description: t('please-select-at-least-one-framework'),
+      })
+      return
+    }
+
+    // Check if all selected frameworks have a target attribute selected
+    const frameworksWithMissingAttributes = selectedFrameworks.filter(
+      (f) => !linkedAttributes.has(f.id),
+    )
+
+    if (frameworksWithMissingAttributes.length > 0) {
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: t('please-select-target-attribute-for-all-frameworks'),
       })
       return
     }
@@ -342,6 +378,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
         frameworkId: f.id,
         level: f.level,
         order: f.order,
+        targetAttributeId: linkedAttributes.get(f.id)!,
       })),
     }
 
@@ -354,6 +391,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
     sourceFrameworkId,
     sourceAttributeId,
     createLink,
+    linkedAttributes,
     t,
   ])
 
@@ -364,7 +402,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
     setSelectedFrameworks([])
     setExpandedFrameworks(new Set())
     setExpandedAttributes(new Set())
-    setLinkedAttributes(new Set())
+    setLinkedAttributes(new Map())
   }, [])
 
   // Reset form when dialog opens
@@ -376,15 +414,17 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden">
-        <DialogHeader>
+      <DialogContent
+        className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden"
+        dir={isArabic ? 'rtl' : 'ltr'}
+      >
+        <DialogHeader className="mt-2">
           <DialogTitle className="flex items-center gap-2">
             <Link2 className="size-5" />
-            Link Frameworks
+            {t('link-frameworks')}
           </DialogTitle>
-          <DialogDescription>
-            Link frameworks to &quot;{sourceAttributeName}&quot; to create
-            hierarchical relationships
+          <DialogDescription className={cn(isArabic && 'text-right')}>
+            {t('link-frameworks-description')} &quot;{sourceAttributeName}&quot;
           </DialogDescription>
         </DialogHeader>
 
@@ -393,38 +433,43 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="link-name">Link Name (Optional)</Label>
+                <Label htmlFor="link-name">{t('link-name')}</Label>
                 <Input
                   id="link-name"
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
-                  placeholder="e.g., Governance Standards Mapping"
+                  placeholder={t('link-name-placeholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="link-description">Description (Optional)</Label>
+                <Label htmlFor="link-description">
+                  {t('link-description')}
+                </Label>
                 <Input
                   id="link-description"
                   value={linkDescription}
                   onChange={(e) => setLinkDescription(e.target.value)}
-                  placeholder="Brief description of this link"
+                  placeholder={t('link-description-placeholder')}
                 />
               </div>
             </div>
           </div>
 
-          <div className="grid flex-1 grid-cols-2 gap-6 overflow-hidden">
+          <div className="flex w-full flex-col items-start justify-center gap-3">
             {/* Available Frameworks */}
-            <div className="space-y-3">
-              <h3 className="font-medium">Available Frameworks</h3>
-              <ScrollArea className="h-[400px] rounded-md border p-4">
+            <div className="w-full space-y-3">
+              <h3 className="font-medium">{t('available-frameworks')}</h3>
+              <ScrollArea
+                className="h-[200px] w-full rounded-md border p-4"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
                 {isLoadingFrameworks ? (
                   <div className="flex h-32 items-center justify-center">
                     <Loader2 className="size-6 animate-spin" />
                   </div>
                 ) : availableFrameworks.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
-                    No frameworks available for linking
+                    {t('no-frameworks-available-for-linking')}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -436,7 +481,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                         <div
                           key={framework.id}
                           className={cn(
-                            'flex items-center space-x-2 p-3 rounded-md border cursor-pointer transition-colors',
+                            'flex items-center gap-2 p-3 rounded-md border cursor-pointer transition-colors',
                             isSelected
                               ? 'bg-primary/10 border-primary'
                               : 'hover:bg-muted',
@@ -449,7 +494,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                           <div className="flex-1">
                             <p className="font-medium">{framework.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {framework.attributes.length} attributes
+                              {framework.attributes.length} {t('attributes')}
                             </p>
                           </div>
                         </div>
@@ -461,13 +506,18 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
             </div>
 
             {/* Selected Frameworks Details */}
-            <div className="space-y-3">
-              <h3 className="font-medium">Selected Frameworks Details</h3>
-              <ScrollArea className="h-[400px] rounded-md border p-4">
+            <div className="w-full space-y-3">
+              <h3 className="font-medium">
+                {t('selected-frameworks-details')}
+              </h3>
+              <ScrollArea
+                className="h-[250px] rounded-md border p-4"
+                dir={isArabic ? 'rtl' : 'ltr'}
+              >
                 {selectedFrameworks.length === 0 ? (
-                  <div className="py-8 text-center text-muted-foreground">
+                  <div className="flex h-full flex-col items-center justify-center text-center text-muted-foreground">
                     <Plus className="mx-auto mb-2 size-8 opacity-50" />
-                    Select frameworks to view their structure
+                    {t('select-frameworks-to-view-structure')}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -487,7 +537,10 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                           {/* Framework Header */}
                           <div className="flex items-center justify-between">
                             <div
-                              className="flex cursor-pointer items-center gap-2"
+                              className={cn(
+                                'flex cursor-pointer items-center gap-2',
+                                isArabic && 'flex-row-reverse',
+                              )}
                               onClick={() =>
                                 toggleFrameworkExpansion(framework.id)
                               }
@@ -495,7 +548,12 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                               {isExpanded ? (
                                 <ChevronDown className="size-4" />
                               ) : (
-                                <ChevronRight className="size-4" />
+                                <ChevronRight
+                                  className={cn(
+                                    'size-4',
+                                    isArabic && 'rotate-180',
+                                  )}
+                                />
                               )}
                               <span className="font-medium">
                                 {framework.name}
@@ -519,7 +577,10 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
                               {(() => {
                                 const nestedStructure =
                                   createUINestedStructure(framework)
-                                return renderNestedAttributes(nestedStructure)
+                                return renderNestedAttributes(
+                                  nestedStructure,
+                                  framework.id,
+                                )
                               })()}
                             </div>
                           )}
@@ -536,7 +597,7 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
         {/* Actions */}
         <div className="flex justify-end gap-2 border-t pt-4">
           <Button variant="outline" onClick={onClose} disabled={isCreating}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -545,12 +606,12 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
             {isCreating ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Creating Link...
+                {t('creating-link')}
               </>
             ) : (
               <>
                 <Link2 className="mr-2 size-4" />
-                Create Link
+                {t('create-link')}
               </>
             )}
           </Button>

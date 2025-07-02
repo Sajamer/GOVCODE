@@ -14,7 +14,7 @@ export interface CreateFrameworkLinkData {
     frameworkId: string
     level: number
     order: number
-    targetAttributeId?: string
+    targetAttributeId: string // Now required
   }[]
 }
 
@@ -27,7 +27,7 @@ export interface UpdateFrameworkLinkData {
     frameworkId: string
     level: number
     order: number
-    targetAttributeId?: string
+    targetAttributeId: string // Now required
   }[]
 }
 
@@ -127,13 +127,11 @@ export const createFrameworkLink = async (data: CreateFrameworkLinkData) => {
             targetFramework: {
               connect: { id: tf.frameworkId },
             },
+            targetAttribute: {
+              connect: { id: tf.targetAttributeId },
+            },
             level: tf.level,
             order: tf.order,
-            ...(tf.targetAttributeId && {
-              targetAttribute: {
-                connect: { id: tf.targetAttributeId },
-              },
-            }),
           })),
         },
       },
@@ -361,10 +359,14 @@ export const updateFrameworkLink = async (data: UpdateFrameworkLinkData) => {
       description?: string
       linkedFrameworks?: {
         create: {
-          targetFrameworkId: string
+          targetFramework: {
+            connect: { id: string }
+          }
+          targetAttribute: {
+            connect: { id: string }
+          }
           level: number
           order: number
-          targetAttributeId?: string
         }[]
       }
     } = {}
@@ -384,10 +386,14 @@ export const updateFrameworkLink = async (data: UpdateFrameworkLinkData) => {
       // Create new linked frameworks
       updateData.linkedFrameworks = {
         create: data.targetFrameworks.map((tf) => ({
-          targetFrameworkId: tf.frameworkId,
+          targetFramework: {
+            connect: { id: tf.frameworkId },
+          },
+          targetAttribute: {
+            connect: { id: tf.targetAttributeId },
+          },
           level: tf.level,
           order: tf.order,
-          targetAttributeId: tf.targetAttributeId,
         })),
       }
     }

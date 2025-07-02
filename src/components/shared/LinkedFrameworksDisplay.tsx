@@ -19,14 +19,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowDown,
   ArrowUp,
-  Eye,
   Link2,
   Loader2,
   Settings,
   Trash2,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC, useState } from 'react'
+import ConfirmationDialog from './modals/ConfirmationDialog'
 
 interface LinkedFrameworksDisplayProps {
   attributeId: string
@@ -38,8 +39,17 @@ const LinkedFrameworksDisplay: FC<LinkedFrameworksDisplayProps> = ({
   onEditLink,
 }) => {
   const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
+
   const queryClient = useQueryClient()
   const [expandedLinks, setExpandedLinks] = useState<Set<string>>(new Set())
+
+  // Confirmation dialog state
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [linkToDelete, setLinkToDelete] = useState<{
+    id: string
+    name?: string
+  } | null>(null)
 
   // Fetch framework links for this attribute
   const { data: linksData, isLoading } = useQuery({
@@ -62,7 +72,7 @@ const LinkedFrameworksDisplay: FC<LinkedFrameworksDisplayProps> = ({
       toast({
         variant: 'success',
         title: t('success'),
-        description: 'Framework link deleted successfully',
+        description: t('framework-link-deleted-successfully'),
       })
 
       // Invalidate queries to refresh data
@@ -78,7 +88,7 @@ const LinkedFrameworksDisplay: FC<LinkedFrameworksDisplayProps> = ({
         description:
           error instanceof Error
             ? error.message
-            : 'Failed to delete framework link',
+            : t('failed-to-delete-framework-link'),
       })
     },
   })
@@ -98,13 +108,23 @@ const LinkedFrameworksDisplay: FC<LinkedFrameworksDisplayProps> = ({
 
   // Handle delete link
   const handleDeleteLink = (linkId: string, linkName?: string) => {
-    if (
-      confirm(
-        `Are you sure you want to delete the link "${linkName || 'Unnamed Link'}"?`,
-      )
-    ) {
-      deleteLink(linkId)
+    setLinkToDelete({ id: linkId, name: linkName })
+    setShowDeleteConfirmation(true)
+  }
+
+  // Confirm delete handler
+  const handleConfirmDelete = () => {
+    if (linkToDelete) {
+      deleteLink(linkToDelete.id)
     }
+    setShowDeleteConfirmation(false)
+    setLinkToDelete(null)
+  }
+
+  // Close confirmation dialog
+  const handleCloseConfirmation = () => {
+    setShowDeleteConfirmation(false)
+    setLinkToDelete(null)
   }
 
   if (isLoading) {
@@ -119,209 +139,218 @@ const LinkedFrameworksDisplay: FC<LinkedFrameworksDisplayProps> = ({
     return (
       <div className="rounded-md border border-dashed p-8 text-center">
         <Link2 className="mx-auto mb-4 size-12 text-muted-foreground/50" />
-        <p className="text-muted-foreground">No framework links found</p>
+        <p className="text-muted-foreground">{t('no-framework-links-found')}</p>
         <p className="text-sm text-muted-foreground">
-          Click the link icon to create framework relationships
+          {t('click-link-icon-to-create')}
         </p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {frameworkLinks.map((link) => {
-        const isExpanded = expandedLinks.has(link.id)
+    <>
+      <div className="space-y-4" dir={isArabic ? 'rtl' : 'ltr'}>
+        {frameworkLinks.map((link) => {
+          const isExpanded = expandedLinks.has(link.id)
 
-        return (
-          <Card key={link.id} className="overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Link2 className="size-5 text-primary" />
-                  <CardTitle className="text-lg">
-                    {link.name || 'Framework Link'}
-                  </CardTitle>
-                  <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                    {link.linkedFrameworks.length} framework
-                    {link.linkedFrameworks.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
+          return (
+            <Card key={link.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="size-5 text-primary" />
+                    <CardTitle className="text-lg">
+                      {link.name || t('framework-link')}
+                    </CardTitle>
+                    <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+                      {link.linkedFrameworks.length}{' '}
+                      {link.linkedFrameworks.length === 1
+                        ? t('frameworks-count')
+                        : t('frameworks-count-plural')}
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleExpanded(link.id)}
-                        >
-                          {isExpanded ? (
-                            <ArrowUp className="size-4" />
-                          ) : (
-                            <ArrowDown className="size-4" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {isExpanded ? 'Collapse' : 'Expand'} details
-                      </TooltipContent>
-                    </Tooltip>
-
-                    {onEditLink && (
+                  <div className="flex items-center gap-1">
+                    <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onEditLink(link.id)}
+                            onClick={() => toggleExpanded(link.id)}
                           >
-                            <Settings className="size-4" />
+                            {isExpanded ? (
+                              <ArrowUp className="size-4" />
+                            ) : (
+                              <ArrowDown className="size-4" />
+                            )}
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>Edit link</TooltipContent>
+                        <TooltipContent>
+                          {isExpanded ? t('collapse') : t('expand')}{' '}
+                          {t('details')}
+                        </TooltipContent>
                       </Tooltip>
-                    )}
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDeleteLink(link.id, link.name || undefined)
-                          }
-                          disabled={isDeleting}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="size-4" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Delete link</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
+                      {onEditLink && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onEditLink(link.id)}
+                            >
+                              <Settings className="size-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t('edit-link')}</TooltipContent>
+                        </Tooltip>
+                      )}
 
-              {link.description && (
-                <p className="text-sm text-muted-foreground">
-                  {link.description}
-                </p>
-              )}
-
-              <div className="text-xs text-muted-foreground">
-                Created by {link.creator.fullName || link.creator.email}
-              </div>
-            </CardHeader>
-
-            {isExpanded && (
-              <CardContent>
-                <div className="space-y-4">
-                  <h4 className="font-medium">Linked Frameworks Hierarchy</h4>
-
-                  <div className="space-y-3">
-                    {link.linkedFrameworks.map((linkedFramework, index) => (
-                      <div
-                        key={linkedFramework.id}
-                        className={cn(
-                          'flex items-center gap-3 rounded-md border p-3',
-                          index % 2 === 0 ? 'bg-muted/30' : 'bg-background',
-                        )}
-                        style={{
-                          marginLeft: `${(linkedFramework.level - 1) * 20}px`,
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                            {linkedFramework.level}
-                          </span>
-                          <div>
-                            <p className="font-medium">
-                              {linkedFramework.targetFramework.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Level {linkedFramework.level} •{' '}
-                              {linkedFramework.targetFramework.attributes
-                                ?.length || 0}{' '}
-                              attributes
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="ml-auto">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="gap-1"
-                            onClick={() => {
-                              // Navigate to framework details - you can implement this
-                              toast({
-                                title: 'Navigate to Framework',
-                                description: `Opening ${linkedFramework.targetFramework.name}`,
-                              })
-                            }}
+                            onClick={() =>
+                              handleDeleteLink(link.id, link.name || undefined)
+                            }
+                            disabled={isDeleting}
+                            className="text-destructive hover:text-destructive"
                           >
-                            <Eye className="size-3" />
-                            View
+                            {isDeleting ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-4" />
+                            )}
                           </Button>
-                        </div>
-                      </div>
-                    ))}
+                        </TooltipTrigger>
+                        <TooltipContent>{t('delete-link')}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
+                </div>
 
-                  {/* Preview of framework data */}
-                  <div className="mt-6">
-                    <h5 className="mb-3 font-medium">Framework Data Preview</h5>
-                    <ScrollArea className="h-48 rounded-md border">
-                      <div className="p-4">
-                        {link.linkedFrameworks.map((linkedFramework) => (
-                          <div key={linkedFramework.id} className="mb-4">
-                            <h6 className="mb-2 font-medium text-primary">
-                              {linkedFramework.targetFramework.name} (Level{' '}
-                              {linkedFramework.level})
-                            </h6>
-                            <div className="ml-4 space-y-1 text-sm">
-                              {linkedFramework.targetFramework.attributes
-                                ?.slice(0, 3)
-                                .map((attr) => (
-                                  <div key={attr.id} className="flex gap-2">
+                {link.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {link.description}
+                  </p>
+                )}
+
+                <div className="text-xs text-muted-foreground">
+                  {t('created-by')}{' '}
+                  {link.creator.fullName || link.creator.email}
+                </div>
+              </CardHeader>
+
+              {isExpanded && (
+                <CardContent>
+                  <div className="space-y-4">
+                    <h4 className="font-medium">
+                      {t('linked-frameworks-hierarchy')}
+                    </h4>
+
+                    <div className="space-y-3">
+                      {link.linkedFrameworks.map((linkedFramework, index) => (
+                        <div
+                          key={linkedFramework.id}
+                          className={cn(
+                            'flex items-center gap-3 rounded-md border p-3',
+                            index % 2 === 0 ? 'bg-muted/30' : 'bg-background',
+                          )}
+                          style={{
+                            marginLeft: `${(linkedFramework.level - 1) * 20}px`,
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                              {linkedFramework.level}
+                            </span>
+                            <div>
+                              <p className="font-medium">
+                                {linkedFramework.targetFramework.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {t('level')} {linkedFramework.level} •{' '}
+                                {linkedFramework.targetFramework.attributes
+                                  ?.length || 0}{' '}
+                                {t('attributes')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Preview of framework data */}
+                    <div className="mt-6">
+                      <h5 className="mb-3 font-medium">
+                        {t('framework-data-preview')}
+                      </h5>
+
+                      {/* Show the source attribute that we are linking with */}
+                      <ScrollArea
+                        className={cn('h-48 rounded-md border')}
+                        dir={isArabic ? 'rtl' : 'ltr'}
+                      >
+                        <div className="bg-primary/10 p-3">
+                          <h6 className="mb-1 text-sm font-medium text-primary">
+                            {t('linking-attribute')}:
+                          </h6>
+                          <p className="text-primary/80 text-sm">
+                            <span className="font-medium">
+                              {link.sourceAttribute.name}
+                            </span>
+                            {link.sourceAttribute.value && (
+                              <>: {link.sourceAttribute.value}</>
+                            )}
+                          </p>
+                        </div>
+                        <div className="p-3">
+                          {link.linkedFrameworks.map((linkedFramework) => (
+                            <div key={linkedFramework.id} className="mb-4">
+                              <h6 className="mb-1 text-sm font-medium text-primary">
+                                {t('with')}
+                              </h6>
+                              {linkedFramework.targetAttribute && (
+                                <div className="ml-4 space-y-1 text-sm">
+                                  <div className="flex gap-2">
                                     <span className="text-muted-foreground">
                                       •
                                     </span>
                                     <span>
-                                      {attr.name}: {attr.value || 'N/A'}
+                                      {linkedFramework.targetAttribute.value ||
+                                        'N/A'}
                                     </span>
                                   </div>
-                                ))}
-                              {(linkedFramework.targetFramework.attributes
-                                ?.length || 0) > 3 && (
-                                <div className="flex gap-2 text-muted-foreground">
-                                  <span>•</span>
-                                  <span>
-                                    ... and{' '}
-                                    {(linkedFramework.targetFramework.attributes
-                                      ?.length || 0) - 3}{' '}
-                                    more attributes
-                                  </span>
                                 </div>
                               )}
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        )
-      })}
-    </div>
+                </CardContent>
+              )}
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        open={showDeleteConfirmation}
+        onClose={handleCloseConfirmation}
+        callback={handleConfirmDelete}
+        title={t('delete-framework-link')}
+        subTitle={t('delete-confirmation', {
+          name: linkToDelete?.name || t('framework-link'),
+        })}
+        type="destructive"
+        isLoading={isDeleting}
+      />
+    </>
   )
 }
 
