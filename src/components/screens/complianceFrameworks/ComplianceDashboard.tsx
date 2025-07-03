@@ -345,14 +345,17 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="w-full">
           <CustomCardHeader
             title="Audit Details by Owner"
             description="Distribution of audit details across different owners"
           />
           <CardContent className="w-full p-0">
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
+            <ChartContainer
+              config={chartConfig}
+              className="aspect-square max-h-[320px] w-full 3xl:max-h-[500px]"
+            >
               <BarChart accessibilityLayer data={auditDetailsByOwner}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -382,7 +385,7 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
           <CardContent>
             <ChartContainer
               config={pieChartConfig}
-              className="mx-auto aspect-square max-h-[250px]"
+              className="mx-auto aspect-square max-h-[350px] 3xl:max-h-[500px]"
             >
               <PieChart>
                 <ChartTooltip
@@ -395,7 +398,7 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
+                  outerRadius={120}
                   paddingAngle={5}
                 />
                 <Legend
@@ -423,7 +426,7 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
           <CardContent>
             <ChartContainer
               config={statusChartConfig}
-              className="mx-auto aspect-square max-h-[250px]"
+              className="mx-auto aspect-square max-h-[350px] 3xl:max-h-[500px]"
             >
               <PieChart>
                 <ChartTooltip
@@ -436,7 +439,7 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
+                  outerRadius={120}
                   paddingAngle={5}
                 />
                 <Legend
@@ -457,7 +460,7 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
           </CardContent>
         </Card>
       </div>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {auditDetailsByOwnerAndStatus.map((ownerData, index) => {
           // Transform owner's status data for individual bar chart
           // Include ALL unique audit statuses, even if count is 0 for this owner
