@@ -1,3 +1,5 @@
+'use client'
+
 import CustomCardHeader from '@/components/shared/cards/CustomCardHeader'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -7,6 +9,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart'
 import {
+  convertToArabicNumerals,
   getAuditDetailsByAttachment,
   getAuditDetailsByOwner,
   getAuditDetailsByOwnerAndStatus,
@@ -15,6 +18,8 @@ import {
   getUniqueAuditStatuses,
 } from '@/lib/utils'
 import { IFramework } from '@/types/framework'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { FC } from 'react'
 import {
   Bar,
@@ -32,13 +37,33 @@ interface IComplianceDashboardProps {
 }
 
 const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
+  const t = useTranslations('general')
+  const isArabic = usePathname().includes('/ar')
+
   const columnRowCounts = getColumnRowCounts(framework.attributes)
   const auditDetailsByOwner = getAuditDetailsByOwner(framework)
-  const auditDetailsByAttachment = getAuditDetailsByAttachment(framework)
+  const auditDetailsByAttachmentRaw = getAuditDetailsByAttachment(framework)
   const auditDetailsByStatus = getAuditDetailsByStatus(framework)
   const auditDetailsByOwnerAndStatus =
     getAuditDetailsByOwnerAndStatus(framework)
   const uniqueAuditStatuses = getUniqueAuditStatuses(framework)
+
+  // Transform column names to use translations
+  const translatedColumnRowCounts = columnRowCounts.map((column, index) => ({
+    ...column,
+    name: t('sumOfLevel', {
+      level: isArabic ? convertToArabicNumerals(index + 1) : index + 1,
+    }),
+  }))
+
+  // Transform attachment data to use translated names
+  const auditDetailsByAttachment = auditDetailsByAttachmentRaw.map((item) => ({
+    ...item,
+    name:
+      item.name === 'With Attachments'
+        ? t('with-attachments')
+        : t('without-attachments'),
+  }))
 
   // Calculate global total of all evidences across all owners
   const globalTotalEvidences = auditDetailsByOwnerAndStatus.reduce(
@@ -61,19 +86,19 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
   // Chart configuration for the bar chart
   const chartConfig: ChartConfig = {
     count: {
-      label: 'Audit Details Count',
+      label: t('auditDetailsCount'),
       color: 'var(--primary)',
     },
   }
 
   // Chart configuration for the pie chart
   const pieChartConfig: ChartConfig = {
-    withAttachments: {
-      label: 'With Attachments',
+    [t('with-attachments')]: {
+      label: t('with-attachments'),
       color: 'hsl(var(--chart-1))',
     },
-    withoutAttachments: {
-      label: 'Without Attachments',
+    [t('without-attachments')]: {
+      label: t('without-attachments'),
       color: 'hsl(var(--chart-2))',
     },
   }
@@ -93,21 +118,23 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
   return (
     <div className="mt-5 flex flex-col items-start justify-start gap-5">
       <div className="flex w-full items-center justify-center gap-3 text-center">
-        {columnRowCounts.map((column, index) => (
+        {translatedColumnRowCounts.map((column, index) => (
           <div
             key={index}
             className="flex-1 rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
           >
             <h3 className="font-medium text-muted-foreground">{column.name}</h3>
-            <p className="text-2xl font-bold">{column.total}</p>
+            <p className="text-2xl font-bold">
+              {isArabic ? convertToArabicNumerals(column.total) : column.total}
+            </p>
           </div>
         ))}
       </div>
       <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="w-full">
           <CustomCardHeader
-            title="Audit Details by Owner"
-            description="Distribution of audit details across different owners"
+            title={t('auditDetailsByOwner')}
+            description={t('auditDetailsByOwnerDescription')}
           />
           <CardContent className="w-full p-0">
             <ChartContainer
@@ -137,8 +164,8 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
         </Card>
         <Card className="w-full">
           <CustomCardHeader
-            title="Audit Details by Attachment Status"
-            description="Distribution of audit details based on attachment status"
+            title={t('auditDetailsByAttachmentStatus')}
+            description={t('auditDetailsByAttachmentStatusDescription')}
           />
           <CardContent>
             <ChartContainer
@@ -178,8 +205,8 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
         </Card>
         <Card className="w-full">
           <CustomCardHeader
-            title="Audit Details by Status"
-            description="Distribution of audit details based on audit rules/status"
+            title={t('auditDetailsByStatus')}
+            description={t('auditDetailsByStatusDescription')}
           />
           <CardContent>
             <ChartContainer
@@ -232,7 +259,11 @@ const ComplianceDashboard: FC<IComplianceDashboardProps> = ({ framework }) => {
             <Card key={index} className="w-full">
               <CustomCardHeader
                 title={`${ownerData.owner}`}
-                description={`Total evidences: ${globalTotalEvidences}`}
+                description={`${t('totalEvidences')}: ${
+                  isArabic
+                    ? convertToArabicNumerals(globalTotalEvidences)
+                    : globalTotalEvidences
+                }`}
               />
               <CardContent className="w-full p-0">
                 <ChartContainer
