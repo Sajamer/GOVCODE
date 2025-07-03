@@ -2,7 +2,11 @@
 /* eslint-disable no-console */
 // import { Prisma } from '@prisma/client'
 import { ordinals } from '@/constants/global-constants'
-import { IFrameworkAttribute } from '@/types/framework'
+import {
+  IAuditDetails,
+  IFramework,
+  IFrameworkAttribute,
+} from '@/types/framework'
 import { Calibration, Prisma, Units } from '@prisma/client'
 import { type ClassValue, clsx } from 'clsx'
 import { createHash, pbkdf2Sync, randomBytes } from 'crypto'
@@ -500,4 +504,249 @@ export const getColumnRowCounts = (
       name: `Sum of the ${getOrdinalText(parseInt(colIndex) + 1)} level`,
       total: attrs.length,
     }))
+}
+
+// Helper function to process audit details by owner
+export const getAuditDetailsByOwner = (
+  framework: IFramework,
+): { owner: string; count: number }[] => {
+  // Get all audit details from all attributes and their children
+  const getAllAuditDetails = (
+    attributes: IFrameworkAttribute[],
+  ): IAuditDetails[] => {
+    let allAuditDetails: IAuditDetails[] = []
+
+    for (const attribute of attributes) {
+      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
+        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
+      }
+      if (attribute.children && attribute.children.length > 0) {
+        allAuditDetails = [
+          ...allAuditDetails,
+          ...getAllAuditDetails(attribute.children),
+        ]
+      }
+    }
+
+    return allAuditDetails
+  }
+
+  const allAuditDetails = getAllAuditDetails(framework.attributes)
+
+  // Group by owner
+  const ownerGroups: { [key: string]: number } = {}
+
+  allAuditDetails.forEach((auditDetail) => {
+    const ownerName = auditDetail.owner?.fullName || 'Unassigned'
+    ownerGroups[ownerName] = (ownerGroups[ownerName] || 0) + 1
+  })
+
+  // Convert to chart data format
+  return Object.entries(ownerGroups).map(([owner, count]) => ({
+    owner,
+    count,
+  }))
+}
+
+// Helper function to process audit details by attachment status
+export const getAuditDetailsByAttachment = (
+  framework: IFramework,
+): { name: string; value: number; fill: string }[] => {
+  // Get all audit details from all attributes and their children
+  const getAllAuditDetails = (
+    attributes: IFrameworkAttribute[],
+  ): IAuditDetails[] => {
+    let allAuditDetails: IAuditDetails[] = []
+
+    for (const attribute of attributes) {
+      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
+        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
+      }
+      if (attribute.children && attribute.children.length > 0) {
+        allAuditDetails = [
+          ...allAuditDetails,
+          ...getAllAuditDetails(attribute.children),
+        ]
+      }
+    }
+
+    return allAuditDetails
+  }
+
+  const allAuditDetails = getAllAuditDetails(framework.attributes)
+
+  // Count audit details with and without attachments
+  let withAttachments = 0
+  let withoutAttachments = 0
+
+  allAuditDetails.forEach((auditDetail) => {
+    if (auditDetail.attachments && auditDetail.attachments.length > 0) {
+      withAttachments++
+    } else {
+      withoutAttachments++
+    }
+  })
+
+  return [
+    {
+      name: 'With Attachments',
+      value: withAttachments,
+      fill: 'hsl(var(--chart-1))',
+    },
+    {
+      name: 'Without Attachments',
+      value: withoutAttachments,
+      fill: 'hsl(var(--chart-2))',
+    },
+  ]
+}
+
+// Helper function to process audit details by audit status (audit rules)
+export const getAuditDetailsByStatus = (
+  framework: IFramework,
+): { name: string; value: number; fill: string }[] => {
+  // Get all audit details from all attributes and their children
+  const getAllAuditDetails = (
+    attributes: IFrameworkAttribute[],
+  ): IAuditDetails[] => {
+    let allAuditDetails: IAuditDetails[] = []
+
+    for (const attribute of attributes) {
+      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
+        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
+      }
+      if (attribute.children && attribute.children.length > 0) {
+        allAuditDetails = [
+          ...allAuditDetails,
+          ...getAllAuditDetails(attribute.children),
+        ]
+      }
+    }
+
+    return allAuditDetails
+  }
+
+  const allAuditDetails = getAllAuditDetails(framework.attributes)
+
+  // Group by audit rule/status
+  const statusGroups: { [key: string]: { count: number; color: string } } = {}
+
+  allAuditDetails.forEach((auditDetail) => {
+    const statusLabel = auditDetail.auditRule.label
+    const statusColor = auditDetail.auditRule.color
+
+    if (!statusGroups[statusLabel]) {
+      statusGroups[statusLabel] = { count: 0, color: statusColor }
+    }
+    statusGroups[statusLabel].count++
+  })
+
+  // Convert to chart data format
+  return Object.entries(statusGroups).map(([label, data]) => ({
+    name: label,
+    value: data.count,
+    fill: data.color,
+  }))
+}
+
+// Helper function to process audit details by owner and status for grouped bar chart
+export const getAuditDetailsByOwnerAndStatus = (
+  framework: IFramework,
+): {
+  owner: string
+  statusCounts: { [key: string]: number }
+  total: number
+}[] => {
+  // Get all audit details from all attributes and their children
+  const getAllAuditDetails = (
+    attributes: IFrameworkAttribute[],
+  ): IAuditDetails[] => {
+    let allAuditDetails: IAuditDetails[] = []
+
+    for (const attribute of attributes) {
+      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
+        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
+      }
+      if (attribute.children && attribute.children.length > 0) {
+        allAuditDetails = [
+          ...allAuditDetails,
+          ...getAllAuditDetails(attribute.children),
+        ]
+      }
+    }
+
+    return allAuditDetails
+  }
+
+  const allAuditDetails = getAllAuditDetails(framework.attributes)
+
+  // Group by owner and then by status
+  const ownerStatusGroups: {
+    [owner: string]: {
+      statusCounts: { [status: string]: number }
+      total: number
+    }
+  } = {}
+
+  allAuditDetails.forEach((auditDetail) => {
+    const ownerName = auditDetail.owner?.fullName || 'Unassigned'
+    const statusLabel = auditDetail.auditRule.label
+
+    if (!ownerStatusGroups[ownerName]) {
+      ownerStatusGroups[ownerName] = { statusCounts: {}, total: 0 }
+    }
+
+    if (!ownerStatusGroups[ownerName].statusCounts[statusLabel]) {
+      ownerStatusGroups[ownerName].statusCounts[statusLabel] = 0
+    }
+
+    ownerStatusGroups[ownerName].statusCounts[statusLabel]++
+    ownerStatusGroups[ownerName].total++
+  })
+
+  // Convert to chart data format
+  return Object.entries(ownerStatusGroups).map(([owner, data]) => ({
+    owner,
+    statusCounts: data.statusCounts,
+    total: data.total,
+  }))
+}
+
+// Helper function to get unique audit statuses for chart configuration
+export const getUniqueAuditStatuses = (
+  framework: IFramework,
+): { label: string; color: string }[] => {
+  const getAllAuditDetails = (
+    attributes: IFrameworkAttribute[],
+  ): IAuditDetails[] => {
+    let allAuditDetails: IAuditDetails[] = []
+
+    for (const attribute of attributes) {
+      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
+        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
+      }
+      if (attribute.children && attribute.children.length > 0) {
+        allAuditDetails = [
+          ...allAuditDetails,
+          ...getAllAuditDetails(attribute.children),
+        ]
+      }
+    }
+
+    return allAuditDetails
+  }
+
+  const allAuditDetails = getAllAuditDetails(framework.attributes)
+  const uniqueStatuses: { [key: string]: string } = {}
+
+  allAuditDetails.forEach((auditDetail) => {
+    const statusLabel = auditDetail.auditRule.label
+    const statusColor = auditDetail.auditRule.color
+    uniqueStatuses[statusLabel] = statusColor
+  })
+
+  return Object.entries(uniqueStatuses).map(([label, color]) => ({
+    label,
+    color,
+  }))
 }
