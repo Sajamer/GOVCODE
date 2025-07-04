@@ -19,6 +19,7 @@ interface IOrganization {
   postalCode: string | null
   timezone: string | null
   currency: string | null
+  taskStatus: ITaskStatus[]
   createdAt: Date
   updatedAt: Date
 }
@@ -45,5 +46,10 @@ interface IOrganizationManipulator {
     id?: number
     name: string
     description?: string
+  }[]
+  taskStatus: {
+    id?: number
+    name: string
+    color: string
   }[]
 }

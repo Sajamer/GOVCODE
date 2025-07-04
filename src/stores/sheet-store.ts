@@ -12,6 +12,7 @@ export type SheetNames =
   | 'frameworks'
   | 'kpi-status'
   | 'audit-status'
+  | 'task-status'
   | 'kpi-dimensions'
 
 type SheetProps = {

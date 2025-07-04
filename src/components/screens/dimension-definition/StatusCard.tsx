@@ -1,7 +1,7 @@
 'use client'
 
 import StatusTable from '@/components/shared/tables/kpiDimensions/StatusTable'
-import { getAllStatuses } from '@/lib/actions/kpi-dimensions/status.actions'
+import { getAllStatuses } from '@/lib/actions/dimension-definition/status.actions'
 import { useQuery } from '@tanstack/react-query'
 import { LayoutList } from 'lucide-react'
 import { FC } from 'react'

@@ -187,3 +187,43 @@ export const quarters = {
   q3: ['Jul', 'Aug', 'Sep'],
   q4: ['Oct', 'Nov', 'Dec'],
 }
+
+export const defaultTaskStatus = [
+  { name: 'ToDo', color: '#01324b' },
+  {
+    name: 'On Hold',
+    color: '#f4f4f4',
+  },
+  {
+    name: 'In Progress',
+    color: '#edae49',
+  },
+  {
+    name: 'Rejected',
+    color: '#eb5e55',
+  },
+  { name: 'Completed', color: '#1ca8a0' },
+]
+
+export const ordinals = [
+  'first',
+  'second',
+  'third',
+  'fourth',
+  'fifth',
+  'sixth',
+  'seventh',
+  'eighth',
+  'ninth',
+  'tenth',
+  'eleventh',
+  'twelfth',
+  'thirteenth',
+  'fourteenth',
+  'fifteenth',
+  'sixteenth',
+  'seventeenth',
+  'eighteenth',
+  'nineteenth',
+  'twentieth',
+]

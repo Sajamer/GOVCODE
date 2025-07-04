@@ -542,6 +542,18 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
       return <PriorityBadge status={value as Priority} />
     case 'status':
       return <StatusBadge status={value as string} />
+    case 'color':
+      return (
+        <div
+          className={cn(
+            'w-fit py-2 px-4 rounded-full text-neutral-200 truncate whitespace-nowrap text-sm font-medium capitalize',
+            isArabic && 'text-right',
+          )}
+          style={{ backgroundColor: value as string }}
+        >
+          {value ? String(value) : '-'}
+        </div>
+      )
     default:
       return (
         <div

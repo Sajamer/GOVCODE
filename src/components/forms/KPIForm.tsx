@@ -8,7 +8,7 @@ import {
 } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
 import { getDepartmentsByOrganizationId } from '@/lib/actions/department.actions'
-import { getAllStatuses } from '@/lib/actions/kpi-dimensions/status.actions'
+import { getAllStatuses } from '@/lib/actions/dimension-definition/status.actions'
 import { createKPI, updateKPI } from '@/lib/actions/kpiActions'
 import { CustomUser } from '@/lib/auth'
 import { axiosGet } from '@/lib/axios'

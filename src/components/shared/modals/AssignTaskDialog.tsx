@@ -92,6 +92,7 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
     setFieldValue,
     handleSubmit,
     handleBlur,
+    resetForm,
     touched,
   } = useFormik<ITaskManagementManipulator>({
     initialValues: {
@@ -145,11 +146,17 @@ const AssignTaskDialog: FC<IAssignTaskDialogProps> = ({
       queryClient.invalidateQueries({
         queryKey: ['tasks-management'],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['audit-tasks', auditDetailId],
+      })
+
       toast({
         variant: 'success',
         title: 'Success',
         description: `Task successfully assigned`,
       })
+
+      resetForm()
       onClose()
     },
     onError: (error: AxiosErrorType) => {

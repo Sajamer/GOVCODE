@@ -1,7 +1,7 @@
 import AuditStatusForm from '@/components/forms/AuditStatusForm'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
-import { deleteAuditStatusById } from '@/lib/actions/kpi-dimensions/audit-status.actions'
+import { deleteAuditStatusById } from '@/lib/actions/dimension-definition/audit-status.actions'
 import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'

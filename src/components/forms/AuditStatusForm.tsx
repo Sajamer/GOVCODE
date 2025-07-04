@@ -4,11 +4,11 @@ import { toast } from '@/hooks/use-toast'
 import {
   createAuditStatus,
   updateAuditStatusById,
-} from '@/lib/actions/kpi-dimensions/audit-status.actions'
+} from '@/lib/actions/dimension-definition/audit-status.actions'
 import {
   auditStatusSchema,
   IAuditStatusManipulator,
-} from '@/schema/kpi-dimensions/audit-status.schema'
+} from '@/schema/dimension-definition/audit-status.schema'
 import { useSheetStore } from '@/stores/sheet-store'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { getIn, useFormik } from 'formik'

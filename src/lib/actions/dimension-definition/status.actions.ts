@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db_connection'
 import { sendError } from '@/lib/utils'
-import { IStatusManipulator } from '@/schema/kpi-dimensions/status.schema'
+import { IStatusManipulator } from '@/schema/dimension-definition/status.schema'
 
 export async function getAllStatuses() {
   try {

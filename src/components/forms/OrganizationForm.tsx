@@ -1,5 +1,6 @@
 'use client '
 
+import { defaultTaskStatus } from '@/constants/global-constants'
 import { toast } from '@/hooks/use-toast'
 import { createOrganization } from '@/lib/actions/organizationActions'
 import { organizationSchema } from '@/schema/organization.schema'
@@ -55,6 +56,7 @@ const OrganizationForm: FC = () => {
       timezone: '',
       currency: '',
       departments: [],
+      taskStatus: defaultTaskStatus,
     },
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(organizationSchema),

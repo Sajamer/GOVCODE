@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { taskStatusSchema } from './task-status.schema'
 
 const { object, array, string } = z
 
@@ -30,6 +31,7 @@ export const organizationSchema = object({
   }).min(1, {
     message: 'At least one department is required',
   }),
+  taskStatus: taskStatusSchema,
 })
 
 export const DepartmentParamsSchema = z.object({

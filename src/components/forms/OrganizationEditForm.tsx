@@ -57,6 +57,7 @@ const OrganizationEditForm: FC<IOrganizationEditFormProps> = ({ data }) => {
         id: department.id,
         name: department.name,
       })),
+      taskStatus: data.taskStatus || [],
     },
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(organizationSchema),

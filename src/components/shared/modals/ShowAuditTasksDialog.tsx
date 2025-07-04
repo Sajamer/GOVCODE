@@ -72,7 +72,7 @@ const ShowAuditTasksDialog: FC<IShowAuditTasksDialogProps> = ({
       >
         <div className="flex w-full flex-col items-start justify-center gap-2">
           <DialogTitle className="w-full text-center text-2xl font-medium text-zinc-900">
-            {title ? `${t('tasks')} for - ${title}` : t('audit-tasks')}
+            {title ? `${t('tasks-for')} : ${title}` : t('audit-tasks')}
           </DialogTitle>
           <DialogDescription className="sr-only w-full text-sm text-zinc-500">
             View all tasks related to this audit detail

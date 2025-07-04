@@ -1,10 +1,11 @@
-import StatusForm from '@/components/forms/StatusForm'
+import TaskStatusForm from '@/components/forms/TaskStatusForm'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
-import { deleteStatusById } from '@/lib/actions/dimension-definition/status.actions'
+import { deleteAuditStatusById } from '@/lib/actions/dimension-definition/audit-status.actions'
 import { generateTableData, searchObjectValueRecursive } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { SheetNames, useSheetStore } from '@/stores/sheet-store'
+import { ITaskStatus } from '@/types/tasks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChartSpline, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -15,7 +16,6 @@ import ConfirmationDialog from '../../modals/ConfirmationDialog'
 import NoResultFound from '../../NoResultFound'
 import SheetComponent from '../../sheets/SheetComponent'
 import TableComponent from '../TableComponent'
-import KpiDimensionActionButtons from './KpiDimensionActionButtons'
 
 interface IGenericTableProps<T extends Record<string, unknown>> {
   title: string
@@ -31,12 +31,10 @@ interface IGenericTableProps<T extends Record<string, unknown>> {
     type: CellType
   }>
 }
-
-const StatusTable = <T extends Record<string, unknown>>({
+const TaskStatusTable = <T extends Record<string, unknown>>({
   title,
   description,
   icon,
-  entityKey,
   sheetName,
   columns,
   isLoading,
@@ -47,12 +45,12 @@ const StatusTable = <T extends Record<string, unknown>>({
   const pathname = usePathname()
   const isArabic = pathname.includes('/ar')
 
-  const { actions, searchTerm, isEdit, rowId } = useSheetStore((store) => store)
+  const { actions, searchTerm, isEdit } = useSheetStore((store) => store)
   const { openSheet, setSearchTerm } = actions
-  const { hasPermission } = useGlobalStore((store) => store)
+  const { organizationId, hasPermission } = useGlobalStore((store) => store)
 
   const [openConfirmation, setOpenConfirmation] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId] = useState<string | null>(null)
 
   const entityData = useMemo(() => data ?? [], [data])
 
@@ -66,7 +64,7 @@ const StatusTable = <T extends Record<string, unknown>>({
   )
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async () => await deleteStatusById(Number(selectedId)),
+    mutationFn: async () => await deleteAuditStatusById(Number(selectedId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [sheetName as string] })
       setOpenConfirmation(false)
@@ -92,21 +90,6 @@ const StatusTable = <T extends Record<string, unknown>>({
   useEffect(() => {
     setSearchTerm('')
   }, [setSearchTerm])
-
-  const tableActions = (rowData: T): JSX.Element => (
-    <KpiDimensionActionButtons
-      rowId={rowData[entityKey] as string}
-      callback={() => {
-        setSelectedId(rowData[entityKey] as string)
-        setOpenConfirmation(true)
-      }}
-      sheetName={sheetName as SheetNames}
-    />
-  )
-
-  const singleEntityData = isEdit
-    ? (entityData.find((r) => r[entityKey] === rowId) as T | undefined)
-    : undefined
 
   const localizedTitle = t(title)
 
@@ -135,7 +118,10 @@ const StatusTable = <T extends Record<string, unknown>>({
                 : `${t('define-new')} ${localizedTitle}`
             }
           >
-            <StatusForm data={singleEntityData as unknown as IStatusResponse} />
+            <TaskStatusForm
+              data={entityData as unknown as ITaskStatus[]}
+              organizationId={organizationId}
+            />
           </SheetComponent>
           {hasPermission && (
             <Button
@@ -143,14 +129,14 @@ const StatusTable = <T extends Record<string, unknown>>({
               onClick={() =>
                 openSheet({
                   sheetToOpen: sheetName as SheetNames,
-                  isEdit: false,
+                  isEdit: true,
                 })
               }
               className="flex size-[2.375rem] items-center justify-center !gap-[0.38rem] px-3 lg:h-11 lg:w-fit 2xl:w-[13.75rem]"
             >
               <Plus size="24" className="text-primary-foreground" />
               <span className="hidden text-sm font-medium lg:flex">
-                {t('add-new') + ' ' + localizedTitle}
+                {t('update') + ' ' + localizedTitle}
               </span>
             </Button>
           )}
@@ -163,16 +149,7 @@ const StatusTable = <T extends Record<string, unknown>>({
             </div>
           ) : entityData.length > 0 ? (
             <div className="flex flex-col items-start justify-start gap-5">
-              <TableComponent
-                data={values}
-                headers={headers}
-                addProps={{
-                  label: `${t('add') + ' ' + localizedTitle}`,
-                  sheetToOpen: sheetName as SheetNames,
-                }}
-                hasFooter
-                tableActions={tableActions}
-              />
+              <TableComponent data={values} headers={headers} />
             </div>
           ) : (
             <NoResultFound label={t('no-status-yet')} />
@@ -192,4 +169,4 @@ const StatusTable = <T extends Record<string, unknown>>({
   )
 }
 
-export default StatusTable
+export default TaskStatusTable
