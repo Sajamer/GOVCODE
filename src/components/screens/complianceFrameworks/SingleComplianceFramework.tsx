@@ -59,7 +59,10 @@ const SingleComplianceFramework: FC = () => {
               <Card className="border-none bg-transparent p-0 shadow-none">
                 <div className="flex items-center justify-start gap-5">
                   <Button
-                    onClick={() => setSelectedAudit(null)}
+                    onClick={() => {
+                      setSelectedAudit(null)
+                      setView('map')
+                    }}
                     className={cn(
                       !selectedAudit && 'bg-[#266a55]/60 hover:bg-[#266a55]/60',
                     )}
@@ -67,7 +70,7 @@ const SingleComplianceFramework: FC = () => {
                     <House className="size-5" />
                     {frameworkData.name}
                   </Button>
-                  {view !== 'dashboard' && (
+                  {view === 'map' && (
                     <>
                       <Button
                         type="button"
