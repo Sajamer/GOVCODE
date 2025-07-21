@@ -221,8 +221,12 @@ export async function POST(req: NextRequest) {
           const parentId = getParentId(attr, hierarchy, idMapping)
 
           if (parentId) {
-            const attributeKey = `col_${attr.colIndex}_${attr.value.toLowerCase().trim()}`
-            const currentId = idMapping.get(attributeKey)
+            // Try row-specific key first (for duplicates), then fall back to simple key
+            const rowSpecificKey = `col_${attr.colIndex}_${attr.value.toLowerCase().trim()}_row_${attr.rowIndex}`
+            const simpleKey = `col_${attr.colIndex}_${attr.value.toLowerCase().trim()}`
+
+            const currentId =
+              idMapping.get(rowSpecificKey) || idMapping.get(simpleKey)
 
             if (currentId) {
               await tx.frameworkAttribute.update({
