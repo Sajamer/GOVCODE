@@ -104,6 +104,55 @@ export async function getFileInfo(
 }
 
 /**
+ * Upload files to local server storage (general purpose)
+ * For files that don't need to be linked to audit details immediately
+ */
+export async function uploadFilesGenerally(
+  fileType: string, // For compatibility with UploadThing API
+  options: {
+    files: File[]
+    input?: {
+      description?: string
+      image?: string
+    }
+  },
+): Promise<LocalUploadResult[]> {
+  const { files } = options
+  const results: LocalUploadResult[] = []
+
+  for (const file of files) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const response = await fetch('/api/upload/general', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Upload failed')
+      }
+
+      const result = await response.json()
+      results.push({
+        id: `temp-${Date.now()}`, // Temporary ID since it's not saved to database yet
+        name: result.name,
+        url: result.url,
+        size: result.size,
+        type: result.type,
+      })
+    } catch (error) {
+      console.error('Upload error for file:', file.name, error)
+      throw error
+    }
+  }
+
+  return results
+}
+
+/**
  * Create a local file URL for viewing/downloading
  */
 export function createLocalFileUrl(filename: string): string {

@@ -11,6 +11,75 @@
     @apply bg-white text-dark-200 min-h-screen;
   }
 
+  /* Arabic Text Rendering Improvements for Screenshots */
+  .arabic-text-optimized {
+    font-feature-settings:
+      'liga' 1,
+      'kern' 1,
+      'calt' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-variant-ligatures: normal;
+    font-kerning: normal;
+  }
+
+  /* RTL direction fixes */
+  [dir='rtl'] {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: bidi-override !important;
+  }
+
+  [dir='rtl'] * {
+    direction: inherit !important;
+    unicode-bidi: inherit !important;
+  }
+
+  /* Specific Arabic font optimizations */
+  .arabic-font {
+    font-family: 'Arial', 'Tahoma', 'DejaVu Sans', sans-serif;
+    font-weight: normal;
+    line-height: 1.6;
+    letter-spacing: normal;
+    word-spacing: normal;
+  }
+
+  /* Chart text improvements for Arabic */
+  .recharts-text,
+  .recharts-label,
+  .recharts-cartesian-axis-tick-value {
+    font-feature-settings:
+      'liga' 1,
+      'kern' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Ensure proper RTL text alignment in charts */
+  [dir='rtl'] .recharts-text,
+  [dir='rtl'] .recharts-label,
+  [dir='rtl'] .recharts-cartesian-axis-tick-value {
+    direction: rtl;
+    text-anchor: end;
+    unicode-bidi: bidi-override;
+  }
+
+  /* Additional Arabic rendering fixes for html2canvas */
+  [dir='rtl'] .chart-container,
+  [dir='rtl'] .chart-container * {
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  /* Force Arabic numerals and text rendering */
+  [dir='rtl'] .recharts-wrapper {
+    direction: rtl !important;
+  }
+
+  [dir='rtl'] .recharts-surface {
+    direction: rtl !important;
+  }
+
   /* Styled scrollbar */
   .styleScrollbar::-webkit-scrollbar {
     @apply w-2;

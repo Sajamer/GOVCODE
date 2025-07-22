@@ -31,10 +31,19 @@ The local file upload system stores files on your server's file system instead o
 
 ### POST `/api/upload/local`
 
-Upload a new file
+Upload a new file for audit details
 
 - **Body**: FormData with `file` and `auditDetailId`
 - **Response**: File metadata with local URL
+- **Use case**: Audit attachments
+
+### POST `/api/upload/general`
+
+Upload a new file (general purpose)
+
+- **Body**: FormData with `file`
+- **Response**: File metadata with local URL
+- **Use case**: Screenshots, general files that don't need immediate database linking
 
 ### DELETE `/api/upload/local/[id]`
 
@@ -65,6 +74,34 @@ Files are accessible via direct URLs:
 
 - Format: `/uploads/[unique-filename]`
 - Example: `/uploads/1703123456789-abc123.pdf`
+
+## Utility Functions
+
+The system provides two main upload functions:
+
+### `uploadFilesLocally(fileType, options)`
+
+- **Purpose**: Upload files for audit details
+- **Parameters**:
+  - `fileType`: String (for UploadThing compatibility)
+  - `options`: Object with `files` array and optional `input.auditDetailId`
+- **Returns**: Array of `LocalUploadResult`
+- **Use case**: Audit attachments that need immediate database linking
+
+### `uploadFilesGenerally(fileType, options)`
+
+- **Purpose**: Upload files for general use (screenshots, etc.)
+- **Parameters**:
+  - `fileType`: String (for UploadThing compatibility)
+  - `options`: Object with `files` array and optional `input` object
+- **Returns**: Array of `LocalUploadResult`
+- **Use case**: Screenshots and other files that will be handled by calling code
+
+### `deleteFileLocally(attachmentId)`
+
+- **Purpose**: Delete files from local storage
+- **Parameters**: `attachmentId` string
+- **Use case**: Remove uploaded files
 
 ## Security Considerations
 

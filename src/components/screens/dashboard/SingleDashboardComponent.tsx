@@ -19,7 +19,7 @@ import {
   getDashboardById,
 } from '@/lib/actions/dashboard.actions'
 import { CustomUser } from '@/lib/auth'
-import { uploadFiles } from '@/lib/uploadthing'
+import { uploadFilesGenerally } from '@/lib/local-upload'
 import { convertToArabicNumerals } from '@/lib/utils'
 import {
   IDashboardKPIs,
@@ -28,9 +28,10 @@ import {
 } from '@/types/dashboard'
 import { IMultipleChartData } from '@/types/kpi'
 import { ChartTypes, Frequency } from '@prisma/client'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createHash } from 'crypto'
 import html2canvas from 'html2canvas-pro'
+import * as domtoimage from 'dom-to-image-more'
 import { Loader2, Scan } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
@@ -46,6 +47,7 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
 }) => {
   const t = useTranslations('general')
   const isArabic = usePathname().includes('/ar')
+  const queryClient = useQueryClient()
 
   const currentYear = new Date().getFullYear()
   const { data: session } = useSession()
@@ -151,6 +153,17 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
     }
   }
 
+  // Check if there's any data to display for screenshot
+  const hasVisibleData =
+    data?.dashboardKPIs?.some((kpiItem) => {
+      const singleChartData = transformKPIData(
+        kpiItem.kpi,
+        selectedYear,
+        selectedFrequency,
+      )
+      return singleChartData.length > 0
+    }) && data?.dashboardKPIs?.length > 0
+
   const multipleChartConfig = {
     actual: {
       label: 'Actual',
@@ -181,17 +194,99 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         return
       }
 
-      const canvas = await html2canvas(componentRef.current)
-      const imageBlob = await new Promise<Blob>((resolve) =>
-        canvas.toBlob((blob) => resolve(blob!), 'image/png'),
-      )
+      let imageBlob: Blob
+
+      try {
+        // First try with dom-to-image-more for better Arabic text handling
+        const dataUrl = await domtoimage.toPng(componentRef.current, {
+          quality: 1.0,
+          bgColor: '#ffffff',
+          style: {
+            fontFeatureSettings: '"liga" 1, "kern" 1',
+            textRendering: 'optimizeLegibility',
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
+            ...(isArabic && {
+              direction: 'rtl',
+              unicodeBidi: 'bidi-override',
+            }),
+          },
+          filter: (node) => {
+            // Skip elements that might cause rendering issues
+            if (node instanceof Element) {
+              return !node.classList?.contains('no-screenshot')
+            }
+            return true
+          },
+        })
+
+        // Convert data URL to blob
+        const response = await fetch(dataUrl)
+        imageBlob = await response.blob()
+      } catch (domError) {
+        console.warn(
+          'dom-to-image failed, falling back to html2canvas:',
+          domError,
+        )
+
+        // Fallback to html2canvas with enhanced options
+        const canvas = await html2canvas(componentRef.current, {
+          allowTaint: true,
+          useCORS: true,
+          scale: 2, // Higher resolution for better text quality
+          logging: false,
+          foreignObjectRendering: true, // Better support for complex layouts
+          ignoreElements: (element) => {
+            // Skip elements that might cause rendering issues
+            return element.classList?.contains('no-screenshot') || false
+          },
+          onclone: (clonedDoc) => {
+            // Apply additional styles to the cloned document for better Arabic rendering
+            const style = clonedDoc.createElement('style')
+            style.textContent = `
+              * {
+                font-feature-settings: "liga" 1, "kern" 1;
+                text-rendering: optimizeLegibility;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+              }
+              [dir="rtl"] {
+                direction: rtl !important;
+                text-align: right !important;
+              }
+              [dir="rtl"] * {
+                direction: rtl !important;
+                unicode-bidi: bidi-override !important;
+              }
+            `
+            clonedDoc.head.appendChild(style)
+
+            // Ensure all Arabic text elements have proper direction
+            const rtlElements = clonedDoc.querySelectorAll(
+              '[dir="rtl"], [dir="rtl"] *',
+            )
+            rtlElements.forEach((el) => {
+              if (el instanceof HTMLElement) {
+                el.style.direction = 'rtl'
+                el.style.textAlign = 'right'
+                el.style.unicodeBidi = 'bidi-override'
+              }
+            })
+          },
+        })
+
+        imageBlob = await new Promise<Blob>(
+          (resolve) =>
+            canvas.toBlob((blob) => resolve(blob!), 'image/png', 1.0), // Maximum quality
+        )
+      }
 
       const file = new File([imageBlob], `${dashboardId}-screenshot.png`, {
         type: 'image/png',
       })
 
-      // Upload the file using Uploadthing
-      const uploadResponse = await uploadFiles('imageUploader', {
+      // Upload the file using local storage
+      const uploadResponse = await uploadFilesGenerally('imageUploader', {
         files: [file],
         input: {
           image: `Screenshot of dashboard ${dashboardId}`,
@@ -212,6 +307,11 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
       })
 
       if (screenshot) {
+        // Invalidate and refetch the dashboard data to show the new screenshot
+        await queryClient.invalidateQueries({
+          queryKey: ['dashboard', dashboardId],
+        })
+
         toast({
           variant: 'success',
           title: 'Screenshot taken',
@@ -328,6 +428,16 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
       <div
         ref={componentRef}
         className="grid w-full grid-cols-1 gap-5 md:grid-cols-3"
+        style={{
+          fontFeatureSettings: '"liga" 1, "kern" 1',
+          textRendering: 'optimizeLegibility',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          ...(isArabic && {
+            direction: 'rtl',
+            unicodeBidi: 'bidi-override',
+          }),
+        }}
       >
         {data?.dashboardKPIs?.map((kpiItem, idx) => {
           const singleChartData = transformKPIData(
@@ -350,26 +460,28 @@ const SingleDashboardComponent: FC<ISingleDashboardComponentProps> = ({
         })}
       </div>
       <div className="flex w-full items-center justify-end gap-5">
-        <Tooltips
-          content={t('take-screenshot')}
-          variant="bold"
-          position="left"
-          asChild
-        >
-          <Button
-            variant={'icon'}
-            size={'icon_sm'}
-            className="bg-primary p-0"
-            disabled={isLoading}
-            onClick={() => takeScreenshot()}
+        {hasVisibleData && (
+          <Tooltips
+            content={t('take-screenshot')}
+            variant="bold"
+            position="left"
+            asChild
           >
-            {isLoading ? (
-              <Loader2 className="size-5 animate-spin text-white" />
-            ) : (
-              <Scan size={20} className="text-white" />
-            )}
-          </Button>
-        </Tooltips>
+            <Button
+              variant={'icon'}
+              size={'icon_sm'}
+              className="bg-primary p-0"
+              disabled={isLoading}
+              onClick={() => takeScreenshot()}
+            >
+              {isLoading ? (
+                <Loader2 className="size-5 animate-spin text-white" />
+              ) : (
+                <Scan size={20} className="text-white" />
+              )}
+            </Button>
+          </Tooltips>
+        )}
         {screenShots && screenShots?.length > 0 && (
           <Button size="lg" onClick={() => setIsModalOpen(true)}>
             {t('show-screenshots')}
