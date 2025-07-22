@@ -48,114 +48,13 @@ const ComplianceListView: FC<IComplianceListViewProps> = ({ framework }) => {
     // Sort columns by index
     const sortedColumns = Array.from(headers.keys()).sort((a, b) => a - b)
 
-    // Create a map of parent-child relationships
+    // Create a map of attributes by ID for easy lookup
     const attributesMap = new Map<string, IFrameworkAttribute>()
     framework.attributes.forEach((attr) => {
       attributesMap.set(attr.id, attr)
     })
 
-    // Build relationships: Create a hierarchical structure for all columns
-    const relationships: Array<{
-      cells: Array<{
-        attribute: IFrameworkAttribute | null
-        colIndex: number
-      }>
-    }> = []
-
-    // Create a simpler approach: for each column, find all related attributes
-    const buildAllRelationships = () => {
-      // Start with the first column and build relationships outward
-      const firstColumnAttrs = attributesByColumn[sortedColumns[0]] || []
-
-      if (firstColumnAttrs.length === 0) return
-
-      firstColumnAttrs.forEach((firstAttr) => {
-        // Find all possible combinations of related attributes in other columns
-        const findRelatedCombinations = (
-          currentAttr: IFrameworkAttribute,
-          currentColIndex: number,
-          currentPath: Array<{
-            attribute: IFrameworkAttribute | null
-            colIndex: number
-          }>,
-        ): void => {
-          // Add current attribute to path
-          const newPath = [
-            ...currentPath,
-            { attribute: currentAttr, colIndex: currentColIndex },
-          ]
-
-          // Find next column
-          const nextColIndex = sortedColumns.find(
-            (col) => col > currentColIndex,
-          )
-
-          if (!nextColIndex) {
-            // No more columns, add this path as a relationship
-            relationships.push({ cells: newPath })
-            return
-          }
-
-          // Find all children of current attribute in the next column
-          const nextColumnAttrs = attributesByColumn[nextColIndex] || []
-          const relatedAttrs = nextColumnAttrs.filter(
-            (attr) =>
-              attr.parentId === currentAttr.id ||
-              isRelatedAttribute(currentAttr, attr),
-          )
-
-          if (relatedAttrs.length > 0) {
-            // Create combinations with each related attribute
-            relatedAttrs.forEach((relatedAttr) => {
-              findRelatedCombinations(relatedAttr, nextColIndex, newPath)
-            })
-          } else {
-            // No related attributes in next column, but continue with remaining columns
-            const remainingColumns = sortedColumns.filter(
-              (col) => col > currentColIndex,
-            )
-            if (remainingColumns.length > 0) {
-              // Fill remaining columns with nulls or continue searching
-              const finalPath = [...newPath]
-              remainingColumns.forEach((colIndex) => {
-                finalPath.push({ attribute: null, colIndex })
-              })
-              relationships.push({ cells: finalPath })
-            }
-          }
-        }
-
-        // Start building relationships from first column
-        findRelatedCombinations(firstAttr, sortedColumns[0], [])
-      })
-    }
-
-    // Helper function to check if attributes are related
-    const isRelatedAttribute = (
-      parent: IFrameworkAttribute,
-      child: IFrameworkAttribute,
-    ): boolean => {
-      // Direct parent-child relationship
-      if (child.parentId === parent.id) return true
-
-      // Check if they're in the same hierarchy
-      const findAllAncestors = (attrId: string): string[] => {
-        const ancestors: string[] = []
-        const attr = framework.attributes.find((a) => a.id === attrId)
-        if (attr?.parentId) {
-          ancestors.push(attr.parentId)
-          ancestors.push(...findAllAncestors(attr.parentId))
-        }
-        return ancestors
-      }
-
-      const childAncestors = findAllAncestors(child.id)
-      return childAncestors.includes(parent.id)
-    }
-
-    buildAllRelationships()
-
-    // Create rows from relationships
+    // Build rows by following parent-child relationships from the last column
     const rows: Array<{
       id: string
       cells: Array<{
@@ -165,82 +64,57 @@ const ComplianceListView: FC<IComplianceListViewProps> = ({ framework }) => {
       }>
     }> = []
 
-    relationships.forEach((rel, relIndex) => {
-      const row = {
-        id: `${framework.id}-rel-${relIndex}`,
-        cells: sortedColumns.map((colIndex) => {
-          // Find the cell for this column in the relationship
-          const cellInColumn = rel.cells.find(
-            (cell) => cell.colIndex === colIndex,
-          )
+    // Find the last column (evidence) and build relationships backwards
+    const lastColumnIndex = Math.max(...sortedColumns)
+    const lastColumnAttrs = attributesByColumn[lastColumnIndex] || []
 
-          if (cellInColumn?.attribute) {
-            return {
-              value:
-                cellInColumn.attribute.value || cellInColumn.attribute.name,
-              attributeId: cellInColumn.attribute.id,
-              colIndex,
-            }
-          }
+    lastColumnAttrs.forEach((evidenceAttr, index) => {
+      const rowCells: Array<{
+        value: string | null
+        attributeId: string | null
+        colIndex: number
+      }> = []
 
-          return {
-            value: null,
-            attributeId: null,
-            colIndex,
+      // Build the hierarchy chain backwards from evidence to root
+      const buildHierarchyChain = (
+        attr: IFrameworkAttribute,
+      ): IFrameworkAttribute[] => {
+        const chain: IFrameworkAttribute[] = [attr]
+        let currentAttr = attr
+
+        while (currentAttr.parentId) {
+          const parentAttr = attributesMap.get(currentAttr.parentId)
+          if (parentAttr) {
+            chain.unshift(parentAttr) // Add to beginning
+            currentAttr = parentAttr
+          } else {
+            break
           }
-        }),
+        }
+
+        return chain
       }
-      rows.push(row)
+
+      const hierarchyChain = buildHierarchyChain(evidenceAttr)
+
+      // Create cells for each column
+      sortedColumns.forEach((colIndex) => {
+        const attrInColumn = hierarchyChain.find(
+          (attr) => attr.colIndex === colIndex,
+        )
+
+        rowCells.push({
+          value: attrInColumn?.value || attrInColumn?.name || null,
+          attributeId: attrInColumn?.id || null,
+          colIndex,
+        })
+      })
+
+      rows.push({
+        id: `${framework.id}-row-${index}`,
+        cells: rowCells,
+      })
     })
-
-    // Fallback: If no relationships found, create cross-product of all columns
-    if (rows.length === 0) {
-      // Create all possible combinations between all columns
-      const createCrossProduct = (
-        colIndex: number,
-        currentCombination: Array<IFrameworkAttribute | null>,
-      ): void => {
-        if (colIndex >= sortedColumns.length) {
-          // Complete combination found
-          if (currentCombination.some((attr) => attr !== null)) {
-            const row = {
-              id: `${framework.id}-cross-${rows.length}`,
-              cells: currentCombination.map((attr, idx) => ({
-                value: attr?.value || attr?.name || null,
-                attributeId: attr?.id || null,
-                colIndex: sortedColumns[idx],
-              })),
-            }
-            rows.push(row)
-          }
-          return
-        }
-
-        const currentColIndex = sortedColumns[colIndex]
-        const attrsInColumn = attributesByColumn[currentColIndex] || []
-
-        if (attrsInColumn.length === 0) {
-          // No attributes in this column, continue with null
-          const newCombination = [...currentCombination]
-          newCombination[colIndex] = null
-          createCrossProduct(colIndex + 1, newCombination)
-        } else {
-          // Try each attribute in this column
-          attrsInColumn.forEach((attr) => {
-            const newCombination = [...currentCombination]
-            newCombination[colIndex] = attr
-            createCrossProduct(colIndex + 1, newCombination)
-          })
-        }
-      }
-
-      createCrossProduct(0, [])
-    }
-
-    // Debug: Log the structure to help understand the data
-    console.log('Framework attributes:', framework.attributes)
-    console.log('Relationships:', relationships)
-    console.log('Final rows:', rows)
 
     return {
       framework,
@@ -279,6 +153,7 @@ const ComplianceListView: FC<IComplianceListViewProps> = ({ framework }) => {
                   {tableData.headers.map((header) => (
                     <TableHead
                       key={header.colIndex}
+                      dir="auto"
                       className={cn(
                         'bg-primary font-medium text-white flex-1',
                         isArabic && 'text-right',
@@ -313,7 +188,9 @@ const ComplianceListView: FC<IComplianceListViewProps> = ({ framework }) => {
                       >
                         <div className="space-y-1">
                           {cell.value ? (
-                            <span className="block">{cell.value}</span>
+                            <span className="block" dir="auto">
+                              {cell.value}
+                            </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}

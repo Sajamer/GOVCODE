@@ -4,8 +4,9 @@
  * This utility processes Excel data to create proper parent-child relationships
  * for framework attributes before inserting them into the database.
  *
- * The main goal is to ensure attributes with the same value in the same column
- * get the same parent ID, creating a proper hierarchical structure.
+ * For compliance frameworks:
+ * - Columns 0-2: Only unique values are inserted (no duplicates)
+ * - Last column: Each instance is inserted with correct parent relationship
  */
 
 export interface ProcessedAttribute {
@@ -13,14 +14,13 @@ export interface ProcessedAttribute {
   value: string
   rowIndex: number
   colIndex: number
-  parentKey?: string // Unique key for finding parent
-  tempId?: string // Temporary ID for processing
+  parentValue?: string // Value of parent in previous column
+  isLastColumn?: boolean // Whether this is the last column (evidence)
 }
 
 export interface AttributeHierarchy {
   attributes: ProcessedAttribute[]
-  hierarchyMap: Map<string, string> // Maps attribute keys to their parent keys
-  uniqueAttributes: Map<string, ProcessedAttribute> // Unique attributes by key
+  uniqueAttributesByColumn: Map<number, Map<string, ProcessedAttribute>> // Column -> Value -> Attribute
 }
 
 /**
@@ -28,26 +28,6 @@ export interface AttributeHierarchy {
  */
 function createAttributeKey(colIndex: number, value: string): string {
   return `col_${colIndex}_${value.toLowerCase().trim()}`
-}
-
-/**
- * Creates a parent key for an attribute based on its position in the hierarchy
- */
-function createParentKey(
-  colIndex: number,
-  rowIndex: number,
-  attributes: ProcessedAttribute[],
-): string | undefined {
-  if (colIndex === 0) return undefined // First column has no parent
-
-  // Find the parent in the previous column for the same row
-  const parentAttr = attributes.find(
-    (attr) => attr.rowIndex === rowIndex && attr.colIndex === colIndex - 1,
-  )
-
-  if (!parentAttr) return undefined
-
-  return createAttributeKey(parentAttr.colIndex, parentAttr.value)
 }
 
 /**
@@ -62,8 +42,13 @@ function processFrameworkHierarchy(
   }>,
 ): AttributeHierarchy {
   const processedAttributes: ProcessedAttribute[] = []
-  const hierarchyMap = new Map<string, string>()
-  const uniqueAttributes = new Map<string, ProcessedAttribute>()
+  const uniqueAttributesByColumn = new Map<
+    number,
+    Map<string, ProcessedAttribute>
+  >()
+
+  // Find the maximum column index to determine the last column
+  const maxColIndex = Math.max(...rawAttributes.map((attr) => attr.colIndex))
 
   // Sort attributes by row and column to ensure proper processing order
   const sortedAttributes = [...rawAttributes].sort((a, b) => {
@@ -71,79 +56,81 @@ function processFrameworkHierarchy(
     return a.colIndex - b.colIndex
   })
 
-  // First pass: Create processed attributes with parent keys
+  // Group attributes by row for easier parent-child relationship processing
+  const attributesByRow = new Map<number, Array<(typeof rawAttributes)[0]>>()
   for (const attr of sortedAttributes) {
-    const attributeKey = createAttributeKey(attr.colIndex, attr.value)
-    const parentKey = createParentKey(
-      attr.colIndex,
-      attr.rowIndex,
-      sortedAttributes,
+    if (!attributesByRow.has(attr.rowIndex)) {
+      attributesByRow.set(attr.rowIndex, [])
+    }
+    attributesByRow.get(attr.rowIndex)!.push(attr)
+  }
+
+  // Process each row to build the hierarchy
+  for (const rowAttributes of attributesByRow.values()) {
+    // Sort by column index
+    const sortedRowAttributes = rowAttributes.sort(
+      (a, b) => a.colIndex - b.colIndex,
     )
 
-    const processedAttr: ProcessedAttribute = {
-      ...attr,
-      parentKey,
-      tempId: attributeKey, // Use key as temp ID
-    }
+    for (const attr of sortedRowAttributes) {
+      const isLastColumn = attr.colIndex === maxColIndex
 
-    processedAttributes.push(processedAttr)
+      // For non-last columns, only add unique values
+      if (!isLastColumn) {
+        if (!uniqueAttributesByColumn.has(attr.colIndex)) {
+          uniqueAttributesByColumn.set(attr.colIndex, new Map())
+        }
 
-    // Store hierarchy relationship
-    if (parentKey) {
-      hierarchyMap.set(attributeKey, parentKey)
-    }
+        const columnMap = uniqueAttributesByColumn.get(attr.colIndex)!
+        const valueKey = attr.value.toLowerCase().trim()
 
-    // Store unique attributes (avoid duplicates)
-    if (!uniqueAttributes.has(attributeKey)) {
-      uniqueAttributes.set(attributeKey, processedAttr)
+        if (!columnMap.has(valueKey)) {
+          const parentValue =
+            attr.colIndex > 0
+              ? sortedRowAttributes.find(
+                  (a) => a.colIndex === attr.colIndex - 1,
+                )?.value
+              : undefined
+
+          const processedAttr: ProcessedAttribute = {
+            ...attr,
+            parentValue,
+            isLastColumn: false,
+          }
+
+          columnMap.set(valueKey, processedAttr)
+          processedAttributes.push(processedAttr)
+        }
+      } else {
+        // For last column (evidence), add each instance with its parent
+        const parentValue = sortedRowAttributes.find(
+          (a) => a.colIndex === attr.colIndex - 1,
+        )?.value
+
+        const processedAttr: ProcessedAttribute = {
+          ...attr,
+          parentValue,
+          isLastColumn: true,
+        }
+
+        processedAttributes.push(processedAttr)
+      }
     }
   }
 
   return {
     attributes: processedAttributes,
-    hierarchyMap,
-    uniqueAttributes,
+    uniqueAttributesByColumn,
   }
 }
 
 /**
- * Filters attributes to remove duplicates while preserving hierarchy
+ * Gets all attributes ready for database insertion
  */
-function getUniqueAttributesForInsertion(
+function getAttributesForInsertion(
   hierarchy: AttributeHierarchy,
 ): ProcessedAttribute[] {
-  const uniqueForInsertion: ProcessedAttribute[] = []
-  const processedKeys = new Set<string>()
-
-  // Process by column level to ensure parents are created before children
-  const columnLevels = new Map<number, ProcessedAttribute[]>()
-
-  // Group by column level
-  for (const attr of hierarchy.uniqueAttributes.values()) {
-    const colIndex = attr.colIndex
-    if (!columnLevels.has(colIndex)) {
-      columnLevels.set(colIndex, [])
-    }
-    columnLevels.get(colIndex)!.push(attr)
-  }
-
-  // Process each column level in order
-  const sortedColumns = Array.from(columnLevels.keys()).sort((a, b) => a - b)
-
-  for (const colIndex of sortedColumns) {
-    const columnAttributes = columnLevels.get(colIndex)!
-
-    for (const attr of columnAttributes) {
-      const attributeKey = createAttributeKey(attr.colIndex, attr.value)
-
-      if (!processedKeys.has(attributeKey)) {
-        uniqueForInsertion.push(attr)
-        processedKeys.add(attributeKey)
-      }
-    }
-  }
-
-  return uniqueForInsertion
+  return hierarchy.attributes
 }
 
 /**
@@ -160,29 +147,47 @@ export function createIdMapping(
 ): Map<string, string> {
   const idMapping = new Map<string, string>()
 
-  for (const created of createdAttributes) {
-    const key = createAttributeKey(created.colIndex, created.value)
-    idMapping.set(key, created.id)
+  // For each created attribute, find the corresponding unique attribute
+  // and map by row index to handle duplicates properly
+  for (let i = 0; i < createdAttributes.length; i++) {
+    const created = createdAttributes[i]
+    const uniqueAttr = uniqueAttributes[i] // They should be in the same order
+
+    if (uniqueAttr) {
+      // Create a unique key that includes row context for duplicates
+      const key = `col_${created.colIndex}_${created.value.toLowerCase().trim()}_row_${uniqueAttr.rowIndex}`
+      idMapping.set(key, created.id)
+
+      // Also create a simple key for non-duplicate items (backwards compatibility)
+      const simpleKey = `col_${created.colIndex}_${created.value.toLowerCase().trim()}`
+      if (!idMapping.has(simpleKey)) {
+        idMapping.set(simpleKey, created.id)
+      }
+    }
   }
 
   return idMapping
 }
 
 /**
- * Gets the parent ID for an attribute based on the hierarchy and ID mapping
+ * Gets the parent ID for an attribute based on its parent value
  */
 export function getParentId(
   attribute: ProcessedAttribute,
   hierarchy: AttributeHierarchy,
   idMapping: Map<string, string>,
 ): string | null {
-  if (!attribute.parentKey) return null
+  if (!attribute.parentValue || attribute.colIndex === 0) return null
 
-  return idMapping.get(attribute.parentKey) || null
+  const parentKey = createAttributeKey(
+    attribute.colIndex - 1,
+    attribute.parentValue,
+  )
+  return idMapping.get(parentKey) || null
 }
 
 /**
- * Validates the hierarchy structure
+ * Validates the hierarchy structure (simplified for compliance framework)
  */
 function validateHierarchy(hierarchy: AttributeHierarchy): {
   isValid: boolean
@@ -190,38 +195,17 @@ function validateHierarchy(hierarchy: AttributeHierarchy): {
 } {
   const errors: string[] = []
 
-  // Check for orphaned children (children without existing parents)
-  for (const [childKey, parentKey] of hierarchy.hierarchyMap.entries()) {
-    if (!hierarchy.uniqueAttributes.has(parentKey)) {
+  // Basic validation - ensure we have attributes
+  if (hierarchy.attributes.length === 0) {
+    errors.push('No attributes found in hierarchy')
+  }
+
+  // Validate that each non-first column has a parent value
+  for (const attr of hierarchy.attributes) {
+    if (attr.colIndex > 0 && !attr.parentValue) {
       errors.push(
-        `Child "${childKey}" references non-existent parent "${parentKey}"`,
+        `Attribute "${attr.value}" in column ${attr.colIndex} has no parent`,
       )
-    }
-  }
-
-  // Check for circular references
-  const visited = new Set<string>()
-  const recursionStack = new Set<string>()
-
-  function hasCircularReference(key: string): boolean {
-    if (recursionStack.has(key)) return true
-    if (visited.has(key)) return false
-
-    visited.add(key)
-    recursionStack.add(key)
-
-    const parentKey = hierarchy.hierarchyMap.get(key)
-    if (parentKey && hasCircularReference(parentKey)) {
-      return true
-    }
-
-    recursionStack.delete(key)
-    return false
-  }
-
-  for (const key of hierarchy.uniqueAttributes.keys()) {
-    if (hasCircularReference(key)) {
-      errors.push(`Circular reference detected involving "${key}"`)
     }
   }
 
@@ -262,8 +246,8 @@ export function prepareFrameworkDataForInsertion(
       }
     }
 
-    // Get unique attributes for insertion
-    const attributesForInsertion = getUniqueAttributesForInsertion(hierarchy)
+    // Get attributes for insertion
+    const attributesForInsertion = getAttributesForInsertion(hierarchy)
 
     return {
       success: true,

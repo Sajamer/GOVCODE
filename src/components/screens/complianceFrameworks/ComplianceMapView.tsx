@@ -34,9 +34,9 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
     router.push(urlWithQuery)
   }
 
-  // Function to calculate heatmap data by attribute value (aggregating all attributes with same value)
-  const getHeatmapDataByValue = (
-    attributeValue: string,
+  // Function to calculate heatmap data by attribute ID (for specific framework attribute)
+  const getHeatmapDataByAttributeId = (
+    attributeId: string,
     framework: IFramework,
   ) => {
     if (!auditData || !framework?.status?.auditRules) return {}
@@ -70,46 +70,46 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
     ].sort((a, b) => a - b)
     const lastColumnIndex = columnIndices[columnIndices.length - 1] || 0
 
-    // Find all attributes with the same value (these are second column attributes)
-    const attributesWithSameValue = framework.attributes.filter(
-      (attr) => attr.value === attributeValue,
+    // Find the specific attribute by ID
+    const attribute = framework.attributes.find(
+      (attr) => attr.id === attributeId,
     )
 
-    // For each attribute with the same value, find its deepest descendants (last column attributes)
-    attributesWithSameValue.forEach((attribute) => {
-      const descendants = getAllDescendants(attribute.id)
+    if (!attribute) return heatmapData
 
-      // Get the deepest level descendants (those that have no children) OR those in the last column
-      const lastColumnDescendants = descendants.filter((desc) => {
-        const hasNoChildren = !framework.attributes.some(
-          (attr) => attr.parentId === desc.id,
+    // Get all descendants of this specific attribute
+    const descendants = getAllDescendants(attribute.id)
+
+    // Get the deepest level descendants (those that have no children) OR those in the last column
+    const lastColumnDescendants = descendants.filter((desc) => {
+      const hasNoChildren = !framework.attributes.some(
+        (attr) => attr.parentId === desc.id,
+      )
+      const isInLastColumn = desc.colIndex === lastColumnIndex
+      return hasNoChildren || isInLastColumn
+    })
+
+    // If no descendants found, use the attribute itself
+    const targetAttributes =
+      lastColumnDescendants.length > 0 ? lastColumnDescendants : [attribute]
+
+    // Count audit rules for each target attribute
+    targetAttributes.forEach((targetAttr) => {
+      if (!targetAttr?.auditDetails) return
+
+      const auditDetail = targetAttr.auditDetails.find(
+        (detail) => detail.auditCycleId === auditData.id,
+      )
+
+      if (auditDetail?.auditRuleId) {
+        const auditRule = framework?.status?.auditRules?.find(
+          (rule) => rule.id === auditDetail.auditRuleId,
         )
-        const isInLastColumn = desc.colIndex === lastColumnIndex
-        return hasNoChildren || isInLastColumn
-      })
 
-      // If no descendants found, use the attribute itself
-      const targetAttributes =
-        lastColumnDescendants.length > 0 ? lastColumnDescendants : [attribute]
-
-      // Count audit rules for each target attribute
-      targetAttributes.forEach((targetAttr) => {
-        if (!targetAttr?.auditDetails) return
-
-        const auditDetail = targetAttr.auditDetails.find(
-          (detail) => detail.auditCycleId === auditData.id,
-        )
-
-        if (auditDetail?.auditRuleId) {
-          const auditRule = framework?.status?.auditRules?.find(
-            (rule) => rule.id === auditDetail.auditRuleId,
-          )
-
-          if (auditRule) {
-            heatmapData[auditRule.id] = (heatmapData[auditRule.id] || 0) + 1
-          }
+        if (auditRule) {
+          heatmapData[auditRule.id] = (heatmapData[auditRule.id] || 0) + 1
         }
-      })
+      }
     })
 
     return heatmapData
@@ -191,15 +191,16 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                           key={parent.id}
                           className="min-w-[280px] border bg-white"
                         >
-                          <div className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white">
+                          <div
+                            className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white"
+                            dir="auto"
+                          >
                             {parent.value}
                           </div>
                           <div className="flex flex-wrap gap-1 p-2 text-center">
                             {children.map((child) => {
-                              const childHeatmapData = getHeatmapDataByValue(
-                                child.value || '',
-                                framework,
-                              )
+                              const childHeatmapData =
+                                getHeatmapDataByAttributeId(child.id, framework)
                               return (
                                 <div key={child.id} className="flex flex-col">
                                   <div
@@ -210,6 +211,7 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                                       )
                                     }
                                     className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                    dir="auto"
                                   >
                                     {child.value}
                                   </div>
@@ -247,7 +249,10 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                     })}
                 </div>
                 <div className="mt-4 flex w-full items-center justify-start gap-5">
-                  <div className="flex items-center justify-center text-center text-white">
+                  <div
+                    className="flex items-center justify-center text-center text-white"
+                    dir="auto"
+                  >
                     <div
                       className={cn(
                         'bg-primary py-2 px-5',

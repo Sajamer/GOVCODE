@@ -11,8 +11,8 @@ import { IFrameWorkAuditCycle } from '@/types/framework'
 import { useQuery } from '@tanstack/react-query'
 import { House, Loader2, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { usePathname } from 'next/navigation'
-import { FC, useState } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { FC, useEffect, useState } from 'react'
 import ComplianceDashboard from './ComplianceDashboard'
 import ComplianceListView from './ComplianceListView'
 import ComplianceMapView from './ComplianceMapView'
@@ -20,8 +20,15 @@ import ComplianceMapView from './ComplianceMapView'
 const SingleComplianceFramework: FC = () => {
   const t = useTranslations('general')
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const frameworkId = pathname.split('/').pop() || ''
   const isArabic = pathname.includes('/ar')
+
+  // Get auditId from URL query parameters
+  const auditIdFromQuery = searchParams.get('auditId')
+  const selectedAuditCycleId = auditIdFromQuery
+    ? Number(auditIdFromQuery)
+    : null
 
   const [view, setView] = useState<'map' | 'list' | 'dashboard'>('map')
   const [selectedAudit, setSelectedAudit] =
@@ -39,6 +46,18 @@ const SingleComplianceFramework: FC = () => {
     queryFn: async () => getAllAudits(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
+
+  // Effect to set selected audit based on auditId parameter
+  useEffect(() => {
+    if (frameworkData && selectedAuditCycleId) {
+      const auditCycle = frameworkData.auditCycles?.find(
+        (cycle) => cycle.id === selectedAuditCycleId,
+      )
+      if (auditCycle) {
+        setSelectedAudit(auditCycle)
+      }
+    }
+  }, [frameworkData, selectedAuditCycleId])
 
   return (
     <div
@@ -59,7 +78,11 @@ const SingleComplianceFramework: FC = () => {
               <Card className="border-none bg-transparent p-0 shadow-none">
                 <div className="flex items-center justify-start gap-5">
                   <Button
-                    onClick={() => setSelectedAudit(null)}
+                    onClick={() => {
+                      setSelectedAudit(null)
+                      setView('map')
+                    }}
+                    dir="auto"
                     className={cn(
                       !selectedAudit && 'bg-[#266a55]/60 hover:bg-[#266a55]/60',
                     )}
@@ -67,7 +90,7 @@ const SingleComplianceFramework: FC = () => {
                     <House className="size-5" />
                     {frameworkData.name}
                   </Button>
-                  {view !== 'dashboard' && (
+                  {view === 'map' && (
                     <>
                       <Button
                         type="button"

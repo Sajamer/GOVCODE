@@ -25,22 +25,26 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import {
-  createAttachment,
-  deleteAttachment,
-} from '@/lib/actions/attachment.actions'
-import {
   IAuditDetailsManipulator,
   saveMultipleAuditDetails,
 } from '@/lib/actions/audit-details.actions'
 import { getAllFrameworks } from '@/lib/actions/framework.actions'
 import { getAllOrganizationUsers } from '@/lib/actions/userActions'
 import { CustomUser } from '@/lib/auth'
-import { uploadFiles } from '@/lib/uploadthing'
+import { deleteFileLocally } from '@/lib/local-upload'
 import { cn } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { IFrameworkAttribute } from '@/types/framework'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { House, Link2, Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  House,
+  Link2,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -153,45 +157,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         throw new Error('No valid audit details to save')
       }
 
-      // Save audit details first
+      // Save audit details
       const savedAuditDetails =
         await saveMultipleAuditDetails(auditDetailsArray)
 
-      // Process temporary attachments
-      const attachmentPromises: Promise<unknown>[] = []
-
-      Object.entries(attachmentsByAttribute).forEach(
-        ([attributeId, attachments]) => {
-          // Find the corresponding saved audit detail
-          const auditDetail = savedAuditDetails.find(
-            (detail) => detail.frameworkAttributeId === attributeId,
-          )
-
-          if (auditDetail) {
-            // Filter only temporary attachments (those with "temp-" prefix)
-            const tempAttachments = attachments.filter((att) =>
-              att.id.startsWith('temp-'),
-            )
-
-            tempAttachments.forEach((tempAttachment) => {
-              attachmentPromises.push(
-                createAttachment({
-                  name: tempAttachment.name,
-                  url: tempAttachment.url,
-                  size: tempAttachment.size,
-                  type: tempAttachment.type,
-                  auditDetailId: auditDetail.id,
-                }),
-              )
-            })
-          }
-        },
-      )
-
-      // Wait for all attachments to be created
-      if (attachmentPromises.length > 0) {
-        await Promise.all(attachmentPromises)
-      }
+      // Since attachments are now saved directly when uploaded,
+      // we don't need to process temporary attachments here
 
       return savedAuditDetails
     },
@@ -206,7 +177,7 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       toast({
         variant: 'success',
         title: t('success'),
-        description: 'Audit details and attachments saved successfully',
+        description: 'Audit details saved successfully',
       })
     },
     onError: (error) => {
@@ -289,46 +260,79 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
 
       try {
         // First, ensure audit detail exists
-        const key = `${attributeId}-${selectedAuditCycleId}`
-        if (!auditDetailsData[key]) {
+        if (!auditDetailsData[`${attributeId}-${selectedAuditCycleId}`]) {
           updateAuditDetail(attributeId, 'comment', '')
         }
 
-        // Upload file to storage
-        const uploadResponse = await uploadFiles('fileUploader', {
-          files: [file],
-          input: {
-            description: `Attachment for framework attribute ${attributeId}`,
-          },
-        })
+        // Upload file to local storage immediately (no temporary state needed)
+        // Since we're using local storage, we can save directly to the database
+        const formData = new FormData()
+        formData.append('file', file)
 
-        if (!uploadResponse || !uploadResponse[0]?.url) {
-          throw new Error('Failed to upload file')
+        // We need an audit detail ID, so create one if it doesn't exist
+        let auditDetailId = ''
+
+        // Check if we have a saved audit detail
+        const existingAuditDetail = currentFramework?.attributes
+          .find((attr) => attr.id === attributeId)
+          ?.auditDetails?.find(
+            (detail) => detail.auditCycleId === selectedAuditCycleId,
+          )
+
+        if (existingAuditDetail) {
+          auditDetailId = existingAuditDetail.id
+        } else {
+          // Create a temporary audit detail first
+          const tempAuditDetail: IAuditDetailsManipulator = {
+            frameworkAttributeId: attributeId,
+            auditCycleId: selectedAuditCycleId || 0,
+            auditBy: userData?.id || '',
+            ownedBy: '',
+            auditRuleId: 1,
+            comment: '',
+            recommendation: '',
+          }
+
+          // Save the audit detail first
+          const savedAuditDetails = await saveMultipleAuditDetails([
+            tempAuditDetail,
+          ])
+          auditDetailId = savedAuditDetails[0].id
         }
 
-        const fileUrl = uploadResponse[0].url
-        const fileName = uploadResponse[0].name || file.name
+        formData.append('auditDetailId', auditDetailId)
 
-        // For now, we'll store attachments temporarily in local state
-        // They will be properly linked to audit details when saved
-        const tempAttachment = {
-          id: `temp-${Date.now()}-${Math.random()}`, // Temporary ID
-          name: fileName,
-          url: fileUrl,
-          size: file.size,
-          type: file.type,
+        const response = await fetch('/api/upload/local', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Upload failed')
+        }
+
+        const uploadResult = await response.json()
+
+        // Add to local state for immediate UI update
+        const newAttachment = {
+          id: uploadResult.id,
+          name: uploadResult.name,
+          url: uploadResult.url,
+          size: uploadResult.size,
+          type: uploadResult.type,
         }
 
         // Update local state
         setAttachmentsByAttribute((prev) => ({
           ...prev,
-          [attributeId]: [...(prev[attributeId] || []), tempAttachment],
+          [attributeId]: [...(prev[attributeId] || []), newAttachment],
         }))
 
         toast({
           variant: 'success',
           title: 'File uploaded',
-          description: `${fileName} uploaded successfully. Save audit details to persist.`,
+          description: `${uploadResult.name} uploaded successfully.`,
         })
       } catch (error) {
         toast({
@@ -344,7 +348,13 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
         })
       }
     },
-    [selectedAuditCycleId, updateAuditDetail, auditDetailsData],
+    [
+      selectedAuditCycleId,
+      updateAuditDetail,
+      auditDetailsData,
+      currentFramework?.attributes,
+      userData?.id,
+    ],
   )
 
   // Function to delete attachment
@@ -353,27 +363,16 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       setDeletingAttachments((prev) => new Set(prev).add(attachmentId))
 
       try {
-        // Check if it's a temporary attachment (starts with "temp-")
-        if (attachmentId.startsWith('temp-')) {
-          // Just remove from local state for temporary attachments
-          setAttachmentsByAttribute((prev) => ({
-            ...prev,
-            [attributeId]: (prev[attributeId] || []).filter(
-              (att) => att.id !== attachmentId,
-            ),
-          }))
-        } else {
-          // For real attachments, delete from database
-          await deleteAttachment(attachmentId)
+        // Delete from local storage and database
+        await deleteFileLocally(attachmentId)
 
-          // Update local state
-          setAttachmentsByAttribute((prev) => ({
-            ...prev,
-            [attributeId]: (prev[attributeId] || []).filter(
-              (att) => att.id !== attachmentId,
-            ),
-          }))
-        }
+        // Update local state
+        setAttachmentsByAttribute((prev) => ({
+          ...prev,
+          [attributeId]: (prev[attributeId] || []).filter(
+            (att) => att.id !== attachmentId,
+          ),
+        }))
 
         toast({
           variant: 'success',
@@ -436,17 +435,50 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     if (hasUnsavedChanges) {
       setShowLeaveConfirmation(true)
     } else {
-      router.back()
+      // Navigate back to framework detail page with auditId parameter if it exists
+      const currentPath = pathname
+      const frameworkPath = currentPath.split('/').slice(0, -1).join('/') // Remove only attributeId, keep framework/id
+
+      if (selectedAuditCycleId) {
+        router.push(`${frameworkPath}?auditId=${selectedAuditCycleId}`)
+      } else {
+        router.push(frameworkPath)
+      }
     }
-  }, [hasUnsavedChanges, router])
+  }, [hasUnsavedChanges, pathname, router, selectedAuditCycleId])
 
   // Confirm navigation without saving
   const handleConfirmLeave = useCallback(() => {
     setHasUnsavedChanges(false)
     setShowLeaveConfirmation(false)
-    // Use window.history.go(-2) for browser navigation to handle both router and browser back
-    window.history.go(-2)
-  }, [])
+
+    // Navigate back to framework detail page with auditId parameter if it exists
+    const currentPath = pathname
+    const frameworkPath = currentPath.split('/').slice(0, -1).join('/') // Remove only attributeId, keep framework/id
+
+    if (selectedAuditCycleId) {
+      router.push(`${frameworkPath}?auditId=${selectedAuditCycleId}`)
+    } else {
+      router.push(frameworkPath)
+    }
+  }, [pathname, router, selectedAuditCycleId])
+
+  // Function to handle exit button - navigate to previous route with auditId
+  const handleExit = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setShowLeaveConfirmation(true)
+    } else {
+      // Navigate back to framework detail page with auditId parameter if it exists
+      const currentPath = pathname
+      const frameworkPath = currentPath.split('/').slice(0, -1).join('/') // Remove only attributeId, keep framework/id
+
+      if (selectedAuditCycleId) {
+        router.push(`${frameworkPath}?auditId=${selectedAuditCycleId}`)
+      } else {
+        router.push(frameworkPath)
+      }
+    }
+  }, [hasUnsavedChanges, pathname, router, selectedAuditCycleId])
 
   // Add browser navigation guard for back button, refresh, and tab close
   useEffect(() => {
@@ -826,10 +858,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       >
         <div className="flex w-full items-center justify-center gap-2">
           <House className="size-5 cursor-pointer" onClick={handleGoBack} />
-          <span className="font-medium">
+          <span className="font-medium" dir="auto">
             {parentSelectedAttribute?.value} -&gt;{' '}
           </span>
-          {selectedAttribute.value}
+          <span dir="auto">{selectedAttribute.value}</span>
         </div>
 
         {/* Show audit details section only when auditId exists in query */}
@@ -854,18 +886,28 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   : ''}
               </span>
             </div>
-            <Button
-              onClick={() => saveAuditDetails()}
-              disabled={isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              {t('save')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleExit}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="size-4" />
+                {t('exit')}
+              </Button>
+              <Button
+                onClick={() => saveAuditDetails()}
+                disabled={isSaving}
+                className="flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                {t('save')}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -880,8 +922,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                 <span
                   key={columnIndex}
                   className={cn(
-                    selectedAuditCycleId ? 'w-full max-w-20' : 'flex-1 w-full',
+                    'text-sm font-medium',
+                    selectedAuditCycleId
+                      ? 'w-full min-w-[100px] max-w-[150px] break-words'
+                      : 'flex-1 w-full',
                   )}
+                  dir="auto"
                 >
                   {relatedAttributes?.[0]?.name}
                 </span>
@@ -929,9 +975,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       className={cn(
                         'text-sm',
                         selectedAuditCycleId
-                          ? 'w-full max-w-20'
+                          ? 'w-full min-w-[100px] max-w-[150px] break-words'
                           : 'flex-1 w-full',
                       )}
+                      dir="auto"
                     >
                       {displayValue || '-'}
                     </span>

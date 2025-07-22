@@ -159,15 +159,24 @@ const LinkedFrameworksDisplay: FC<LinkedFrameworksDisplayProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Link2 className="size-5 text-primary" />
-                    <CardTitle className="text-lg">
-                      {link.name || t('framework-link')}
+                    <CardTitle>
+                      {link.linkedFrameworks.map((linkedFramework, index) => (
+                        <span key={linkedFramework.id}>
+                          {linkedFramework.targetFramework.name}
+                          {linkedFramework.targetAttribute?.value && (
+                            <> &gt; {linkedFramework.targetAttribute.value}</>
+                          )}
+                          {index < link.linkedFrameworks.length - 1 && ', '}
+                        </span>
+                      ))}
+                      {' > '}
+                      <span className="font-medium">
+                        {link.sourceAttribute.name}
+                      </span>
+                      {link.sourceAttribute.value && (
+                        <>: {link.sourceAttribute.value}</>
+                      )}
                     </CardTitle>
-                    <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                      {link.linkedFrameworks.length}{' '}
-                      {link.linkedFrameworks.length === 1
-                        ? t('frameworks-count')
-                        : t('frameworks-count-plural')}
-                    </span>
                   </div>
 
                   <div className="flex items-center gap-1">
