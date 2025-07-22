@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from '@/i18n/routing'
 import { cn } from '@/lib/utils'
-import { useParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { ChangeEvent, FC, ReactNode, useTransition } from 'react'
 
 interface ILocaleSwitcherSelectProps {
@@ -18,18 +18,18 @@ const LocaleSwitcherSelect: FC<ILocaleSwitcherSelectProps> = ({
 }) => {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const params = useParams()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   function onSelectChange(event: ChangeEvent<HTMLSelectElement>) {
     const nextLocale = event.target.value
 
     startTransition(() => {
-      router.replace(
-        // @ts-expect-error: TypeScript does not recognize the locale property
-        { pathname, params },
-        { locale: nextLocale },
-      )
+      // Preserve search parameters when changing locale
+      const searchString = searchParams.toString()
+      const fullPath = searchString ? `${pathname}?${searchString}` : pathname
+
+      router.replace(fullPath, { locale: nextLocale })
     })
   }
 
