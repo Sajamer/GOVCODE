@@ -485,24 +485,24 @@ export const getColumnRowCounts = (
 ): { name: string; total: number }[] => {
   const allAttributes = getAllAttributes(attributes)
 
-  // Group attributes by colIndex
-  const columnGroups: { [key: number]: IFrameworkAttribute[] } = {}
+  // Group attributes by colIndex, using Set to avoid duplicates
+  const columnGroups: { [key: number]: Set<string> } = {}
 
   allAttributes.forEach((attr) => {
     if (attr.colIndex !== undefined && attr.colIndex !== null) {
       if (!columnGroups[attr.colIndex]) {
-        columnGroups[attr.colIndex] = []
+        columnGroups[attr.colIndex] = new Set()
       }
-      columnGroups[attr.colIndex].push(attr)
+      columnGroups[attr.colIndex].add(attr.id)
     }
   })
 
   // Convert to array of objects with column name and row count
   return Object.entries(columnGroups)
     .sort(([a], [b]) => parseInt(a) - parseInt(b)) // Sort by column index
-    .map(([colIndex, attrs]) => ({
+    .map(([colIndex, attrSet]) => ({
       name: `Sum of the ${getOrdinalText(parseInt(colIndex) + 1)} level`,
-      total: attrs.length,
+      total: attrSet.size,
     }))
 }
 
