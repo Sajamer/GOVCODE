@@ -36,7 +36,15 @@ import { cn } from '@/lib/utils'
 import { useGlobalStore } from '@/stores/global-store'
 import { IFrameworkAttribute } from '@/types/framework'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { House, Link2, Loader2, Plus, Save, Trash2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  House,
+  Link2,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -427,17 +435,50 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
     if (hasUnsavedChanges) {
       setShowLeaveConfirmation(true)
     } else {
-      router.back()
+      // Navigate back to framework detail page with auditId parameter if it exists
+      const currentPath = pathname
+      const frameworkPath = currentPath.split('/').slice(0, -1).join('/') // Remove only attributeId, keep framework/id
+
+      if (selectedAuditCycleId) {
+        router.push(`${frameworkPath}?auditId=${selectedAuditCycleId}`)
+      } else {
+        router.push(frameworkPath)
+      }
     }
-  }, [hasUnsavedChanges, router])
+  }, [hasUnsavedChanges, pathname, router, selectedAuditCycleId])
 
   // Confirm navigation without saving
   const handleConfirmLeave = useCallback(() => {
     setHasUnsavedChanges(false)
     setShowLeaveConfirmation(false)
-    // Use window.history.go(-2) for browser navigation to handle both router and browser back
-    window.history.go(-2)
-  }, [])
+
+    // Navigate back to framework detail page with auditId parameter if it exists
+    const currentPath = pathname
+    const frameworkPath = currentPath.split('/').slice(0, -1).join('/') // Remove only attributeId, keep framework/id
+
+    if (selectedAuditCycleId) {
+      router.push(`${frameworkPath}?auditId=${selectedAuditCycleId}`)
+    } else {
+      router.push(frameworkPath)
+    }
+  }, [pathname, router, selectedAuditCycleId])
+
+  // Function to handle exit button - navigate to previous route with auditId
+  const handleExit = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setShowLeaveConfirmation(true)
+    } else {
+      // Navigate back to framework detail page with auditId parameter if it exists
+      const currentPath = pathname
+      const frameworkPath = currentPath.split('/').slice(0, -1).join('/') // Remove only attributeId, keep framework/id
+
+      if (selectedAuditCycleId) {
+        router.push(`${frameworkPath}?auditId=${selectedAuditCycleId}`)
+      } else {
+        router.push(frameworkPath)
+      }
+    }
+  }, [hasUnsavedChanges, pathname, router, selectedAuditCycleId])
 
   // Add browser navigation guard for back button, refresh, and tab close
   useEffect(() => {
@@ -845,18 +886,28 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                   : ''}
               </span>
             </div>
-            <Button
-              onClick={() => saveAuditDetails()}
-              disabled={isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Save className="size-4" />
-              )}
-              {t('save')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleExit}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="size-4" />
+                {t('exit')}
+              </Button>
+              <Button
+                onClick={() => saveAuditDetails()}
+                disabled={isSaving}
+                className="flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                {t('save')}
+              </Button>
+            </div>
           </div>
         )}
 
