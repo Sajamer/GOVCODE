@@ -82,6 +82,7 @@ const SingleComplianceFramework: FC = () => {
                       setSelectedAudit(null)
                       setView('map')
                     }}
+                    dir="auto"
                     className={cn(
                       !selectedAudit && 'bg-[#266a55]/60 hover:bg-[#266a55]/60',
                     )}

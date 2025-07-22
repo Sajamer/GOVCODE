@@ -858,10 +858,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
       >
         <div className="flex w-full items-center justify-center gap-2">
           <House className="size-5 cursor-pointer" onClick={handleGoBack} />
-          <span className="font-medium">
+          <span className="font-medium" dir="auto">
             {parentSelectedAttribute?.value} -&gt;{' '}
           </span>
-          {selectedAttribute.value}
+          <span dir="auto">{selectedAttribute.value}</span>
         </div>
 
         {/* Show audit details section only when auditId exists in query */}
@@ -922,8 +922,12 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                 <span
                   key={columnIndex}
                   className={cn(
-                    selectedAuditCycleId ? 'w-full max-w-20' : 'flex-1 w-full',
+                    'text-sm font-medium',
+                    selectedAuditCycleId
+                      ? 'w-full min-w-[100px] max-w-[150px] break-words'
+                      : 'flex-1 w-full',
                   )}
+                  dir="auto"
                 >
                   {relatedAttributes?.[0]?.name}
                 </span>
@@ -971,9 +975,10 @@ const FrameworkAttributeDetail: FC<FrameworkAttributeDetailProps> = ({
                       className={cn(
                         'text-sm',
                         selectedAuditCycleId
-                          ? 'w-full max-w-20'
+                          ? 'w-full min-w-[100px] max-w-[150px] break-words'
                           : 'flex-1 w-full',
                       )}
+                      dir="auto"
                     >
                       {displayValue || '-'}
                     </span>

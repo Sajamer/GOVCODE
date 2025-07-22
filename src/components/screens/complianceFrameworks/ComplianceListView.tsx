@@ -153,6 +153,7 @@ const ComplianceListView: FC<IComplianceListViewProps> = ({ framework }) => {
                   {tableData.headers.map((header) => (
                     <TableHead
                       key={header.colIndex}
+                      dir="auto"
                       className={cn(
                         'bg-primary font-medium text-white flex-1',
                         isArabic && 'text-right',
@@ -187,7 +188,9 @@ const ComplianceListView: FC<IComplianceListViewProps> = ({ framework }) => {
                       >
                         <div className="space-y-1">
                           {cell.value ? (
-                            <span className="block">{cell.value}</span>
+                            <span className="block" dir="auto">
+                              {cell.value}
+                            </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}

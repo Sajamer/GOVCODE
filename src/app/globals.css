@@ -36,6 +36,19 @@
     unicode-bidi: inherit !important;
   }
 
+  /* Fix for mixed content in RTL - prevent text reversal */
+  [dir='rtl'] .mixed-content,
+  [dir='auto'] {
+    unicode-bidi: isolate !important;
+    direction: auto !important;
+  }
+
+  /* Ensure proper text direction for framework attribute values */
+  .framework-text {
+    unicode-bidi: isolate;
+    direction: auto;
+  }
+
   /* Specific Arabic font optimizations */
   .arabic-font {
     font-family: 'Arial', 'Tahoma', 'DejaVu Sans', sans-serif;

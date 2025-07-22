@@ -191,7 +191,10 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                           key={parent.id}
                           className="min-w-[280px] border bg-white"
                         >
-                          <div className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white">
+                          <div
+                            className="mb-3 border-b-2 bg-primary px-4 py-2 text-center text-white"
+                            dir="auto"
+                          >
                             {parent.value}
                           </div>
                           <div className="flex flex-wrap gap-1 p-2 text-center">
@@ -208,6 +211,7 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                                       )
                                     }
                                     className="cursor-pointer rounded bg-[#266a55]/60 p-2 text-sm text-white hover:underline hover:underline-offset-1"
+                                    dir="auto"
                                   >
                                     {child.value}
                                   </div>
@@ -245,7 +249,10 @@ const ComplianceMapView: FC<IComplianceMapViewProps> = ({
                     })}
                 </div>
                 <div className="mt-4 flex w-full items-center justify-start gap-5">
-                  <div className="flex items-center justify-center text-center text-white">
+                  <div
+                    className="flex items-center justify-center text-center text-white"
+                    dir="auto"
+                  >
                     <div
                       className={cn(
                         'bg-primary py-2 px-5',
