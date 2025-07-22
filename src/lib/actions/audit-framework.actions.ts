@@ -112,25 +112,71 @@ export const createAudit = async (dto: IAuditFrameworkManipulator) => {
       throw new Error(`Framework with ID ${dto.frameworkId} does not exist`)
     }
 
-    const newAudit = await prisma.auditCycle.create({
-      data: {
-        name: dto.name,
-        startDate: dto.startDate,
-        auditBy: dto.auditBy,
-        description: dto.description,
-        frameworkId: dto.frameworkId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-          },
-        },
-      },
+    // Get the first audit rule (default status)
+    const defaultAuditRule = await prisma.auditRules.findFirst({
+      orderBy: { id: 'asc' },
+      select: { id: true },
     })
 
-    return newAudit
+    if (!defaultAuditRule) {
+      throw new Error('No audit rules found in the system')
+    }
+
+    // Get only the leaf framework attributes (last column) for this framework
+    // These are attributes that don't have any children (no other attributes have them as parent)
+    const frameworkAttributes = await prisma.frameworkAttribute.findMany({
+      where: {
+        frameworkId: dto.frameworkId,
+        // Only get attributes that are not parents (leaf nodes)
+        children: {
+          none: {},
+        },
+      },
+      select: { id: true },
+    })
+
+    // Use transaction to ensure all operations succeed or fail together
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the audit cycle
+      const newAudit = await tx.auditCycle.create({
+        data: {
+          name: dto.name,
+          startDate: dto.startDate,
+          auditBy: dto.auditBy,
+          description: dto.description,
+          frameworkId: dto.frameworkId,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+      })
+
+      // Create audit details for each leaf framework attribute (last column only)
+      if (frameworkAttributes.length > 0) {
+        const auditDetailsData = frameworkAttributes.map((attr) => ({
+          frameworkAttributeId: attr.id,
+          auditCycleId: newAudit.id,
+          auditBy: dto.auditBy, // The auditor is initially set to the creator, but can be changed later
+          ownedBy: dto.auditBy, // The creator becomes the owner
+          auditRuleId: defaultAuditRule.id,
+          comment: null,
+          recommendation: null,
+        }))
+
+        await tx.auditDetails.createMany({
+          data: auditDetailsData,
+        })
+      }
+
+      return newAudit
+    })
+
+    return result
   } catch (error) {
     sendError(error)
     throw new Error('Error while creating audit.')

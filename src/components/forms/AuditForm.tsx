@@ -7,7 +7,6 @@ import {
   auditFrameworkSchema,
   IAuditFrameworkManipulator,
 } from '@/schema/audit-framework.schema'
-import { IFramework, IFrameWorkAuditCycle } from '@/types/framework'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFormik } from 'formik'
 import { useSession } from 'next-auth/react'
@@ -68,55 +67,27 @@ const AuditForm: FC<IAuditFormProps> = ({
 
   const { mutate: addMutation, isPending: addLoading } = useMutation({
     mutationFn: async () => await createAudit(values),
-    onSuccess: (newData: IFrameWorkAuditCycle) => {
+    onSuccess: () => {
+      // Invalidate all audit-related queries
       queryClient.invalidateQueries({
         queryKey: ['all-audits'],
       })
 
-      queryClient.setQueryData(
-        ['frameworks'],
-        (oldData: { frameworks: IFramework[] } | undefined) => {
-          if (!oldData) return { frameworks: [] }
-          return {
-            frameworks: oldData.frameworks.map((framework) => {
-              if (framework.id === frameworkId) {
-                return {
-                  ...framework,
-                  auditCycles: [...(framework.auditCycles || []), newData].sort(
-                    (a, b) =>
-                      new Date(b.startDate).getTime() -
-                      new Date(a.startDate).getTime(),
-                  ),
-                }
-              }
-              return framework
-            }),
-          }
-        },
-      )
+      // Invalidate framework queries to refresh audit details
+      queryClient.invalidateQueries({
+        queryKey: ['frameworks'],
+      })
 
-      queryClient.setQueryData(
-        ['single-framework', frameworkId],
-        (oldData: IFramework | undefined) => {
-          if (!oldData) return oldData
+      queryClient.invalidateQueries({
+        queryKey: ['single-framework', frameworkId],
+      })
 
-          const updatedFramework = {
-            ...oldData,
-            auditCycles: [
-              ...(oldData.auditCycles || []),
-              {
-                ...newData,
-                user: {
-                  id: userData?.id || '',
-                  fullName: userData?.fullName || '',
-                },
-              },
-            ],
-          }
-
-          return updatedFramework
-        },
-      )
+      // Invalidate any queries that might be related to framework audit details
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey.includes('framework') ||
+          query.queryKey.includes('audit'),
+      })
 
       toast({
         variant: 'success',
