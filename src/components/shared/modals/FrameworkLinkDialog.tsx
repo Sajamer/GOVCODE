@@ -204,9 +204,9 @@ const FrameworkLinkDialog: FC<FrameworkLinkDialogProps> = ({
               {/* Attribute name/value */}
               <span
                 className={cn(
-                  'text-sm flex-1 cursor-pointer',
+                  'text-sm flex-1 cursor-pointer px-2 py-1 rounded',
                   attributeHasChildren ? 'font-medium' : 'font-normal',
-                  isLinked && 'text-primary font-medium',
+                  isLinked && 'bg-primary text-white font-medium',
                 )}
                 onClick={() =>
                   attributeHasChildren && toggleAttributeExpansion(attr.id)
