@@ -7,7 +7,7 @@ import path from 'path'
 // DELETE endpoint to remove attachment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     // Verify user authentication
@@ -16,7 +16,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const attachmentId = params.id
+    const { id: attachmentId } = await params
 
     // Get attachment info from database
     const attachment = await prisma.attachment.findUnique({
@@ -61,10 +61,10 @@ export async function DELETE(
 // GET endpoint to serve files
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const attachmentId = params.id
+    const { id: attachmentId } = await params
 
     // Get attachment info from database
     const attachment = await prisma.attachment.findUnique({
