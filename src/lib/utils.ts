@@ -479,6 +479,27 @@ const getAllAttributes = (
   return allAttributes
 }
 
+// Helper function to get all audit details from all attributes and their children
+const getAllAuditDetails = (
+  attributes: IFrameworkAttribute[],
+): IAuditDetails[] => {
+  let allAuditDetails: IAuditDetails[] = []
+
+  for (const attribute of attributes) {
+    if (attribute.auditDetails && attribute.auditDetails.length > 0) {
+      allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
+    }
+    if (attribute.children && attribute.children.length > 0) {
+      allAuditDetails = [
+        ...allAuditDetails,
+        ...getAllAuditDetails(attribute.children),
+      ]
+    }
+  }
+
+  return allAuditDetails
+}
+
 // Helper function to count rows per column using colIndex
 export const getColumnRowCounts = (
   attributes: IFrameworkAttribute[],
@@ -510,27 +531,6 @@ export const getColumnRowCounts = (
 export const getAuditDetailsByOwner = (
   framework: IFramework,
 ): { owner: string; count: number }[] => {
-  // Get all audit details from all attributes and their children
-  const getAllAuditDetails = (
-    attributes: IFrameworkAttribute[],
-  ): IAuditDetails[] => {
-    let allAuditDetails: IAuditDetails[] = []
-
-    for (const attribute of attributes) {
-      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
-        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
-      }
-      if (attribute.children && attribute.children.length > 0) {
-        allAuditDetails = [
-          ...allAuditDetails,
-          ...getAllAuditDetails(attribute.children),
-        ]
-      }
-    }
-
-    return allAuditDetails
-  }
-
   const allAuditDetails = getAllAuditDetails(framework.attributes)
 
   // Group by owner
@@ -552,27 +552,6 @@ export const getAuditDetailsByOwner = (
 export const getAuditDetailsByAttachment = (
   framework: IFramework,
 ): { name: string; value: number; fill: string }[] => {
-  // Get all audit details from all attributes and their children
-  const getAllAuditDetails = (
-    attributes: IFrameworkAttribute[],
-  ): IAuditDetails[] => {
-    let allAuditDetails: IAuditDetails[] = []
-
-    for (const attribute of attributes) {
-      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
-        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
-      }
-      if (attribute.children && attribute.children.length > 0) {
-        allAuditDetails = [
-          ...allAuditDetails,
-          ...getAllAuditDetails(attribute.children),
-        ]
-      }
-    }
-
-    return allAuditDetails
-  }
-
   const allAuditDetails = getAllAuditDetails(framework.attributes)
 
   // Count audit details with and without attachments
@@ -605,40 +584,29 @@ export const getAuditDetailsByAttachment = (
 export const getAuditDetailsByStatus = (
   framework: IFramework,
 ): { name: string; value: number; fill: string }[] => {
-  // Get all audit details from all attributes and their children
-  const getAllAuditDetails = (
-    attributes: IFrameworkAttribute[],
-  ): IAuditDetails[] => {
-    let allAuditDetails: IAuditDetails[] = []
-
-    for (const attribute of attributes) {
-      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
-        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
-      }
-      if (attribute.children && attribute.children.length > 0) {
-        allAuditDetails = [
-          ...allAuditDetails,
-          ...getAllAuditDetails(attribute.children),
-        ]
-      }
-    }
-
-    return allAuditDetails
-  }
-
   const allAuditDetails = getAllAuditDetails(framework.attributes)
 
-  // Group by audit rule/status
+  // Initialize all possible statuses from framework's audit rules with count 0
   const statusGroups: { [key: string]: { count: number; color: string } } = {}
 
-  allAuditDetails.forEach((auditDetail) => {
-    const statusLabel = auditDetail.auditRule.label
-    const statusColor = auditDetail.auditRule.color
+  // First, initialize all audit rules with count 0
+  if (framework.status?.auditRules) {
+    framework.status.auditRules.forEach((rule) => {
+      statusGroups[rule.label] = { count: 0, color: rule.color }
+    })
+  }
 
-    if (!statusGroups[statusLabel]) {
-      statusGroups[statusLabel] = { count: 0, color: statusColor }
+  // Then count actual audit details
+  allAuditDetails.forEach((auditDetail) => {
+    // Find the corresponding audit rule in the framework's status
+    const auditRule = framework.status?.auditRules?.find(
+      (rule) => rule.id === auditDetail.auditRuleId,
+    )
+
+    if (auditRule) {
+      const statusLabel = auditRule.label
+      statusGroups[statusLabel].count++
     }
-    statusGroups[statusLabel].count++
   })
 
   // Convert to chart data format
@@ -657,27 +625,6 @@ export const getAuditDetailsByOwnerAndStatus = (
   statusCounts: { [key: string]: number }
   total: number
 }[] => {
-  // Get all audit details from all attributes and their children
-  const getAllAuditDetails = (
-    attributes: IFrameworkAttribute[],
-  ): IAuditDetails[] => {
-    let allAuditDetails: IAuditDetails[] = []
-
-    for (const attribute of attributes) {
-      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
-        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
-      }
-      if (attribute.children && attribute.children.length > 0) {
-        allAuditDetails = [
-          ...allAuditDetails,
-          ...getAllAuditDetails(attribute.children),
-        ]
-      }
-    }
-
-    return allAuditDetails
-  }
-
   const allAuditDetails = getAllAuditDetails(framework.attributes)
 
   // Group by owner and then by status
@@ -690,18 +637,26 @@ export const getAuditDetailsByOwnerAndStatus = (
 
   allAuditDetails.forEach((auditDetail) => {
     const ownerName = auditDetail.owner?.fullName || 'Unassigned'
-    const statusLabel = auditDetail.auditRule.label
 
-    if (!ownerStatusGroups[ownerName]) {
-      ownerStatusGroups[ownerName] = { statusCounts: {}, total: 0 }
+    // Find the corresponding audit rule in the framework's status
+    const auditRule = framework.status?.auditRules?.find(
+      (rule) => rule.id === auditDetail.auditRuleId,
+    )
+
+    if (auditRule) {
+      const statusLabel = auditRule.label
+
+      if (!ownerStatusGroups[ownerName]) {
+        ownerStatusGroups[ownerName] = { statusCounts: {}, total: 0 }
+      }
+
+      if (!ownerStatusGroups[ownerName].statusCounts[statusLabel]) {
+        ownerStatusGroups[ownerName].statusCounts[statusLabel] = 0
+      }
+
+      ownerStatusGroups[ownerName].statusCounts[statusLabel]++
+      ownerStatusGroups[ownerName].total++
     }
-
-    if (!ownerStatusGroups[ownerName].statusCounts[statusLabel]) {
-      ownerStatusGroups[ownerName].statusCounts[statusLabel] = 0
-    }
-
-    ownerStatusGroups[ownerName].statusCounts[statusLabel]++
-    ownerStatusGroups[ownerName].total++
   })
 
   // Convert to chart data format
@@ -716,37 +671,13 @@ export const getAuditDetailsByOwnerAndStatus = (
 export const getUniqueAuditStatuses = (
   framework: IFramework,
 ): { label: string; color: string }[] => {
-  const getAllAuditDetails = (
-    attributes: IFrameworkAttribute[],
-  ): IAuditDetails[] => {
-    let allAuditDetails: IAuditDetails[] = []
-
-    for (const attribute of attributes) {
-      if (attribute.auditDetails && attribute.auditDetails.length > 0) {
-        allAuditDetails = [...allAuditDetails, ...attribute.auditDetails]
-      }
-      if (attribute.children && attribute.children.length > 0) {
-        allAuditDetails = [
-          ...allAuditDetails,
-          ...getAllAuditDetails(attribute.children),
-        ]
-      }
-    }
-
-    return allAuditDetails
+  // Return the audit rules directly from the framework's status
+  if (framework.status?.auditRules) {
+    return framework.status.auditRules.map((rule) => ({
+      label: rule.label,
+      color: rule.color,
+    }))
   }
 
-  const allAuditDetails = getAllAuditDetails(framework.attributes)
-  const uniqueStatuses: { [key: string]: string } = {}
-
-  allAuditDetails.forEach((auditDetail) => {
-    const statusLabel = auditDetail.auditRule.label
-    const statusColor = auditDetail.auditRule.color
-    uniqueStatuses[statusLabel] = statusColor
-  })
-
-  return Object.entries(uniqueStatuses).map(([label, color]) => ({
-    label,
-    color,
-  }))
+  return []
 }
