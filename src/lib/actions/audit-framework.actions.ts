@@ -102,24 +102,37 @@ export const createAudit = async (dto: IAuditFrameworkManipulator) => {
       throw new Error(`User with ID ${dto.auditBy} does not exist`)
     }
 
-    // Also verify that the framework exists
+    // Also verify that the framework exists and get its status
     const frameworkExists = await prisma.framework.findUnique({
       where: { id: dto.frameworkId },
-      select: { id: true },
+      select: {
+        id: true,
+        statusId: true,
+        status: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     })
 
     if (!frameworkExists) {
       throw new Error(`Framework with ID ${dto.frameworkId} does not exist`)
     }
 
-    // Get the first audit rule (default status)
+    // Get the audit rule based on the framework's status
     const defaultAuditRule = await prisma.auditRules.findFirst({
-      orderBy: { id: 'asc' },
+      where: {
+        statusId: frameworkExists.statusId,
+      },
       select: { id: true },
     })
 
     if (!defaultAuditRule) {
-      throw new Error('No audit rules found in the system')
+      throw new Error(
+        `No audit rules found for status: ${frameworkExists.status?.name || 'Unknown'}`,
+      )
     }
 
     // Get only the leaf framework attributes (last column) for this framework
