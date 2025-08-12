@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { getTableCellClasses, getMixedContentClasses, isArabicLocale } from '@/lib/text-direction-utils'
 import { useSheetStore, type SheetNames } from '@/stores/sheet-store'
 import { Priority } from '@prisma/client'
 import { ArrowUp } from 'iconsax-react'
@@ -82,8 +83,8 @@ const TableComponent = <T extends object>({
   const { openSheet } = useSheetStore((store) => store.actions)
 
   const router = useRouter()
-
-  const isArabic = usePathname().includes('/ar')
+  const pathname = usePathname()
+  const isArabic = isArabicLocale(pathname)
   const t = useTranslations('general')
 
   const checkHorizontalScroll = useCallback(() => {
@@ -201,7 +202,7 @@ const TableComponent = <T extends object>({
       )}
     >
       {row.map((value, index) => (
-        <td key={index} className="px-6 py-4 text-left">
+        <td key={index} className={getTableCellClasses(isArabic)}>
           {TableCell(value.type, value.value)}
         </td>
       ))}
@@ -518,23 +519,24 @@ const TableComponent = <T extends object>({
 export default TableComponent
 
 const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
-  const isArabic = usePathname().includes('/ar')
+  const pathname = usePathname()
+  const isArabic = isArabicLocale(pathname)
   const t = useTranslations('general')
 
   const translatedKey =
     typeof value === 'string' ? value.toLowerCase() : String(value)
+
+  // Base styles for mixed content handling
+  const baseTextStyles = getMixedContentClasses(
+    'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800'
+  )
 
   switch (type.toLowerCase()) {
     case 'date':
       return value ? <Date date={value as string} /> : <>-</>
     case 'translated':
       return (
-        <div
-          className={cn(
-            'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800',
-            isArabic && 'text-right',
-          )}
-        >
+        <div className={baseTextStyles}>
           {t(`options.${translatedKey}`) ?? '-'}
         </div>
       )
@@ -545,9 +547,8 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
     case 'color':
       return (
         <div
-          className={cn(
-            'w-fit py-2 px-4 rounded-full text-neutral-200 truncate whitespace-nowrap text-sm font-medium capitalize',
-            isArabic && 'text-right',
+          className={getMixedContentClasses(
+            'w-fit py-2 px-4 rounded-full text-neutral-200 truncate whitespace-nowrap text-sm font-medium capitalize'
           )}
           style={{ backgroundColor: value as string }}
         >
@@ -556,12 +557,7 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
       )
     default:
       return (
-        <div
-          className={cn(
-            'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800',
-            isArabic && 'text-right',
-          )}
-        >
+        <div className={baseTextStyles}>
           {value ? String(value) : '-'}
         </div>
       )
