@@ -28,25 +28,50 @@
   [dir='rtl'] {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: bidi-override !important;
-  }
-
-  [dir='rtl'] * {
-    direction: inherit !important;
-    unicode-bidi: inherit !important;
   }
 
   /* Fix for mixed content in RTL - prevent text reversal */
   [dir='rtl'] .mixed-content,
-  [dir='auto'] {
+  [dir='ltr'] .mixed-content,
+  .mixed-content {
     unicode-bidi: isolate !important;
     direction: auto !important;
+    text-align: start !important;
   }
 
   /* Ensure proper text direction for framework attribute values */
   .framework-text {
     unicode-bidi: isolate;
     direction: auto;
+  }
+
+  /* Table cell text direction handling */
+  table td .mixed-content {
+    display: block;
+    unicode-bidi: isolate;
+    direction: auto;
+    text-align: inherit;
+  }
+
+  /* Prevent English text reversal in RTL contexts */
+  [dir='rtl'] table td {
+    text-align: right;
+  }
+
+  [dir='rtl'] table td .mixed-content {
+    text-align: start;
+    direction: auto;
+    unicode-bidi: isolate;
+  }
+
+  [dir='ltr'] table td {
+    text-align: left;
+  }
+
+  [dir='ltr'] table td .mixed-content {
+    text-align: start;
+    direction: auto;
+    unicode-bidi: isolate;
   }
 
   /* Specific Arabic font optimizations */
