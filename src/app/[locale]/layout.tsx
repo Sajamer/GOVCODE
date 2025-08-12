@@ -34,7 +34,11 @@ export default async function LocalLayout({
   const messages = await getMessages()
 
   return (
-    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+      suppressHydrationWarning
+    >
       <body className={`${poppins.variable} font-poppins antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <TanStackProvider>
