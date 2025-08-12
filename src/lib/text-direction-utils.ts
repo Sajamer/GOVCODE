@@ -14,10 +14,13 @@ export function isArabicLocale(pathname: string): boolean {
 /**
  * Returns the appropriate text alignment class based on locale
  */
-export function getTextAlignment(isArabic: boolean, alignment?: 'start' | 'center' | 'end'): string {
+export function getTextAlignment(
+  isArabic: boolean,
+  alignment?: 'start' | 'center' | 'end',
+): string {
   if (alignment === 'center') return 'text-center'
   if (alignment === 'end') return isArabic ? 'text-left' : 'text-right'
-  
+
   // Default alignment (start)
   return isArabic ? 'text-right' : 'text-left'
 }
@@ -29,7 +32,7 @@ export function getTextAlignment(isArabic: boolean, alignment?: 'start' | 'cente
 export function getMixedContentClasses(additionalClasses?: string): string {
   return cn(
     'mixed-content', // This class has unicode-bidi: isolate and direction: auto
-    additionalClasses
+    additionalClasses,
   )
 }
 
@@ -49,24 +52,31 @@ export function getTextContainerClasses(
     alignment?: 'start' | 'center' | 'end'
     additionalClasses?: string
     enableMixedContent?: boolean
-  }
+  },
 ): string {
-  const { alignment = 'start', additionalClasses = '', enableMixedContent = true } = options || {}
-  
+  const {
+    alignment = 'start',
+    additionalClasses = '',
+    enableMixedContent = true,
+  } = options || {}
+
   return cn(
     getTextAlignment(isArabic, alignment),
     enableMixedContent && 'mixed-content',
-    additionalClasses
+    additionalClasses,
   )
 }
 
 /**
  * Creates props for text containers that need proper direction handling
  */
-export function getTextDirectionProps(isArabic: boolean, enableMixedContent: boolean = true) {
+export function getTextDirectionProps(
+  isArabic: boolean,
+  enableMixedContent: boolean = true,
+) {
   return {
     dir: enableMixedContent ? 'auto' : getDirection(isArabic),
-    className: enableMixedContent ? 'mixed-content' : ''
+    className: enableMixedContent ? 'mixed-content' : '',
   }
 }
 
@@ -74,9 +84,10 @@ export function getTextDirectionProps(isArabic: boolean, enableMixedContent: boo
  * Detects if text contains mixed content (Arabic + Latin scripts)
  */
 export function hasMixedContent(text: string): boolean {
-  const arabicPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
+  const arabicPattern =
+    /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/
   const latinPattern = /[A-Za-z]/
-  
+
   return arabicPattern.test(text) && latinPattern.test(text)
 }
 
@@ -85,12 +96,12 @@ export function hasMixedContent(text: string): boolean {
  */
 export function getTableCellClasses(
   isArabic: boolean,
-  additionalClasses?: string
+  additionalClasses?: string,
 ): string {
   return cn(
     'px-6 py-4',
     getTextAlignment(isArabic),
     'mixed-content',
-    additionalClasses
+    additionalClasses,
   )
 }

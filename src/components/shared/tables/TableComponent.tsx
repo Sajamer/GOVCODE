@@ -4,8 +4,12 @@ import { Icons } from '@/components/icons/Icons'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import {
+  getMixedContentClasses,
+  getTableCellClasses,
+  isArabicLocale,
+} from '@/lib/text-direction-utils'
 import { cn } from '@/lib/utils'
-import { getTableCellClasses, getMixedContentClasses, isArabicLocale } from '@/lib/text-direction-utils'
 import { useSheetStore, type SheetNames } from '@/stores/sheet-store'
 import { Priority } from '@prisma/client'
 import { ArrowUp } from 'iconsax-react'
@@ -519,8 +523,6 @@ const TableComponent = <T extends object>({
 export default TableComponent
 
 const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
-  const pathname = usePathname()
-  const isArabic = isArabicLocale(pathname)
   const t = useTranslations('general')
 
   const translatedKey =
@@ -528,7 +530,7 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
 
   // Base styles for mixed content handling
   const baseTextStyles = getMixedContentClasses(
-    'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800'
+    'max-w-xs truncate whitespace-nowrap text-sm font-medium capitalize text-zinc-800',
   )
 
   switch (type.toLowerCase()) {
@@ -548,7 +550,7 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
       return (
         <div
           className={getMixedContentClasses(
-            'w-fit py-2 px-4 rounded-full text-neutral-200 truncate whitespace-nowrap text-sm font-medium capitalize'
+            'w-fit py-2 px-4 rounded-full text-neutral-200 truncate whitespace-nowrap text-sm font-medium capitalize',
           )}
           style={{ backgroundColor: value as string }}
         >
@@ -556,10 +558,6 @@ const TableCell = <T,>(type: CellType, value: T): JSX.Element => {
         </div>
       )
     default:
-      return (
-        <div className={baseTextStyles}>
-          {value ? String(value) : '-'}
-        </div>
-      )
+      return <div className={baseTextStyles}>{value ? String(value) : '-'}</div>
   }
 }
