@@ -29,12 +29,11 @@ const PieChartComponent = <T,>({
   chartData,
 }: IPieChartComponentProps<T>) => {
   const colors = [
-    '#ef4444',
-    '#f97316',
-    '#a3e635',
-    '#0369a1',
-    '#059669',
-    '#33FFF3',
+    'hsl(var(--chart-1))',
+    'hsl(var(--chart-2))',
+    'hsl(var(--chart-3))',
+    'hsl(var(--chart-4))',
+    'hsl(var(--chart-5))',
     '#8b5cf6',
     '#FF5733',
     '#e11d48',
@@ -48,44 +47,30 @@ const PieChartComponent = <T,>({
     fill: colors[index % colors.length], // Cycle through colors if more than 12 items
   }))
 
+  const getNameKey = (item: IChartData) => {
+    if ('month' in item) return item.month
+    if ('quarter' in item) return item.quarter
+    if ('semiAnnual' in item) return item.semiAnnual
+    if ('year' in item) return item.year
+    return ''
+  }
+
   return (
     <Card className="flex w-full flex-col dark:bg-white dark:text-black">
       <CustomCardHeader title={title} description={description} />
       {updatedChartData && updatedChartData.length > 0 ? (
-        <CardContent>
+        <CardContent className="flex-1 pb-0">
           <ChartContainer
             config={config}
-            className="mx-auto aspect-square max-h-[250px]"
+            className="mx-auto aspect-square max-h-[250px] pb-0 [&_.recharts-pie-label-text]:fill-foreground"
           >
             <PieChart>
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="line" />}
-              />
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               <Pie
                 data={updatedChartData}
                 dataKey="actual"
-                outerRadius={60}
-                nameKey={(item: IChartData) => {
-                  if ('month' in item) return item.month
-                  if ('quarter' in item) return item.quarter
-                  if ('semiAnnual' in item) return item.semiAnnual
-                  if ('year' in item) return item.year
-                  return ''
-                }}
-              />
-              <Pie
-                data={updatedChartData}
-                dataKey="target"
-                innerRadius={70}
-                outerRadius={90}
-                nameKey={(item: IChartData) => {
-                  if ('month' in item) return item.month
-                  if ('quarter' in item) return item.quarter
-                  if ('semiAnnual' in item) return item.semiAnnual
-                  if ('year' in item) return item.year
-                  return ''
-                }}
+                nameKey={getNameKey}
+                label
               />
             </PieChart>
           </ChartContainer>
